@@ -1,0 +1,79 @@
+---
+type Block =
+  | { type: 'paragraph'; title?: string; body: string }
+  | { type: 'image'; src: string; alt: string; caption?: string }
+  | { type: 'video'; src: string; title?: string }
+  | { type: 'table'; title?: string; headers: string[]; rows: string[][] }
+  | { type: 'list'; title?: string; items: string[] };
+
+interface Props { blocks: Block[] }
+const { blocks } = Astro.props;
+---
+<section class="max-w-3xl mx-auto px-6 py-16 prose-anti">
+  {blocks.map((block) => {
+    if (block.type === 'paragraph') {
+      return (
+        <div class="mb-10">
+          {block.title && <h2 class="font-display text-3xl mb-4">{block.title}</h2>}
+          <p class="text-ink/85">{block.body}</p>
+        </div>
+      );
+    }
+    if (block.type === 'image') {
+      return (
+        <figure class="mb-10">
+          <img src={block.src} alt={block.alt} loading="lazy" class="rounded-2xl w-full" />
+          {block.caption && <figcaption class="mt-2 text-sm text-ink/60 text-center italic">{block.caption}</figcaption>}
+        </figure>
+      );
+    }
+    if (block.type === 'video') {
+      return (
+        <div class="mb-10 aspect-video rounded-2xl overflow-hidden bg-ink">
+          <iframe
+            src={block.src}
+            title={block.title ?? 'Video'}
+            class="w-full h-full"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          />
+        </div>
+      );
+    }
+    if (block.type === 'table') {
+      return (
+        <div class="mb-10">
+          {block.title && <h2 class="font-display text-3xl mb-4">{block.title}</h2>}
+          <div class="overflow-x-auto rounded-xl border border-ink/10">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-bone">
+                <tr>{block.headers.map((h) => <th class="px-4 py-3 font-semibold">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {block.rows.map((row) => (
+                  <tr class="border-t border-ink/10">
+                    {row.map((c) => <td class="px-4 py-3">{c}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+    if (block.type === 'list') {
+      return (
+        <div class="mb-10">
+          {block.title && <h2 class="font-display text-3xl mb-4">{block.title}</h2>}
+          <ul class="space-y-2">
+            {block.items.map((i) => (
+              <li class="flex gap-3"><span class="text-rose mt-1">●</span><span>{i}</span></li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+    return null;
+  })}
+</section>

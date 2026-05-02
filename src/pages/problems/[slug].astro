@@ -1,0 +1,86 @@
+---
+// English-default route at /problems/[slug]
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { localePath, t } from '../../i18n/utils';
+import { DEFAULT_LOCALE } from '../../i18n/ui';
+
+export async function getStaticPaths() {
+  const all = await getCollection('problems', ({ data }) => data.locale === DEFAULT_LOCALE);
+  return all.map((p) => ({ params: { slug: p.data.slug }, props: { problem: p } }));
+}
+
+const locale = DEFAULT_LOCALE;
+const { problem } = Astro.props;
+const data = problem.data;
+
+const evidenceLabel: Record<string, string> = {
+  strong: t(locale, 'problem.evidence.strong'),
+  moderate: t(locale, 'problem.evidence.moderate'),
+  emerging: t(locale, 'problem.evidence.emerging'),
+};
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MedicalCondition',
+  name: data.title,
+  description: data.summary,
+  associatedAnatomy: { '@type': 'AnatomicalStructure', name: data.bodyArea },
+  possibleTreatment: data.solutions.map((s) => ({
+    '@type': 'MedicalTherapy',
+    name: s.name,
+    description: s.description,
+  })),
+};
+---
+<BaseLayout
+  title={data.seoTitle ?? `${data.title} — solutions backed by science | DeAging Europe`}
+  description={data.seoDescription ?? data.summary}
+  locale={locale}
+  path={`problems/${data.slug}`}
+  type="article"
+  image={data.image}
+  jsonLd={articleJsonLd}
+>
+  <article>
+    <header class="bg-bone py-16 border-b border-ink/5">
+      <div class="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">{t(locale, 'problem.bodyArea')} · {data.bodyArea}</p>
+          <h1 class="font-display text-5xl md:text-6xl mt-4 leading-tight">{data.title}</h1>
+          <p class="mt-6 text-lg text-ink/75 leading-relaxed">{data.summary}</p>
+        </div>
+        <div class="aspect-[4/3] rounded-2xl overflow-hidden">
+          <img src={data.image} alt={data.title} class="w-full h-full object-cover" />
+        </div>
+      </div>
+    </header>
+
+    <section class="max-w-5xl mx-auto px-6 py-20">
+      <h2 class="font-display text-4xl mb-10">{t(locale, 'problem.solutions')}</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        {data.solutions.map((s) => (
+          <article class="bg-white rounded-2xl p-6 border border-ink/5 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-xs uppercase tracking-widest text-sage">{s.kind}</p>
+                <h3 class="font-display text-2xl mt-1">{s.name}</h3>
+              </div>
+              <span class={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
+                s.evidence === 'strong' ? 'bg-sage/15 text-sage' :
+                s.evidence === 'moderate' ? 'bg-gold/15 text-gold' :
+                'bg-rose/15 text-rose'
+              }`}>{evidenceLabel[s.evidence]}</span>
+            </div>
+            <p class="mt-4 text-ink/75 leading-relaxed">{s.description}</p>
+            {s.productSlug && (
+              <a href={localePath(locale, `products/${s.productSlug}`)} class="mt-4 inline-block text-rose font-semibold hover:underline">
+                See recommended product →
+              </a>
+            )}
+          </article>
+        ))}
+      </div>
+    </section>
+  </article>
+</BaseLayout>

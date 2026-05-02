@@ -1,0 +1,39 @@
+---
+import BuyButton from './BuyButton.astro';
+import { type Locale } from '../i18n/ui';
+import { t } from '../i18n/utils';
+
+interface Props {
+  locale: Locale;
+  buyUrl: string;
+  testimonials: { name: string; location?: string; rating: number; body: string; image?: string }[];
+}
+const { locale, buyUrl, testimonials } = Astro.props;
+---
+<section class="py-20 bg-bone">
+  <div class="max-w-6xl mx-auto px-6">
+    <h2 class="font-display text-4xl text-center mb-12">{t(locale, 'product.testimonials.title')}</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      {testimonials.map((tm) => (
+        <figure class="bg-white rounded-2xl p-6 shadow-sm border border-ink/5">
+          <div class="flex gap-1 text-gold" aria-label={`${tm.rating} out of 5 stars`}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <span aria-hidden="true">{i < tm.rating ? '★' : '☆'}</span>
+            ))}
+          </div>
+          <blockquote class="mt-4 text-ink/85 leading-relaxed">"{tm.body}"</blockquote>
+          <figcaption class="mt-5 flex items-center gap-3">
+            {tm.image && <img src={tm.image} alt={tm.name} class="w-10 h-10 rounded-full object-cover" />}
+            <div>
+              <div class="font-semibold text-sm">{tm.name}</div>
+              {tm.location && <div class="text-xs text-ink/60">{tm.location}</div>}
+            </div>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+    <div class="mt-12 text-center">
+      <BuyButton href={buyUrl} locale={locale} size="lg" />
+    </div>
+  </div>
+</section>

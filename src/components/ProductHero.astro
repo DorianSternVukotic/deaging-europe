@@ -1,0 +1,34 @@
+---
+import BuyButton from './BuyButton.astro';
+import { type Locale } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  brand: string;
+  tagline: string;
+  image: string;
+  buyUrl: string;
+  price?: string;
+  currency?: string;
+}
+const { locale, title, brand, tagline, image, buyUrl, price, currency } = Astro.props;
+---
+<section class="bg-gradient-to-br from-bone via-bone to-rose/10 border-b border-ink/5">
+  <div class="max-w-6xl mx-auto px-6 py-12 md:py-20 grid md:grid-cols-2 gap-10 items-center">
+    <div class="reveal">
+      <p class="text-xs uppercase tracking-[0.3em] text-sage">{brand}</p>
+      <h1 class="font-display text-4xl md:text-6xl mt-3 leading-tight">{title}</h1>
+      <p class="mt-5 text-lg text-ink/75 leading-relaxed max-w-md">{tagline}</p>
+      <div class="mt-8 flex flex-wrap items-center gap-4">
+        <BuyButton href={buyUrl} locale={locale} size="lg" />
+        {price && <span class="text-ink/60 text-sm">{price} {currency}</span>}
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="aspect-square rounded-3xl overflow-hidden bg-white shadow-2xl">
+        <img src={image} alt={title} class="w-full h-full object-cover" />
+      </div>
+    </div>
+  </div>
+</section>

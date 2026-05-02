@@ -1,0 +1,14 @@
+We are THE platform for anti aging upon which all the information backed up by science and confirmed by authorithative figures like doctors. We are popularizing it by influencers and making money by affiliate sales until we grow enough and make our own brands.
+Website should be first and foremost a genuinely valuable information hub like bryan johnsons blueprint
+
+Example: Influencer talks about a brand of collagen and how great that brand is. Then we sell ads to the influencers audience for that brand thats on our website. User is redirected to the dedicated sales page for that collagen brand. On top theres a promotion of the product - image, title and one sentence description and a buy button. Then underneath an info section about that product. Info section of several subsections usually having a title and then a paragraph or image or video or table. Then a big section about a doctor and scientific studies and a buy button again. At the bottom, testimonials and a buy button again.
+see example https://www.aeterna.bg/ . Pull content from this website for the demo
+
+
+localization - we should figure out how to seo/aicrawl optimize this for each european country and even a city, as well as provide pages in those localized languages
+
+on the front page we have a list of problems with a picture, for example - wrinkles for a jaw - and recommended solution for example lasers and collagen
+see example from https://lilianabb3.wixsite.com/mysite section Лечения и процедури
+Pull content from that website from the demo  
+
+the website should be seo optimized especially for ai crawlers as well as content available without javascript so chat ai interfaces can see it. We are going to be popularizing the site by seo, by AI and also our videos as well as influencers.

@@ -1,0 +1,51 @@
+---
+import BuyButton from './BuyButton.astro';
+import { type Locale } from '../i18n/ui';
+import { t } from '../i18n/utils';
+
+interface Props {
+  locale: Locale;
+  buyUrl: string;
+  doctor: {
+    name: string;
+    title: string;
+    image: string;
+    bio: string;
+    studies: { title: string; journal: string; year: number; summary: string; url?: string }[];
+  };
+}
+const { locale, doctor, buyUrl } = Astro.props;
+---
+<section class="bg-ink text-bone py-20">
+  <div class="max-w-5xl mx-auto px-6">
+    <p class="text-xs uppercase tracking-[0.3em] text-gold">{t(locale, 'product.doctor.title')}</p>
+    <div class="mt-6 grid md:grid-cols-[200px_1fr] gap-8 items-start">
+      <img src={doctor.image} alt={doctor.name} class="w-40 h-40 rounded-full object-cover ring-4 ring-gold/30" />
+      <div>
+        <h2 class="font-display text-4xl">{doctor.name}</h2>
+        <p class="text-gold mt-1">{doctor.title}</p>
+        <p class="mt-4 text-bone/80 leading-relaxed">{doctor.bio}</p>
+      </div>
+    </div>
+
+    <h3 class="font-display text-3xl mt-16 mb-6">{t(locale, 'product.studies.title')}</h3>
+    <div class="grid md:grid-cols-2 gap-6">
+      {doctor.studies.map((study) => (
+        <article class="bg-bone/5 rounded-xl p-6 border border-bone/10">
+          <p class="text-xs text-gold uppercase tracking-wider">{study.journal} · {study.year}</p>
+          <h4 class="font-display text-xl mt-2">{study.title}</h4>
+          <p class="mt-3 text-sm text-bone/75 leading-relaxed">{study.summary}</p>
+          {study.url && (
+            <a href={study.url} target="_blank" rel="noopener" class="text-gold text-sm mt-3 inline-block hover:underline">
+              Read study →
+            </a>
+          )}
+        </article>
+      ))}
+    </div>
+
+    <div class="mt-12 text-center">
+      <BuyButton href={buyUrl} locale={locale} size="lg" />
+    </div>
+  </div>
+</section>

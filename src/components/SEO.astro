@@ -1,0 +1,48 @@
+---
+import { LOCALES, HREFLANG, type Locale, DEFAULT_LOCALE } from '../i18n/ui';
+import { localePath } from '../i18n/utils';
+
+interface Props {
+  title: string;
+  description: string;
+  locale: Locale;
+  /** Path *after* the locale segment (e.g. "products/collagen-max-pro"). */
+  path?: string;
+  image?: string;
+  type?: 'website' | 'article' | 'product';
+  jsonLd?: object | object[];
+}
+
+const { title, description, locale, path = '', image, type = 'website', jsonLd } = Astro.props;
+const site = Astro.site ?? new URL('https://deagingeurope.example');
+const canonical = new URL(localePath(locale, path), site).toString();
+const ogImage = image ? new URL(image, site).toString() : new URL('/og-default.png', site).toString();
+const jsonLdArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+
+{LOCALES.map((l) => (
+  <link rel="alternate" hreflang={HREFLANG[l]} href={new URL(localePath(l, path), site).toString()} />
+))}
+<link rel="alternate" hreflang="x-default" href={new URL(localePath(DEFAULT_LOCALE, path), site).toString()} />
+
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={type} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:locale" content={HREFLANG[locale].replace('-', '_')} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+
+{jsonLdArray.map((data) => (
+  <script type="application/ld+json" set:html={JSON.stringify(data)} />
+))}

@@ -1,0 +1,83 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProductHero from '../../../components/ProductHero.astro';
+import InfoSection from '../../../components/InfoSection.astro';
+import DoctorSection from '../../../components/DoctorSection.astro';
+import Testimonials from '../../../components/Testimonials.astro';
+import { t, getLocaleFromParams } from '../../../i18n/utils';
+import { LOCALES, DEFAULT_LOCALE } from '../../../i18n/ui';
+
+export async function getStaticPaths() {
+  const all = await getCollection('products');
+  return all
+    .filter((p) => p.data.locale !== DEFAULT_LOCALE && (LOCALES as readonly string[]).includes(p.data.locale))
+    .map((p) => ({
+      params: { lang: p.data.locale, slug: p.data.slug },
+      props: { product: p },
+    }));
+}
+
+const locale = getLocaleFromParams(Astro.params.lang);
+const { product } = Astro.props;
+const d = product.data;
+
+const productJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: d.title,
+  brand: { '@type': 'Brand', name: d.brand },
+  description: d.tagline,
+  image: d.image,
+  ...(d.price && {
+    offers: {
+      '@type': 'Offer',
+      price: d.price,
+      priceCurrency: d.currency,
+      availability: 'https://schema.org/InStock',
+      url: d.buyUrl,
+    },
+  }),
+  aggregateRating: d.testimonials.length > 0 ? {
+    '@type': 'AggregateRating',
+    ratingValue: (d.testimonials.reduce((s, x) => s + x.rating, 0) / d.testimonials.length).toFixed(1),
+    reviewCount: d.testimonials.length,
+  } : undefined,
+  review: d.testimonials.map((tm) => ({
+    '@type': 'Review',
+    author: { '@type': 'Person', name: tm.name },
+    reviewRating: { '@type': 'Rating', ratingValue: tm.rating, bestRating: 5 },
+    reviewBody: tm.body,
+  })),
+};
+---
+<BaseLayout
+  title={d.seoTitle ?? `${d.title} by ${d.brand} | DeAging Europe`}
+  description={d.seoDescription ?? d.tagline}
+  locale={locale}
+  path={`products/${d.slug}`}
+  type="product"
+  image={d.image}
+  jsonLd={productJsonLd}
+>
+  <ProductHero
+    locale={locale}
+    title={d.title}
+    brand={d.brand}
+    tagline={d.tagline}
+    image={d.image}
+    buyUrl={d.buyUrl}
+    price={d.price}
+    currency={d.currency}
+  />
+
+  <p class="max-w-3xl mx-auto px-6 mt-6 text-xs text-ink/50 italic">
+    {d.affiliateDisclosure ?? t(locale, 'product.affiliate')}
+  </p>
+
+  <InfoSection blocks={d.info} />
+
+  <DoctorSection locale={locale} doctor={d.doctor} buyUrl={d.buyUrl} />
+
+  <Testimonials locale={locale} buyUrl={d.buyUrl} testimonials={d.testimonials} />
+</BaseLayout>
