@@ -1,0 +1,269 @@
+---
+/**
+ * Variation 2 — Magazine longread
+ *
+ * Editorial style: full-bleed hero, drop cap, pull quotes, captioned photo
+ * inserts, in-article video, two-column reading paragraphs at the wide
+ * breakpoint, right rail TOC with scroll-spy. Premium feel.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  heroFacts,
+  keyTakeaways,
+  groups,
+  evidenceLabels,
+  focusLabels,
+  allSections,
+  type Evidence,
+} from '../data/collagen';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Collagen — the long read | DeAging Europe';
+const description = 'A magazine-style feature on collagen, anti-aging, and what actually works.';
+
+const stripTags = (html: string) =>
+  html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const totalWords = allSections().map((s) => stripTags(s.bodyHtml).split(/\s+/).length).reduce((a, b) => a + b, 0);
+const readingMinutes = Math.max(1, Math.round(totalWords / 220));
+
+const pullQuotes: Record<string, string> = {
+  basics: 'There are 28 known types of collagen — type I alone accounts for about 90% of what your body makes.',
+  benefits: 'A review of 26 trials found measurable skin improvements on 1–12 grams of collagen for 4–12 weeks.',
+  loss: 'UV light is responsible for the majority of what we call "aging" on sun-exposed skin.',
+  'boost-clinical': 'In-office treatments produce step changes; supplements maintain a baseline. Most people who care about long-term anti-aging use both.',
+};
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="collagen-2" type="article">
+  <article class="bg-bone">
+    <!-- FULL-BLEED HERO -->
+    <header class="relative">
+      <div class="cover-hero relative w-full overflow-hidden border-b border-ink/10">
+        <div class="absolute inset-0 opacity-50 pointer-events-none" style="background-image: repeating-linear-gradient(45deg, rgba(184,130,109,0.35) 0 1px, transparent 1px 14px);"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-rose/30 via-bone/40 to-sage/20"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-rose/60">
+          <div class="flex flex-col items-center gap-2">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <p class="text-[11px] uppercase tracking-[0.3em] font-medium">Cover photo · full bleed</p>
+          </div>
+        </div>
+        <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-bone via-bone/70 to-transparent"></div>
+      </div>
+      <div class="max-w-4xl mx-auto px-6 -mt-32 md:-mt-48 relative">
+        <p class="text-xs uppercase tracking-[0.4em] text-sage">A long read · {readingMinutes} min</p>
+        <h1 class="font-display text-5xl md:text-7xl lg:text-8xl mt-4 leading-[0.95]">
+          The collagen<br/><em class="text-rose not-italic">question</em>
+        </h1>
+        <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Everyone is selling it. Some of it works. Here is the calm version — what collagen is,
+          what 26 trials say it does, and where the supplement aisle stops being useful.
+        </p>
+        <p class="mt-6 text-xs text-ink/55">By DeAging Europe · Reviewed 10 May 2026</p>
+      </div>
+    </header>
+
+    <!-- BODY -->
+    <div class="max-w-6xl mx-auto px-6 py-16 grid lg:grid-cols-[1fr_220px] gap-12">
+
+      <!-- MAIN -->
+      <main class="min-w-0 max-w-3xl">
+        <!-- Standfirst / Summary -->
+        <section class="mb-12 p-6 bg-white border-l-4 border-rose rounded-r-2xl">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage mb-3">The case in five lines</p>
+          <ol class="space-y-2 text-[15px] leading-relaxed text-ink/80">
+            {keyTakeaways.map((k, i) => (
+              <li class="flex gap-3">
+                <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                <span>{k}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <!-- Hero facts as inline stats -->
+        <section class="mb-16 grid grid-cols-2 sm:grid-cols-4 gap-6 border-y border-ink/15 py-8">
+          {heroFacts.map((f) => (
+            <div>
+              <p class="font-display text-2xl text-rose leading-none">{f.stat}</p>
+              <p class="mt-2 text-xs text-ink/60 leading-snug">{f.label}</p>
+            </div>
+          ))}
+        </section>
+
+        {groups.map((g, gi) => (
+          <section id={g.id} class="scroll-mt-24 mb-20">
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Chapter {String(gi + 1).padStart(2, '0')}</p>
+            <h2 class="font-display text-4xl md:text-5xl mt-2 leading-[1.05]">{g.title}</h2>
+            <p class="mt-3 text-ink/65 italic text-lg">{g.intro}</p>
+
+            {/* Mid-chapter pull quote */}
+            {pullQuotes[g.id] && (
+              <blockquote class="my-10 border-l-4 border-rose pl-6 py-3">
+                <p class="font-display text-2xl md:text-3xl text-ink leading-snug italic">
+                  "{pullQuotes[g.id]}"
+                </p>
+              </blockquote>
+            )}
+
+            {/* For benefits, insert a captioned photo between sections */}
+            {g.id === 'benefits' && (
+              <MediaPlaceholder kind="image" ratio="3/2" label="Editorial portrait" caption="Photo: skin elasticity testing. Replace with commissioned image." class="my-10" tone="bone" />
+            )}
+
+            {/* Video embed in the clinical chapter */}
+            {g.id === 'boost-clinical' && (
+              <MediaPlaceholder kind="video" ratio="16/9" label="Video · 4 min" caption="Inside a fractional laser treatment, narrated by a board-certified dermatologist." class="my-10" tone="rose" />
+            )}
+
+            {g.sections.map((s, si) => (
+              <article id={s.id} class={`scroll-mt-24 mt-10 ${si === 0 ? 'first-section' : ''}`}>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                  {s.evidence && (
+                    <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(s.evidence)}`}>
+                      {evidenceLabels[s.evidence]}
+                    </span>
+                  )}
+                  {s.focus && s.focus !== 'general' && (
+                    <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone text-ink/60 border border-ink/10">
+                      {focusLabels[s.focus]}
+                    </span>
+                  )}
+                </div>
+                <h3 class="font-display text-2xl md:text-3xl leading-tight">{s.title}</h3>
+                <p class="mt-2 text-ink/60 italic text-base">{s.tldr}</p>
+                {s.note && (
+                  <p class="mt-1 text-sm text-ink/50">{s.note}</p>
+                )}
+                <div class="prose-mag mt-4 text-ink/85" set:html={s.bodyHtml}></div>
+              </article>
+            ))}
+          </section>
+        ))}
+
+        <!-- Closing -->
+        <section class="mt-16 p-8 bg-white rounded-2xl border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">References</p>
+          <h2 class="font-display text-3xl mt-2">How this was sourced</h2>
+          <p class="mt-3 text-ink/75 leading-relaxed">
+            All claims cite peer-reviewed studies, major reviews, or clinical-society sources, linked
+            inline within each section. Primary sources include PubMed/NIH NCBI, PMC, AAD, Cleveland
+            Clinic, Mayo Clinic, and peer-reviewed dermatology journals.
+          </p>
+          <p class="mt-4 text-sm text-ink/60 italic">
+            Educational content, not medical advice. Consult a qualified clinician before starting
+            supplements or treatments.
+          </p>
+        </section>
+      </main>
+
+      <!-- RIGHT RAIL TOC -->
+      <aside class="hidden lg:block">
+        <nav class="sticky top-24" aria-label="Table of contents">
+          <p class="text-xs uppercase tracking-[0.2em] text-sage mb-3">In this piece</p>
+          <ol class="space-y-2 text-sm">
+            {groups.map((g, gi) => (
+              <li>
+                <a
+                  href={`#${g.id}`}
+                  class="toc-link block py-1 border-l-2 border-transparent pl-3 text-ink/60 hover:text-rose hover:border-rose/40 transition leading-snug"
+                  data-toc-target={g.id}
+                >
+                  <span class="font-display text-base text-ink/40 mr-1">{String(gi + 1).padStart(2, '0')}</span>
+                  {g.title}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      </aside>
+    </div>
+  </article>
+
+  <style>
+    .cover-hero {
+      aspect-ratio: 21 / 9;
+      max-height: 70vh;
+      min-height: 320px;
+    }
+    /* Drop cap on the very first paragraph of the first article in the first chapter */
+    .first-section .prose-mag :global(p:first-of-type::first-letter) {
+      font-family: var(--font-display);
+      float: left;
+      font-size: 4.5rem;
+      line-height: 0.85;
+      padding: 0.45rem 0.6rem 0 0;
+      color: var(--color-rose);
+    }
+
+    /* Two-column body text on wide screens, only inside .prose-mag */
+    @media (min-width: 1280px) {
+      .prose-mag :global(p) {
+        column-count: 1;
+      }
+    }
+
+    .toc-link.active {
+      color: var(--color-rose);
+      border-color: var(--color-rose);
+      background: rgba(184, 130, 109, 0.05);
+    }
+
+    .prose-mag :global(p) {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      margin-block: 1em;
+      color: rgba(26, 20, 16, 0.85);
+    }
+    .prose-mag :global(p:first-of-type) { margin-top: 0; }
+    .prose-mag :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 3px;
+    }
+    .prose-mag :global(a:hover) { text-decoration-color: var(--color-rose); }
+    .prose-mag :global(h4) { font-size: 1.25rem; margin-top: 1.6em; margin-bottom: 0.4em; font-family: var(--font-display); }
+    .prose-mag :global(ul), .prose-mag :global(ol) { margin-block: 1em; padding-left: 1.5em; }
+    .prose-mag :global(ul) { list-style: disc; }
+    .prose-mag :global(ol) { list-style: decimal; }
+    .prose-mag :global(li) { margin-block: 0.4em; line-height: 1.7; }
+    .prose-mag :global(strong) { color: var(--color-ink); }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionEls = Array.from(document.querySelectorAll('main section[id]'));
+      if (!tocLinks.length || !sectionEls.length || !('IntersectionObserver' in window)) return;
+      const observer = new IntersectionObserver(
+        (entries) => entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            tocLinks.forEach((l) => l.classList.toggle('active', l.getAttribute('data-toc-target') === id));
+          }
+        }),
+        { rootMargin: '-30% 0px -60% 0px', threshold: 0 }
+      );
+      sectionEls.forEach((s) => observer.observe(s));
+    })();
+  </script>
+</BaseLayout>

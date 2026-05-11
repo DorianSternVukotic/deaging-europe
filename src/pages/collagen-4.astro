@@ -1,0 +1,309 @@
+---
+/**
+ * Variation 4 — Problem-first
+ *
+ * Entry by what the user is trying to fix. Big picture buttons up front
+ * (Wrinkles, Joints, Hair & Nails, Bones, Muscle, Heart). Selecting one
+ * reorders & filters the page so the most relevant cards come first.
+ *
+ * Default view (no selection) shows everything sorted by evidence strength.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  heroFacts,
+  groups,
+  evidenceLabels,
+  focusLabels,
+  type Evidence,
+  type FocusArea,
+} from '../data/collagen';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Collagen — what do you want to fix? | DeAging Europe';
+const description = 'Start from the problem. We filter the evidence to what is relevant for you.';
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+// Visible "problem" buttons. These map to one or more focus areas in the data.
+// Tailwind v4 needs full class strings to detect — no string interpolation here.
+type Tone = 'rose' | 'gold' | 'sage';
+const toneClasses: Record<Tone, string> = {
+  rose: 'bg-rose/10 border-rose/20 text-rose',
+  gold: 'bg-gold/10 border-gold/20 text-gold',
+  sage: 'bg-sage/10 border-sage/20 text-sage',
+};
+const problems: { id: string; label: string; tagline: string; focus: FocusArea[]; tone: Tone }[] = [
+  { id: 'wrinkles',    label: 'Wrinkles & sagging',     tagline: 'Skin elasticity, hydration, fine lines',     focus: ['skin'],            tone: 'rose' },
+  { id: 'joints',      label: 'Joint pain & stiffness', tagline: 'Knees, fingers, osteoarthritis support',     focus: ['joints'],          tone: 'gold' },
+  { id: 'hair-nails',  label: 'Hair & nails',           tagline: 'Brittle nails, weaker hair',                 focus: ['hair-nails'],      tone: 'sage' },
+  { id: 'bones',       label: 'Bone strength',          tagline: 'Bone density, post-menopausal',              focus: ['bones'],           tone: 'gold' },
+  { id: 'muscle',      label: 'Muscle & energy',        tagline: 'Sarcopenia, recovery, daily strength',       focus: ['muscle'],          tone: 'rose' },
+  { id: 'heart',       label: 'Heart & arteries',       tagline: 'Arterial flexibility, HDL cholesterol',      focus: ['heart'],           tone: 'sage' },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="collagen-4" type="article">
+  <article class="bg-bone">
+    <!-- HERO + PROBLEM PICKER -->
+    <header class="border-b border-ink/10">
+      <div class="max-w-6xl mx-auto px-6 py-14">
+        <p class="text-xs uppercase tracking-[0.4em] text-sage">Variation 4 · Goal-oriented</p>
+        <h1 class="font-display text-5xl md:text-7xl mt-3 leading-[1.02] max-w-3xl">
+          What do you want<br/>to <em class="text-rose not-italic">fix</em>?
+        </h1>
+        <p class="mt-5 max-w-2xl text-lg text-ink/75">
+          Pick what bothers you. We reorder the evidence so the things most likely to help appear
+          first. Foundational topics — what collagen is, side effects, FAQs — stay visible no
+          matter what you pick.
+        </p>
+
+        <div
+          class="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          role="radiogroup"
+          aria-label="What do you want to fix?"
+        >
+          <button
+            type="button"
+            role="radio"
+            aria-checked="true"
+            data-problem="all"
+            class="problem-btn active text-left p-5 rounded-2xl border-2 border-rose bg-rose/5 hover:bg-rose/10 transition flex flex-col gap-2"
+          >
+            <p class="font-display text-lg leading-tight">Anything &amp; everything</p>
+            <p class="text-sm text-ink/65">Full guide. Sorted by strength of evidence.</p>
+          </button>
+          {problems.map((p) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked="false"
+              data-problem={p.id}
+              data-focus={p.focus.join(',')}
+              class="problem-btn text-left p-5 rounded-2xl border-2 border-ink/10 bg-white hover:border-ink/30 transition flex gap-4 items-center"
+            >
+              <div class={`w-12 h-12 rounded-xl shrink-0 border flex items-center justify-center ${toneClasses[p.tone]}`}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M12 7v5l3 2"/>
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <p class="font-display text-lg leading-tight">{p.label}</p>
+                <p class="text-sm text-ink/60 leading-snug">{p.tagline}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div class="mt-6 flex items-center gap-4 flex-wrap">
+          <p class="text-sm text-ink/60" id="selection-summary">Showing: everything</p>
+          <button id="reset" type="button" class="text-xs underline text-ink/55 hover:text-rose hidden">
+            Reset
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- KEY FACTS -->
+    <section class="bg-white border-b border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {heroFacts.map((f) => (
+          <div>
+            <p class="font-display text-2xl text-rose leading-none">{f.stat}</p>
+            <p class="mt-2 text-xs text-ink/65 leading-snug">{f.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- MAIN: groups iterated, but cards filterable + sortable client-side -->
+    <main class="max-w-6xl mx-auto px-6 py-12">
+      {groups.map((g) => (
+        <section
+          id={g.id}
+          class="group-section mb-14 scroll-mt-24"
+          data-group={g.id}
+        >
+          <div class="flex items-baseline justify-between gap-4 border-b border-ink/10 pb-3 mb-6">
+            <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+            <p class="text-xs uppercase tracking-[0.2em] text-ink/40">
+              <span class="visible-count">{g.sections.length}</span> / {g.sections.length}
+            </p>
+          </div>
+          <p class="text-ink/70 mb-6 italic">{g.intro}</p>
+
+          <div class="card-grid grid md:grid-cols-2 gap-4">
+            {g.sections
+              .slice()
+              .sort((a, b) => (evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']))
+              .map((s) => (
+                <details
+                  id={s.id}
+                  class="card bg-white rounded-2xl border border-ink/5 overflow-hidden open:shadow-md transition"
+                  data-evidence={s.evidence ?? 'none'}
+                  data-focus={s.focus ?? 'general'}
+                  data-rank={evidenceRank[s.evidence ?? 'limited']}
+                >
+                  <summary class="cursor-pointer list-none p-5 hover:bg-bone/40 transition flex items-start gap-3">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex flex-wrap items-center gap-2 mb-2">
+                        {s.evidence && (
+                          <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(s.evidence)}`}>
+                            {evidenceLabels[s.evidence]}
+                          </span>
+                        )}
+                        {s.focus && s.focus !== 'general' && (
+                          <span class="focus-pill text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone text-ink/60 border border-ink/10">
+                            {focusLabels[s.focus]}
+                          </span>
+                        )}
+                      </div>
+                      <h3 class="font-display text-xl leading-tight">{s.title}</h3>
+                      <p class="mt-1.5 text-sm text-ink/70 leading-snug">{s.tldr}</p>
+                    </div>
+                    <span class="caret shrink-0 text-ink/40 mt-1 text-lg">＋</span>
+                  </summary>
+                  <div class="px-5 pb-5 pt-0 prose-card text-ink/85 text-[15px]" set:html={s.bodyHtml}></div>
+                </details>
+              ))}
+          </div>
+        </section>
+      ))}
+    </main>
+
+    <p class="max-w-6xl mx-auto px-6 pb-16 text-xs text-ink/50 italic">
+      Educational content, not medical advice. Consult a qualified clinician before starting
+      supplements or treatments.
+    </p>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+    details[open] .caret { transform: rotate(45deg); }
+    .caret { transition: transform .2s; }
+
+    .problem-btn:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
+    .problem-btn.active {
+      border-color: var(--color-rose);
+      background: rgba(184, 130, 109, 0.07);
+    }
+
+    /* Highlight matching focus pill when a problem is selected */
+    .card.match { box-shadow: 0 0 0 2px var(--color-rose); }
+    .card.dim { opacity: 0.35; }
+
+    .prose-card :global(p) { margin-block: 0.7em; line-height: 1.7; }
+    .prose-card :global(p:first-child) { margin-top: 0; }
+    .prose-card :global(a) { color: var(--color-rose); text-decoration: underline; text-decoration-color: rgba(184,130,109,0.4); }
+    .prose-card :global(h4) { font-size: 1rem; margin-top: 1.2em; margin-bottom: 0.4em; font-weight: 600; }
+    .prose-card :global(ul), .prose-card :global(ol) { margin-block: 0.7em; padding-left: 1.2em; }
+    .prose-card :global(ul) { list-style: disc; }
+    .prose-card :global(ol) { list-style: decimal; }
+    .prose-card :global(li) { margin-block: 0.3em; line-height: 1.65; }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const buttons = Array.from(document.querySelectorAll('.problem-btn'));
+      const cards = Array.from(document.querySelectorAll('.card'));
+      const summary = document.getElementById('selection-summary');
+      const reset = document.getElementById('reset');
+
+      // Foundational focus groups that should always stay visible
+      const foundationalFocus = new Set(['general']);
+      // Group IDs whose cards should always stay visible regardless of focus filter
+      const foundationalGroups = new Set(['basics', 'safety', 'faq', 'loss']);
+
+      function apply(problemId, focusList) {
+        if (problemId === 'all') {
+          cards.forEach((c) => {
+            c.classList.remove('match', 'dim');
+          });
+          document.querySelectorAll('.group-section').forEach((sec) => {
+            sec.style.display = '';
+            const total = sec.querySelectorAll('.card').length;
+            const vc = sec.querySelector('.visible-count');
+            if (vc) vc.textContent = String(total);
+          });
+          summary.textContent = 'Showing: everything';
+          reset.classList.add('hidden');
+          return;
+        }
+
+        const focusSet = new Set(focusList);
+
+        cards.forEach((c) => {
+          const focus = c.getAttribute('data-focus') || 'general';
+          const groupSec = c.closest('.group-section');
+          const groupId = groupSec?.getAttribute('data-group') || '';
+
+          const isMatch = focusSet.has(focus);
+          const isFoundational = foundationalFocus.has(focus) || foundationalGroups.has(groupId);
+
+          c.classList.toggle('match', isMatch);
+          // Keep foundational content visible; just dim cards that don't match and aren't foundational
+          if (!isMatch && !isFoundational) {
+            c.classList.add('dim');
+          } else {
+            c.classList.remove('dim');
+          }
+        });
+
+        // Within each group, move matching cards to the top
+        document.querySelectorAll('.card-grid').forEach((grid) => {
+          const items = Array.from(grid.children);
+          items.sort((a, b) => {
+            const am = a.classList.contains('match') ? 0 : 1;
+            const bm = b.classList.contains('match') ? 0 : 1;
+            if (am !== bm) return am - bm;
+            // Then by evidence rank
+            return parseInt(a.getAttribute('data-rank') || '99') - parseInt(b.getAttribute('data-rank') || '99');
+          });
+          items.forEach((i) => grid.appendChild(i));
+        });
+
+        // Update counts
+        document.querySelectorAll('.group-section').forEach((sec) => {
+          const matches = sec.querySelectorAll('.card.match').length;
+          const total = sec.querySelectorAll('.card').length;
+          const vc = sec.querySelector('.visible-count');
+          if (vc) vc.textContent = matches > 0 ? String(matches) : String(total);
+        });
+
+        const label = buttons.find((b) => b.getAttribute('data-problem') === problemId)?.querySelector('.font-display')?.textContent ?? problemId;
+        summary.textContent = `Showing: ${label} — matching cards highlighted, rest dimmed`;
+        reset.classList.remove('hidden');
+      }
+
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          buttons.forEach((b) => {
+            b.classList.remove('active');
+            b.setAttribute('aria-checked', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-checked', 'true');
+          const pid = btn.getAttribute('data-problem');
+          const focus = (btn.getAttribute('data-focus') || '').split(',').filter(Boolean);
+          apply(pid, focus);
+        });
+      });
+
+      reset?.addEventListener('click', () => {
+        buttons[0].click();
+      });
+    })();
+  </script>
+</BaseLayout>

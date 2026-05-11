@@ -1,0 +1,697 @@
+---
+/**
+ * Variation 5 — Recommended hybrid (the synthesis)
+ *
+ * Why this design for this content:
+ *
+ *  1. Collagen has a HUGE evidence-quality variance (gold-standard retinoids vs.
+ *     "maybe" microcurrent). Evidence should be the primary visual signal, not
+ *     an afterthought — hence the evidence-strength overview chart up top.
+ *
+ *  2. Three legitimate user types: the skimmer, the problem-haver, the deep-
+ *     diver. We don't pick one. "Choose your path" is shown upfront with three
+ *     entries; the rest of the page works for all three.
+ *
+ *  3. Many therapies/products are essentially commercial offerings (Sculptra,
+ *     Thermage, brand-name lasers). Comparison tables fit them better than
+ *     accordions — comparison wants everything visible side by side.
+ *
+ *  4. Visual content matters disproportionately (before/after, procedure
+ *     videos, anatomy diagrams). We reserve dedicated media slots.
+ *
+ *  5. Sticky TOC + scroll-spy as the spine (works for skimmers AND deep
+ *     readers). All content lives in the DOM (native <details>) so it's
+ *     skimmable, searchable, AI-indexable, printable.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  heroFacts,
+  keyTakeaways,
+  groups,
+  evidenceLabels,
+  focusLabels,
+  allSections,
+  type Evidence,
+  type FocusArea,
+} from '../data/collagen';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Collagen — the complete guide | DeAging Europe';
+const description =
+  'Skim it in 3 minutes, dig into a specific concern, or read every page. Evidence-graded, with comparison tables for products and clinical treatments.';
+
+const stripTags = (html: string) =>
+  html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const totalWords = allSections()
+  .map((s) => stripTags(s.bodyHtml).split(/\s+/).length)
+  .reduce((a, b) => a + b, 0);
+const readingMinutes = Math.max(1, Math.round(totalWords / 220));
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+// Evidence-strength chart — one row per intervention that has an evidence rating.
+// 4 strong / 3 moderate / 2 emerging / 1 limited.
+const evidenceWidth: Record<Evidence, number> = { strong: 100, moderate: 75, emerging: 50, limited: 25 };
+const chartItems = allSections()
+  .filter((s) => s.evidence)
+  .map((s) => ({ id: s.id, title: s.title, evidence: s.evidence!, focus: s.focus ?? 'general' }))
+  .sort((a, b) => evidenceRank[a.evidence] - evidenceRank[b.evidence]);
+
+const allFocus: FocusArea[] = [
+  'skin', 'joints', 'bones', 'muscle', 'heart', 'hair-nails', 'gut', 'brain', 'weight',
+];
+
+// Therapies — for the comparison table
+const therapyGroup = groups.find((g) => g.id === 'boost-clinical');
+const therapyRows = therapyGroup?.sections.map((s) => {
+  // Extract structured bits from the prose. (For a real product I'd move
+  // these out of bodyHtml into typed fields — here we shape display only.)
+  const body = stripTags(s.bodyHtml);
+  const sessions = body.match(/(\d+\s*[-–]\s*\d+|single|one)\s*(sessions?|treatments?|session)/i)?.[0] ?? '—';
+  const downtime = body.match(/(\d+\s*[-–]\s*\d+)\s*days?\s*(of|downtime|redness)?/i)?.[0]
+    ?? body.match(/zero (?:to|or) minimal downtime/i)?.[0]
+    ?? body.match(/little to no downtime/i)?.[0]
+    ?? '—';
+  return {
+    id: s.id,
+    title: s.title,
+    tldr: s.tldr,
+    note: s.note,
+    evidence: s.evidence!,
+    sessions: sessions.replace(/typically|usually/i, '').trim(),
+    downtime: downtime.trim(),
+  };
+}) ?? [];
+
+// Topical product comparison
+const topicalGroup = groups.find((g) => g.id === 'boost-topical');
+const topicalRows = topicalGroup?.sections
+  .filter((s) => s.note && s.note.toLowerCase().includes('top'))
+  .map((s) => ({
+    id: s.id,
+    title: s.title,
+    tldr: s.tldr,
+    evidence: s.evidence!,
+    product: s.note?.replace(/^Top (pick|device):\s*/i, '') ?? '',
+  })) ?? [];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="collagen-5" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-end">
+        <div>
+          <p class="text-xs uppercase tracking-[0.4em] text-sage">Recommended · Variation 5</p>
+          <h1 class="font-display text-5xl md:text-7xl mt-4 leading-[1.02] max-w-3xl">
+            Collagen, end&#8209;to&#8209;end<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            What it is, what supplements actually do, and which clinical treatments stimulate new
+            collagen. Skim the summaries; the evidence is one tap deeper.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 10 May 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ "CHOOSE YOUR PATH" ════════════ -->
+    <section class="bg-white border-b border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-10">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">Where to start</p>
+        <h2 class="font-display text-2xl md:text-3xl mt-2 mb-6">Choose your path</h2>
+        <div class="grid sm:grid-cols-3 gap-4">
+          <a href="#takeaways" class="path-card group p-5 rounded-2xl border-2 border-ink/10 hover:border-rose/60 hover:shadow-md transition flex flex-col gap-2 bg-bone/40">
+            <div class="w-10 h-10 rounded-full bg-rose/15 text-rose flex items-center justify-center font-display text-xl">3</div>
+            <p class="font-display text-xl leading-tight mt-1">Skim it in 3 minutes</p>
+            <p class="text-sm text-ink/65 leading-snug">Five takeaways, four key stats, the evidence chart. Enough to make a decision.</p>
+            <span class="text-xs text-rose font-medium mt-auto pt-2">Jump to summary →</span>
+          </a>
+          <a href="#fix" class="path-card group p-5 rounded-2xl border-2 border-ink/10 hover:border-rose/60 hover:shadow-md transition flex flex-col gap-2 bg-bone/40">
+            <div class="w-10 h-10 rounded-full bg-sage/15 text-sage flex items-center justify-center font-display text-xl">?</div>
+            <p class="font-display text-xl leading-tight mt-1">I have a specific concern</p>
+            <p class="text-sm text-ink/65 leading-snug">Filter the page to what's relevant for skin, joints, bones, hair, or muscle.</p>
+            <span class="text-xs text-rose font-medium mt-auto pt-2">Pick a concern →</span>
+          </a>
+          <a href="#basics" class="path-card group p-5 rounded-2xl border-2 border-ink/10 hover:border-rose/60 hover:shadow-md transition flex flex-col gap-2 bg-bone/40">
+            <div class="w-10 h-10 rounded-full bg-gold/15 text-gold flex items-center justify-center font-display text-xl">∞</div>
+            <p class="font-display text-xl leading-tight mt-1">Read the whole thing</p>
+            <p class="text-sm text-ink/65 leading-snug">Start from "what is collagen?" and read end to end. ~{readingMinutes} minutes.</p>
+            <span class="text-xs text-rose font-medium mt-auto pt-2">Start at chapter 1 →</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ FILTER BAR (sticky) ════════════ -->
+    <div
+      id="control-bar"
+      class="sticky z-30 bg-bone/95 backdrop-blur border-b border-ink/10"
+      style="top: var(--header-h, 60px);"
+    >
+      <div class="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap">
+        <span class="text-xs uppercase tracking-[0.2em] text-ink/60 shrink-0">I care about</span>
+        <div class="flex gap-1.5 items-center overflow-x-auto scrollbar-hide" role="group">
+          <button type="button" data-focus="all" aria-pressed="true" class="filter-chip active text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-ink text-bone whitespace-nowrap">Anything</button>
+          {allFocus.map((f) => (
+            <button type="button" data-focus={f} aria-pressed="false" class="filter-chip text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-white hover:border-ink/40 transition whitespace-nowrap">{focusLabels[f]}</button>
+          ))}
+        </div>
+        <div class="ml-auto flex items-center gap-2">
+          <button id="toggle-all" type="button" class="text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-white hover:border-ink/40 transition shrink-0 whitespace-nowrap" data-state="closed">
+            Expand all
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + STATS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-[1fr_2fr] gap-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">By the numbers</p>
+        <h2 class="font-display text-3xl mt-2">Key facts</h2>
+        <dl class="mt-5 space-y-5">
+          {heroFacts.map((f) => (
+            <div class="border-l-2 border-rose/60 pl-4">
+              <dt class="font-display text-2xl text-rose leading-none">{f.stat}</dt>
+              <dd class="mt-1 text-sm text-ink/70 leading-snug">{f.label}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- ════════════ EVIDENCE OVERVIEW CHART ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">Evidence at a glance</p>
+        <h2 class="font-display text-3xl md:text-4xl mt-2">What's solid, what's speculative</h2>
+        <p class="mt-2 text-ink/65 max-w-2xl">
+          Every intervention in this guide rated on the strength of its supporting evidence. Hover
+          or tap a row to jump to the full discussion.
+        </p>
+
+        <div class="mt-8 grid md:grid-cols-2 gap-x-10 gap-y-1">
+          {chartItems.map((c) => (
+            <a href={`#${c.id}`} class="chart-row group flex items-center gap-3 py-2 hover:bg-bone/60 px-2 -mx-2 rounded transition">
+              <div class="w-32 md:w-40 shrink-0 text-sm text-ink/85 truncate group-hover:text-rose">{c.title}</div>
+              <div class="flex-1 h-2 bg-ink/5 rounded-full relative overflow-hidden">
+                <div
+                  class={`absolute inset-y-0 left-0 rounded-full ${
+                    c.evidence === 'strong' ? 'bg-sage' :
+                    c.evidence === 'moderate' ? 'bg-gold' :
+                    c.evidence === 'emerging' ? 'bg-rose' :
+                    'bg-ink/25'
+                  }`}
+                  style={`width: ${evidenceWidth[c.evidence]}%;`}
+                ></div>
+              </div>
+              <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full shrink-0 ${evidencePillClass(c.evidence)}`}>
+                {c.evidence}
+              </span>
+            </a>
+          ))}
+        </div>
+
+        <div class="mt-8 flex flex-wrap items-center gap-6 text-xs text-ink/60">
+          <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sage"></span> Strong: multiple RCTs / meta-analyses</span>
+          <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-gold"></span> Moderate: trials with positive signal</span>
+          <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose"></span> Emerging: a few promising studies</span>
+          <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-ink/25"></span> Limited: anecdotal or mixed</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ PROBLEM PICKER ════════════ -->
+    <section id="fix" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12">
+      <p class="text-xs uppercase tracking-[0.3em] text-sage">Goal-oriented entry</p>
+      <h2 class="font-display text-3xl md:text-4xl mt-2">What are you trying to fix?</h2>
+      <p class="mt-2 text-ink/65 max-w-2xl">Tap a concern. The filter chips above will update, and the relevant cards in the guide below will move to the top.</p>
+      <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {(
+          [
+            { f: 'skin', label: 'Wrinkles & skin' },
+            { f: 'joints', label: 'Joint stiffness' },
+            { f: 'bones', label: 'Bone density' },
+            { f: 'muscle', label: 'Muscle mass' },
+            { f: 'heart', label: 'Heart & arteries' },
+            { f: 'hair-nails', label: 'Hair & nails' },
+          ] as { f: FocusArea; label: string }[]
+        ).map((p) => (
+          <button type="button" class="quick-filter p-4 bg-white border border-ink/10 rounded-2xl hover:border-rose hover:shadow-md transition text-left" data-quick-focus={p.f}>
+            <p class="font-display text-base leading-tight">{p.label}</p>
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <!-- ════════════ MAIN LAYOUT: TOC + CONTENT ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-[220px_1fr] gap-10">
+
+      <!-- STICKY TOC -->
+      <aside class="hidden lg:block">
+        <nav class="sticky top-[140px]" aria-label="Table of contents">
+          <p class="text-xs uppercase tracking-[0.2em] text-sage mb-3">Contents</p>
+          <ol class="space-y-2 text-sm">
+            {groups.map((g, i) => (
+              <li>
+                <a href={`#${g.id}`} class="toc-link block py-1 border-l-2 border-transparent pl-3 text-ink/60 hover:text-rose hover:border-rose/40 transition" data-toc-target={g.id}>
+                  <span class="font-display text-base text-ink/40 mr-2">{String(i + 1).padStart(2, '0')}</span>
+                  {g.title}
+                </a>
+              </li>
+            ))}
+            <li class="pt-3"><a href="#compare-clinical" class="block text-xs uppercase tracking-widest text-ink/40 hover:text-rose">Clinical comparison</a></li>
+            <li><a href="#compare-topical" class="block text-xs uppercase tracking-widest text-ink/40 hover:text-rose">Topical picks</a></li>
+            <li><a href="#routine" class="block text-xs uppercase tracking-widest text-ink/40 hover:text-rose">Build a routine</a></li>
+          </ol>
+        </nav>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <div id="guide-body" class="min-w-0">
+        {groups.map((g, gi) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(gi + 1).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>
+
+            {/* Featured media for high-impact sections */}
+            {g.id === 'basics' && (
+              <div class="mt-6">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" caption="What collagen looks like under a microscope, and why fragmentation matters." tone="sage" />
+              </div>
+            )}
+            {g.id === 'boost-clinical' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Inside a fractional laser session" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Before / after grid" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 space-y-4">
+              {g.sections
+                .slice()
+                .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited'])
+                .map((s) => (
+                  <details
+                    id={s.id}
+                    class="card group bg-white rounded-2xl border border-ink/5 shadow-sm overflow-hidden scroll-mt-32 open:shadow-md transition"
+                    data-evidence={s.evidence ?? 'none'}
+                    data-focus={s.focus ?? 'general'}
+                    data-rank={evidenceRank[s.evidence ?? 'limited']}
+                  >
+                    <summary class="cursor-pointer list-none p-5 md:p-6 flex items-start gap-4 hover:bg-bone/40 transition">
+                      <div class="flex-1 min-w-0">
+                        {(s.evidence || (s.focus && s.focus !== 'general')) && (
+                          <div class="flex flex-wrap items-center gap-2 mb-2">
+                            {s.evidence && (
+                              <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(s.evidence)}`}>
+                                {evidenceLabels[s.evidence]}
+                              </span>
+                            )}
+                            {s.focus && s.focus !== 'general' && (
+                              <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone text-ink/60 border border-ink/10">
+                                {focusLabels[s.focus]}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <h3 class="font-display text-xl md:text-2xl leading-tight">{s.title}</h3>
+                        <p class="mt-2 text-ink/70 text-[15px] leading-relaxed">{s.tldr}</p>
+                        {s.note && <p class="mt-2 text-xs text-ink/55 italic">{s.note}</p>}
+                      </div>
+                      <span class="caret shrink-0 mt-1 w-8 h-8 rounded-full bg-bone flex items-center justify-center text-ink/60 group-open:bg-rose group-open:text-bone transition" aria-hidden="true">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-45">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      </span>
+                    </summary>
+
+                    <div class="card-body px-6 pb-6 pt-0 grid md:grid-cols-[1fr_auto] gap-6 items-start">
+                      <div class="prose-anti text-ink/85" set:html={s.bodyHtml}></div>
+                      {(g.id === 'boost-clinical' || g.id === 'boost-topical') && (
+                        <div class="md:w-56 shrink-0">
+                          <MediaPlaceholder kind="image" ratio="4/5" label={s.title} tone={g.id === 'boost-clinical' ? 'rose' : 'gold'} />
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CLINICAL COMPARISON TABLE ════════════ -->
+        <section id="compare-clinical" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Side by side</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Clinical treatments compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Sessions, downtime, and evidence — at a glance. Click a row to jump to the full discussion.</p>
+
+          <div class="mt-6 -mx-6 md:-mx-8 overflow-x-auto">
+            <table class="w-full text-sm min-w-[720px]">
+              <thead>
+                <tr class="text-left text-xs uppercase tracking-widest text-ink/50 border-b border-ink/10">
+                  <th class="py-3 px-6 md:px-8 font-medium">Treatment</th>
+                  <th class="py-3 px-3 font-medium">Sessions</th>
+                  <th class="py-3 px-3 font-medium">Downtime</th>
+                  <th class="py-3 px-3 font-medium">Evidence</th>
+                  <th class="py-3 px-3 font-medium">Best for</th>
+                </tr>
+              </thead>
+              <tbody>
+                {therapyRows.map((r) => (
+                  <tr class="border-b border-ink/5 hover:bg-bone/40 transition">
+                    <td class="py-4 px-6 md:px-8 align-top">
+                      <a href={`#${r.id}`} class="font-display text-base hover:text-rose">{r.title}</a>
+                      <p class="text-xs text-ink/55 leading-snug mt-1 max-w-xs">{r.tldr}</p>
+                    </td>
+                    <td class="py-4 px-3 align-top text-ink/80 whitespace-nowrap">{r.sessions}</td>
+                    <td class="py-4 px-3 align-top text-ink/80 whitespace-nowrap">{r.downtime}</td>
+                    <td class="py-4 px-3 align-top">
+                      <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>
+                        {r.evidence}
+                      </span>
+                    </td>
+                    <td class="py-4 px-3 align-top text-xs text-ink/65 max-w-[180px]">{r.note?.replace(/^Best for:\s*/i, '') ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ════════════ TOPICAL PRODUCT TABLE ════════════ -->
+        <section id="compare-topical" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Daily-care picks</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Topical products by evidence</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Our editorial picks for each topical category. Not affiliate, not exhaustive — anchors for further reading.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {topicalRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.title}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.tldr}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Top pick: {r.product}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ BUILD-A-ROUTINE ════════════ -->
+        <section id="routine" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Build your collagen routine</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Pick one option from each row. Your daily stack appears below. Saved to your browser only.</p>
+
+          <div class="mt-8 space-y-6" id="routine-builder">
+            {[
+              { key: 'sun', label: 'Morning · Sunscreen', evidence: 'strong', opts: ['Mineral SPF 50', 'Chemical SPF 30', 'Tinted physical', 'None — high regret'] },
+              { key: 'vitc', label: 'Morning · Vitamin C', evidence: 'strong', opts: ['L-ascorbic 15%', 'Ascorbyl glucoside', 'None'] },
+              { key: 'collagen', label: 'Anytime · Oral collagen', evidence: 'strong', opts: ['Bovine 10g', 'Marine 10g', 'Chicken (type II)', 'Skip — eat bone broth'] },
+              { key: 'retinoid', label: 'Night · Retinoid', evidence: 'strong', opts: ['Rx tretinoin 0.025%', 'OTC retinol 0.3–1%', 'Retinaldehyde', 'None — first 4 weeks'] },
+              { key: 'extra', label: 'Optional support', evidence: 'moderate', opts: ['Hyaluronic acid', 'Niacinamide 5%', 'LED red light', 'Peptide serum'] },
+            ].map((row) => (
+              <div class="routine-row" data-key={row.key}>
+                <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                  <p class="font-display text-lg">{row.label}</p>
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(row.evidence as Evidence)}`}>{row.evidence}</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  {row.opts.map((opt) => (
+                    <button type="button" data-opt={opt} class="routine-opt text-sm px-3 py-1.5 rounded-full border border-ink/15 bg-white hover:border-rose transition">{opt}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div id="routine-summary" class="mt-10 p-6 bg-white rounded-xl border border-ink/10">
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Your stack</p>
+            <p id="routine-empty" class="mt-3 text-ink/60 italic">Pick at least one option above to see your routine.</p>
+            <ul id="routine-list" class="mt-3 space-y-2 hidden text-[15px]"></ul>
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References & further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, major reviews, or clinical-society sources, linked
+            inline within each section. Primary sources: PubMed/NIH NCBI, PMC, AAD, Cleveland Clinic,
+            Mayo Clinic, peer-reviewed dermatology journals.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Talk to a qualified clinician before starting
+          supplements or treatments, especially during pregnancy, breastfeeding, while on
+          medications, or with a chronic condition.
+        </p>
+      </div>
+    </div>
+
+    <!-- ════════════ CLINICIAN CTA ════════════ -->
+    <div class="sticky bottom-4 z-30 max-w-6xl mx-auto px-6 pointer-events-none">
+      <div class="ml-auto max-w-md p-4 bg-ink text-bone rounded-2xl shadow-2xl flex items-center justify-between gap-3 pointer-events-auto hidden md:flex">
+        <p class="text-sm">Want personalized advice? <span class="text-bone/70">Speak with a clinician.</span></p>
+        <a href="#" class="text-xs px-3 py-1.5 rounded-full bg-rose text-bone font-medium hover:bg-rose/90 transition whitespace-nowrap">Book a call</a>
+      </div>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    .filter-chip.active {
+      background: var(--color-ink);
+      color: var(--color-bone);
+      border-color: var(--color-ink);
+    }
+    .filter-chip:focus-visible,
+    #toggle-all:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: 2px;
+    }
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .toc-link.active {
+      color: var(--color-rose);
+      border-color: var(--color-rose);
+      background: rgba(184, 130, 109, 0.05);
+    }
+
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { scrollbar-width: none; }
+
+    .card.match { box-shadow: 0 0 0 2px rgba(184,130,109,0.5); }
+    .card.dim { opacity: 0.4; }
+    .card.filtered-out { display: none; }
+
+    .routine-opt.active {
+      background: var(--color-rose);
+      color: var(--color-bone);
+      border-color: var(--color-rose);
+    }
+
+    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
+    .prose-anti :global(p:first-child) { margin-top: 0; }
+    .prose-anti :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
+    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
+    .prose-anti :global(ul) { list-style: disc; }
+    .prose-anti :global(ol) { list-style: decimal; }
+    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      #control-bar, aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      // 1. Chrome measurement for sticky math
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        const bar = document.getElementById('control-bar');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', (bar?.getBoundingClientRect().height || 56) + 'px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      // 2. Focus filter
+      let activeFocus = 'all';
+      function applyFilter() {
+        const cards = guideBody.querySelectorAll('.card');
+        cards.forEach((c) => {
+          const fc = c.getAttribute('data-focus') || 'general';
+          const match = activeFocus === 'all' || fc === activeFocus;
+          const foundational = fc === 'general';
+          c.classList.toggle('match', match && activeFocus !== 'all');
+          c.classList.toggle('dim', activeFocus !== 'all' && !match && !foundational);
+        });
+        // Reorder matches to top within each group
+        document.querySelectorAll('.card-grid').forEach((grid) => {
+          const items = Array.from(grid.children);
+          items.sort((a, b) => {
+            const am = a.classList.contains('match') ? 0 : 1;
+            const bm = b.classList.contains('match') ? 0 : 1;
+            if (am !== bm) return am - bm;
+            return parseInt(a.getAttribute('data-rank') || '99') - parseInt(b.getAttribute('data-rank') || '99');
+          });
+          items.forEach((i) => grid.appendChild(i));
+        });
+      }
+
+      function setActiveChip(value) {
+        document.querySelectorAll('[data-focus]').forEach((b) => {
+          const on = b.getAttribute('data-focus') === value;
+          b.classList.toggle('active', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      }
+
+      document.querySelectorAll('[data-focus]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activeFocus = btn.getAttribute('data-focus') || 'all';
+          setActiveChip(activeFocus);
+          applyFilter();
+        });
+      });
+
+      // Quick-filter buttons in problem picker
+      document.querySelectorAll('[data-quick-focus]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activeFocus = btn.getAttribute('data-quick-focus') || 'all';
+          setActiveChip(activeFocus);
+          applyFilter();
+          // Scroll to first matching group
+          const firstMatch = document.querySelector('.card.match');
+          if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      // 3. Expand/collapse all
+      const toggle = document.getElementById('toggle-all');
+      const allCards = Array.from(document.querySelectorAll('#guide-body details.card'));
+      function setLabel() {
+        const allOpen = allCards.every((c) => c.hasAttribute('open'));
+        toggle.setAttribute('data-state', allOpen ? 'open' : 'closed');
+        toggle.textContent = allOpen ? 'Collapse all' : 'Expand all';
+      }
+      if (toggle) {
+        toggle.addEventListener('click', () => {
+          const state = toggle.getAttribute('data-state');
+          const open = state !== 'open';
+          allCards.forEach((d) => open ? d.setAttribute('open', '') : d.removeAttribute('open'));
+          setLabel();
+        });
+        allCards.forEach((d) => d.addEventListener('toggle', setLabel));
+      }
+
+      // 4. Hash deep-link: open targeted <details>
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+
+      // 5. Scroll-spy on TOC
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionEls = Array.from(document.querySelectorAll('#guide-body > section[id]'));
+      if (sectionEls.length && tocLinks.length && 'IntersectionObserver' in window) {
+        const obs = new IntersectionObserver(
+          (entries) => entries.forEach((e) => {
+            if (e.isIntersecting) {
+              tocLinks.forEach((l) => l.classList.toggle('active', l.getAttribute('data-toc-target') === e.target.id));
+            }
+          }),
+          { rootMargin: '-30% 0px -60% 0px', threshold: 0 }
+        );
+        sectionEls.forEach((s) => obs.observe(s));
+      }
+
+      // 6. Routine builder
+      const builder = document.getElementById('routine-builder');
+      const list = document.getElementById('routine-list');
+      const empty = document.getElementById('routine-empty');
+      const selected = {};
+      builder?.querySelectorAll('.routine-opt').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const row = btn.closest('.routine-row');
+          const key = row.getAttribute('data-key');
+          row.querySelectorAll('.routine-opt').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          selected[key] = { label: row.querySelector('p').textContent, choice: btn.getAttribute('data-opt') };
+          renderRoutine();
+        });
+      });
+      function renderRoutine() {
+        const items = Object.values(selected);
+        if (!items.length) {
+          empty.classList.remove('hidden');
+          list.classList.add('hidden');
+          return;
+        }
+        empty.classList.add('hidden');
+        list.classList.remove('hidden');
+        list.innerHTML = items
+          .map((i) => `<li class="flex justify-between gap-3 border-b border-ink/5 py-2 last:border-0"><span class="text-ink/60 text-sm">${i.label}</span><span class="font-medium">${i.choice}</span></li>`)
+          .join('');
+      }
+    })();
+  </script>
+</BaseLayout>

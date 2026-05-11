@@ -1,0 +1,260 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  heroFacts,
+  keyTakeaways,
+  groups,
+  evidenceLabels,
+  focusLabels,
+  allSections,
+  type Evidence,
+} from '../data/collagen';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Collagen — long-form encyclopedia | DeAging Europe';
+const description =
+  'The same evidence base, fully expanded. A Wikipedia-style read of everything we know about collagen for anti-aging.';
+
+const stripTags = (html: string) =>
+  html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+// Article + FAQ JSON-LD
+const faqSections = groups.find((g) => g.id === 'faq')?.sections ?? [];
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Collagen — long-form encyclopedia',
+  description,
+  inLanguage: 'en',
+  author: { '@type': 'Organization', name: 'DeAging Europe' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'DeAging Europe',
+    logo: { '@type': 'ImageObject', url: '/og-default.png' },
+  },
+  datePublished: '2026-05-10',
+  dateModified: '2026-05-10',
+  about: { '@type': 'Substance', name: 'Collagen' },
+  articleSection: groups.map((g) => g.title),
+};
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqSections.map((s) => ({
+    '@type': 'Question',
+    name: s.title,
+    acceptedAnswer: { '@type': 'Answer', text: stripTags(s.bodyHtml) },
+  })),
+};
+
+const totalWords = allSections()
+  .map((s) => stripTags(s.bodyHtml).split(/\s+/).length)
+  .reduce((a, b) => a + b, 0);
+const readingMinutes = Math.max(1, Math.round(totalWords / 220));
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  locale={locale}
+  path="collagen-deep"
+  type="article"
+  jsonLd={[articleJsonLd, faqJsonLd]}
+>
+  <article class="bg-bone">
+    <!-- HERO -->
+    <header class="border-b border-ink/10">
+      <div class="max-w-5xl mx-auto px-6 py-12 md:py-16">
+        <p class="text-xs uppercase tracking-[0.4em] text-sage">Encyclopedia</p>
+        <h1 class="font-display text-4xl md:text-6xl mt-4 leading-tight">
+          Collagen: a complete reference
+        </h1>
+        <p class="mt-4 max-w-3xl text-lg text-ink/75 leading-relaxed">
+          The same evidence base as our drawer-based guide, but fully expanded for end-to-end
+          reading. Use the table of contents on the left to jump.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 10 May 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <!-- Quick stats inline -->
+        <dl class="mt-8 grid sm:grid-cols-4 gap-4 max-w-3xl">
+          {heroFacts.map((f) => (
+            <div class="border-l-2 border-rose/60 pl-3">
+              <dt class="font-display text-2xl text-rose leading-none">{f.stat}</dt>
+              <dd class="mt-1 text-xs text-ink/60 leading-snug">{f.label}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </header>
+
+    <!-- LAYOUT: TOC + CONTENT -->
+    <div class="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-[240px_1fr] gap-12">
+
+      <!-- TOC -->
+      <aside class="hidden lg:block">
+        <nav class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2" aria-label="Table of contents">
+          <p class="text-xs uppercase tracking-[0.2em] text-sage mb-3">Contents</p>
+          <ol class="space-y-3 text-sm">
+            {groups.map((g, gi) => (
+              <li>
+                <a
+                  href={`#${g.id}`}
+                  class="toc-link block py-1 border-l-2 border-transparent pl-3 text-ink hover:text-rose hover:border-rose/40 transition font-medium"
+                  data-toc-target={g.id}
+                >
+                  <span class="font-display text-ink/40 mr-2">{String(gi + 1).padStart(2, '0')}</span>
+                  {g.title}
+                </a>
+                <ol class="mt-1 space-y-1 ml-3 border-l border-ink/10 pl-3">
+                  {g.sections.map((s) => (
+                    <li>
+                      <a
+                        href={`#${s.id}`}
+                        class="toc-sublink block py-0.5 text-xs text-ink/55 hover:text-rose transition leading-snug"
+                        data-toc-target={s.id}
+                      >{s.title}</a>
+                    </li>
+                  ))}
+                </ol>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="min-w-0 max-w-3xl">
+        <!-- Lead summary -->
+        <section class="bg-white border border-ink/5 rounded-2xl p-6 mb-12 shadow-sm">
+          <h2 class="font-display text-2xl">Summary</h2>
+          <ol class="mt-4 space-y-3">
+            {keyTakeaways.map((k, i) => (
+              <li class="flex gap-3 text-ink/80 text-[15px] leading-relaxed">
+                <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+                <span>{k}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {groups.map((g, gi) => (
+          <section id={g.id} class="scroll-mt-24 mb-16">
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(gi + 1).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2 border-b border-ink/10 pb-3">{g.title}</h2>
+            <p class="mt-3 text-ink/70 italic">{g.intro}</p>
+
+            {g.sections.map((s) => (
+              <section id={s.id} class="scroll-mt-24 mt-10">
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                  {s.evidence && (
+                    <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(s.evidence)}`}>
+                      {evidenceLabels[s.evidence]}
+                    </span>
+                  )}
+                  {s.focus && s.focus !== 'general' && (
+                    <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone text-ink/60 border border-ink/10">
+                      {focusLabels[s.focus]}
+                    </span>
+                  )}
+                </div>
+                <h3 class="font-display text-2xl md:text-3xl leading-tight">{s.title}</h3>
+                <p class="mt-2 text-ink/70 italic">{s.tldr}</p>
+                {s.note && (
+                  <p class="mt-1 text-sm text-ink/55">{s.note}</p>
+                )}
+                <div class="prose-anti mt-4 text-ink/85 leading-relaxed" set:html={s.bodyHtml}></div>
+              </section>
+            ))}
+          </section>
+        ))}
+
+        <!-- References -->
+        <section id="references" class="scroll-mt-24 bg-white rounded-2xl p-8 border border-ink/5 mt-16">
+          <h2 class="font-display text-3xl">References</h2>
+          <p class="mt-2 text-ink/70">
+            All claims cite peer-reviewed studies, major reviews, or clinical-society sources linked
+            inline within each section. Primary sources include PubMed/NIH NCBI, PMC, AAD, Cleveland
+            Clinic, Mayo Clinic, and peer-reviewed dermatology journals.
+          </p>
+          <p class="mt-4 text-sm text-ink/60">
+            Want the same content with collapsible drawers and filter chips? Use the
+            <a href="/collagen" class="text-rose underline">drawer-based guide</a>.
+          </p>
+        </section>
+
+        <p class="mt-12 text-xs text-ink/50 italic">
+          Educational content, not medical advice. Consult a qualified clinician before starting
+          supplements or treatments.
+        </p>
+      </main>
+    </div>
+  </article>
+
+  <style>
+    .toc-link.active,
+    .toc-sublink.active {
+      color: var(--color-rose);
+      border-color: var(--color-rose);
+    }
+    .toc-link.active { background: rgba(184, 130, 109, 0.06); }
+
+    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.75; }
+    .prose-anti :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .prose-anti :global(a:hover) { text-decoration-color: var(--color-rose); }
+    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
+    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
+    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
+    .prose-anti :global(ul) { list-style: disc; }
+    .prose-anti :global(ol) { list-style: decimal; }
+
+    /* Print-friendly */
+    @media print {
+      aside { display: none !important; }
+      header { border: 0 !important; }
+      .scroll-mt-24 { scroll-margin: 0; }
+      details { break-inside: avoid; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const tocLinks = document.querySelectorAll('.toc-link, .toc-sublink');
+      const allTargets = Array.from(document.querySelectorAll('main section[id]'));
+      if (!tocLinks.length || !allTargets.length || !('IntersectionObserver' in window)) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const id = entry.target.id;
+              tocLinks.forEach((l) => {
+                l.classList.toggle('active', l.getAttribute('data-toc-target') === id);
+              });
+            }
+          });
+        },
+        { rootMargin: '-25% 0px -65% 0px', threshold: 0 }
+      );
+      allTargets.forEach((s) => observer.observe(s));
+    })();
+  </script>
+</BaseLayout>

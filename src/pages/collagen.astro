@@ -1,0 +1,645 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  heroFacts,
+  keyTakeaways,
+  groups,
+  evidenceLabels,
+  focusLabels,
+  allSections,
+  type Evidence,
+  type FocusArea,
+} from '../data/collagen';
+
+const locale = DEFAULT_LOCALE;
+
+const title = 'The definitive guide to collagen for anti-aging | DeAging Europe';
+const description =
+  'Authoritative, evidence-ranked guide to collagen: what it is, what supplements actually do, how to slow loss, and which clinical and at-home treatments stimulate new collagen.';
+
+// ---------------------------------------------------------------------------
+// JSON-LD — Article + FAQPage + MedicalWebPage
+// ---------------------------------------------------------------------------
+
+const faqSections = groups.find((g) => g.id === 'faq')?.sections ?? [];
+
+const stripTags = (html: string) =>
+  html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'The definitive guide to collagen for anti-aging',
+  description,
+  inLanguage: 'en',
+  author: { '@type': 'Organization', name: 'DeAging Europe' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'DeAging Europe',
+    logo: { '@type': 'ImageObject', url: '/og-default.png' },
+  },
+  datePublished: '2026-05-10',
+  dateModified: '2026-05-10',
+  about: { '@type': 'Substance', name: 'Collagen' },
+  articleSection: groups.map((g) => g.title),
+};
+
+const medicalJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MedicalWebPage',
+  name: 'The definitive guide to collagen for anti-aging',
+  description,
+  audience: { '@type': 'PeopleAudience', audienceType: 'Adults' },
+  about: {
+    '@type': 'Substance',
+    name: 'Collagen',
+    description:
+      'The most abundant structural protein in the human body — major component of skin, bone, cartilage, tendons, and arteries.',
+  },
+  lastReviewed: '2026-05-10',
+};
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqSections.map((s) => ({
+    '@type': 'Question',
+    name: s.title,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: stripTags(s.bodyHtml),
+    },
+  })),
+};
+
+// ---------------------------------------------------------------------------
+// Reading-time estimate (avg 220 wpm, plain-text body)
+// ---------------------------------------------------------------------------
+const totalWords = allSections()
+  .map((s) => stripTags(s.bodyHtml).split(/\s+/).length + (s.title?.split(/\s+/).length ?? 0))
+  .reduce((a, b) => a + b, 0);
+const readingMinutes = Math.max(1, Math.round(totalWords / 220));
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const allFocusAreas: FocusArea[] = [
+  'skin',
+  'joints',
+  'bones',
+  'muscle',
+  'heart',
+  'hair-nails',
+  'gut',
+  'brain',
+  'weight',
+];
+const allEvidence: Evidence[] = ['strong', 'moderate', 'emerging', 'limited'];
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  locale={locale}
+  path="collagen"
+  type="article"
+  jsonLd={[articleJsonLd, medicalJsonLd, faqJsonLd]}
+>
+  <article class="bg-bone">
+    <!-- HERO -->
+    <header class="relative overflow-hidden border-b border-ink/10">
+      <div class="max-w-6xl mx-auto px-6 py-16 md:py-24">
+        <p class="text-xs uppercase tracking-[0.4em] text-sage">Definitive guide</p>
+        <h1 class="font-display text-5xl md:text-7xl mt-6 max-w-4xl leading-[1.05]">
+          Collagen, for the anti-aging realist
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Everything we know about collagen — what it is, what supplements actually do, how to
+          slow loss, and which clinical treatments stimulate new collagen — sorted by evidence.
+          Skim the summaries, then open the drawers for the science.
+        </p>
+        <p class="mt-4 text-xs text-ink/50">
+          Updated 10 May 2026 · ~{readingMinutes} min read end-to-end · {allSections().length} sections
+        </p>
+
+        <!-- Key facts strip -->
+        <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {heroFacts.map((f) => (
+            <div class="bg-white rounded-2xl p-5 border border-ink/5 shadow-sm">
+              <p class="font-display text-3xl md:text-4xl text-rose leading-none">{f.stat}</p>
+              <p class="mt-3 text-sm text-ink/70 leading-snug">{f.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- KEY TAKEAWAYS -->
+    <section class="bg-white border-b border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-14">
+        <h2 class="font-display text-3xl md:text-4xl">In a nutshell</h2>
+        <ol class="mt-6 space-y-3 max-w-4xl text-base md:text-lg leading-relaxed">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-4">
+              <span class="font-display text-2xl text-rose leading-none w-7 shrink-0">{i + 1}.</span>
+              <span class="text-ink/85">{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- CONTROL BAR -->
+    <div
+      id="control-bar"
+      class="sticky z-30 bg-bone/95 backdrop-blur border-b border-ink/10"
+      style="top: var(--header-h, 60px);"
+    >
+      <div class="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3">
+
+        <!-- Mobile section nav (native select for max accessibility) -->
+        <label class="lg:hidden inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-white shrink-0 cursor-pointer">
+          <span class="sr-only">Jump to section</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <select
+            id="mobile-toc"
+            class="bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-1"
+            aria-label="Jump to section"
+          >
+            <option value="">Jump to…</option>
+            {groups.map((g, i) => (
+              <option value={`#${g.id}`}>{String(i + 1).padStart(2, '0')} · {g.title}</option>
+            ))}
+            <option value="#references">References</option>
+          </select>
+        </label>
+
+        <!-- Filter chips: scroll horizontally on mobile, wrap on desktop -->
+        <div
+          class="filter-scroller flex-1 min-w-0 flex gap-2 items-center overflow-x-auto md:overflow-visible md:flex-wrap"
+          role="toolbar"
+          aria-label="Filter cards"
+        >
+          <div class="flex gap-1.5 items-center shrink-0" role="group" aria-label="Filter by evidence strength">
+            <span class="hidden md:inline text-xs uppercase tracking-[0.2em] text-ink/60 mr-1 shrink-0">Evidence</span>
+            <button
+              type="button"
+              class="filter-chip active text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-ink text-bone whitespace-nowrap"
+              data-filter-evidence="all"
+              aria-pressed="true"
+            >Any</button>
+            {allEvidence.map((e) => (
+              <button
+                type="button"
+                class="filter-chip text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-white hover:border-ink/40 transition whitespace-nowrap"
+                data-filter-evidence={e}
+                aria-pressed="false"
+              >{evidenceLabels[e].replace(' evidence', '')}</button>
+            ))}
+          </div>
+
+          <span class="w-px h-5 bg-ink/15 shrink-0 hidden md:inline-block" aria-hidden="true"></span>
+
+          <div class="flex gap-1.5 items-center shrink-0" role="group" aria-label="Filter by what you care about">
+            <span class="hidden md:inline text-xs uppercase tracking-[0.2em] text-ink/60 mr-1 shrink-0">I care about</span>
+            <button
+              type="button"
+              class="filter-chip active text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-ink text-bone whitespace-nowrap"
+              data-filter-focus="all"
+              aria-pressed="true"
+            >Anything</button>
+            {allFocusAreas.map((f) => (
+              <button
+                type="button"
+                class="filter-chip text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-white hover:border-ink/40 transition whitespace-nowrap"
+                data-filter-focus={f}
+                aria-pressed="false"
+              >{focusLabels[f]}</button>
+            ))}
+          </div>
+        </div>
+
+        <!-- Expand/collapse all -->
+        <button
+          id="toggle-all"
+          type="button"
+          class="text-xs px-3 py-1.5 rounded-full border border-ink/15 bg-white hover:border-ink/40 transition shrink-0 whitespace-nowrap"
+          data-state="closed"
+          aria-pressed="false"
+        >
+          <span class="md:hidden" aria-hidden="true">⇕</span>
+          <span class="hidden md:inline">Expand all</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN LAYOUT: TOC + CONTENT -->
+    <div class="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-[220px_1fr] gap-10">
+
+      <!-- STICKY TOC (lg+) -->
+      <aside class="hidden lg:block">
+        <nav class="sticky top-[140px]" aria-label="Table of contents">
+          <p class="text-xs uppercase tracking-[0.2em] text-sage mb-3">Contents</p>
+          <ol class="space-y-2 text-sm">
+            {groups.map((g, i) => (
+              <li>
+                <a
+                  href={`#${g.id}`}
+                  class="toc-link block py-1 border-l-2 border-transparent pl-3 text-ink/60 hover:text-rose hover:border-rose/40 transition"
+                  data-toc-target={g.id}
+                >
+                  <span class="font-display text-base text-ink/40 mr-2">{String(i + 1).padStart(2, '0')}</span>
+                  {g.title}
+                </a>
+              </li>
+            ))}
+            <li class="pt-4">
+              <a href="#references" class="block text-xs uppercase tracking-widest text-ink/40 hover:text-rose transition">References</a>
+            </li>
+          </ol>
+        </nav>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <div id="guide-body" class="min-w-0">
+        {groups.map((g, gi) => (
+          <section id={g.id} class="scroll-mt-32 mb-16">
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(gi + 1).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>
+
+            <div class="mt-8 space-y-4">
+              {g.sections.map((s) => (
+                <details
+                  id={s.id}
+                  class="card group bg-white rounded-2xl border border-ink/5 shadow-sm overflow-hidden scroll-mt-32 open:shadow-md transition"
+                  data-evidence={s.evidence ?? 'none'}
+                  data-focus={s.focus ?? 'general'}
+                >
+                  <summary class="cursor-pointer list-none p-5 md:p-6 flex items-start gap-4 hover:bg-bone/40 transition">
+                    <div class="flex-1 min-w-0">
+                      {(s.evidence || (s.focus && s.focus !== 'general')) && (
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                          {s.evidence && (
+                            <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(s.evidence)}`}>
+                              {evidenceLabels[s.evidence]}
+                            </span>
+                          )}
+                          {s.focus && s.focus !== 'general' && (
+                            <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone text-ink/60 border border-ink/10">
+                              {focusLabels[s.focus]}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <h3 class="font-display text-xl md:text-2xl leading-tight">{s.title}</h3>
+                      <p class="mt-2 text-ink/70 text-[15px] leading-relaxed">{s.tldr}</p>
+                      {s.note && (
+                        <p class="mt-2 text-xs text-ink/50 italic">{s.note}</p>
+                      )}
+                    </div>
+                    <span
+                      class="caret shrink-0 mt-1 w-8 h-8 rounded-full bg-bone flex items-center justify-center text-ink/60 group-open:bg-rose group-open:text-bone transition"
+                      aria-hidden="true"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-45">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </span>
+                  </summary>
+
+                  <div class="card-body px-6 pb-6 pt-0 prose-anti text-ink/85" set:html={s.bodyHtml}></div>
+                </details>
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- REFERENCES (linkbacks to inline citations) -->
+        <section id="references" class="scroll-mt-32 mt-20 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References & further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims in this guide cite peer-reviewed studies, major reviews, or clinical-society
+            sources. References are linked inline within each section. Where evidence is weak or
+            anecdotal, we say so explicitly.
+          </p>
+          <p class="mt-4 text-sm text-ink/60">
+            Primary sources used throughout: PubMed/NIH NCBI, PMC, AAD, Cleveland Clinic, Mayo
+            Clinic, peer-reviewed dermatology journals.
+          </p>
+        </section>
+
+        <!-- Disclaimer -->
+        <p class="mt-12 text-xs text-ink/50 italic max-w-3xl">
+          This page is educational and not medical advice. Talk to a qualified clinician before
+          starting supplements or treatments, especially if you are pregnant, breastfeeding, on
+          medications, or managing a chronic condition.
+        </p>
+      </div>
+    </div>
+
+    <!-- Back to top -->
+    <button
+      id="back-to-top"
+      type="button"
+      class="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-ink text-bone shadow-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity hover:bg-rose"
+      aria-label="Back to top"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="12" y1="19" x2="12" y2="5"/>
+        <polyline points="5 12 12 5 19 12"/>
+      </svg>
+    </button>
+  </article>
+
+  <!-- Page-specific styles -->
+  <style>
+    /* Hide the default <summary> marker */
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    /* Filter chips */
+    .filter-chip.active {
+      background: var(--color-ink);
+      color: var(--color-bone);
+      border-color: var(--color-ink);
+    }
+
+    /* Keyboard focus visibility */
+    .filter-chip:focus-visible,
+    #toggle-all:focus-visible,
+    #back-to-top:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: 2px;
+    }
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    /* Active TOC link */
+    .toc-link.active {
+      color: var(--color-rose);
+      border-color: var(--color-rose);
+      background: rgba(184, 130, 109, 0.05);
+    }
+
+    /* Card transitions */
+    details[open] .card-body {
+      animation: slide-down 0.25s ease-out;
+    }
+    @keyframes slide-down {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      details[open] .card-body { animation: none; }
+      html { scroll-behavior: auto; }
+    }
+
+    /* Prose styling inside drawer bodies */
+    .card-body :global(p) { margin-block: 0.85em; line-height: 1.7; }
+    .card-body :global(p:first-child) { margin-top: 0; }
+    .card-body :global(p:last-child) { margin-bottom: 0; }
+    .card-body :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .card-body :global(a:hover) { text-decoration-color: var(--color-rose); }
+    .card-body :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; }
+    .card-body :global(ul), .card-body :global(ol) { margin-block: 0.85em; }
+    .card-body :global(li) { margin-block: 0.35em; line-height: 1.65; }
+
+    /* Filter hide */
+    .card.filtered-out { display: none; }
+
+    /* Scroll-margin: large enough to clear sticky header + control bar */
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    /* Mobile filter scroller — hide scrollbar, show fade on right edge */
+    .filter-scroller {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .filter-scroller::-webkit-scrollbar { display: none; }
+    @media (max-width: 767px) {
+      .filter-scroller {
+        scroll-snap-type: x proximity;
+        -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
+                mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
+      }
+      .filter-scroller > * { scroll-snap-align: start; }
+    }
+
+    /* Back-to-top visibility */
+    #back-to-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Print */
+    @media print {
+      #control-bar, aside, #back-to-top { display: none !important; }
+      details { break-inside: avoid; }
+      details[open] .card-body { animation: none; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    // ---------------------------------------------------------------
+    // /collagen client-side enhancements.
+    //
+    // Drawers use native <details> so all content stays in the DOM for
+    // SEO/AI even when collapsed. This script handles: header/bar size
+    // measurement, filter chips, expand/collapse-all, mobile TOC select,
+    // back-to-top, hash deep-linking, and TOC scroll-spy.
+    // ---------------------------------------------------------------
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      // --- 1. Measure header + sticky bar heights so scroll-margin math works
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        const bar = document.getElementById('control-bar');
+        const headerH = header ? Math.round(header.getBoundingClientRect().height) : 60;
+        const barH = bar ? Math.round(bar.getBoundingClientRect().height) : 56;
+        document.documentElement.style.setProperty('--header-h', headerH + 'px');
+        document.documentElement.style.setProperty('--bar-h', barH + 'px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      // --- 2. Filtering
+      let activeEvidence = 'all';
+      let activeFocus = 'all';
+
+      function applyFilters() {
+        const cards = guideBody.querySelectorAll('.card');
+        cards.forEach((card) => {
+          const ev = card.getAttribute('data-evidence') || 'none';
+          const fc = card.getAttribute('data-focus') || 'general';
+          const evMatch = activeEvidence === 'all' || ev === activeEvidence;
+          // When a focus is selected, also keep foundational 'general' cards
+          // visible so "What is collagen?", "Safety", and FAQs stay in view.
+          const fcMatch = activeFocus === 'all' || fc === activeFocus || fc === 'general';
+          card.classList.toggle('filtered-out', !(evMatch && fcMatch));
+        });
+        // Hide group headers that have no visible cards
+        document.querySelectorAll('#guide-body > section').forEach((sec) => {
+          if (sec.id === 'references') return;
+          const visible = sec.querySelectorAll('.card:not(.filtered-out)').length;
+          sec.style.display = visible === 0 ? 'none' : '';
+        });
+      }
+
+      function setActiveChip(group, value) {
+        document.querySelectorAll('[data-filter-' + group + ']').forEach((b) => {
+          const isActive = b.getAttribute('data-filter-' + group) === value;
+          b.classList.toggle('active', isActive);
+          b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+      }
+
+      document.querySelectorAll('[data-filter-evidence]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activeEvidence = btn.getAttribute('data-filter-evidence') || 'all';
+          setActiveChip('evidence', activeEvidence);
+          applyFilters();
+        });
+      });
+      document.querySelectorAll('[data-filter-focus]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activeFocus = btn.getAttribute('data-filter-focus') || 'all';
+          setActiveChip('focus', activeFocus);
+          applyFilters();
+        });
+      });
+
+      function resetFilters() {
+        activeEvidence = 'all';
+        activeFocus = 'all';
+        setActiveChip('evidence', 'all');
+        setActiveChip('focus', 'all');
+        applyFilters();
+      }
+
+      // --- 3. Expand / collapse all, with sync to individual toggle events
+      const toggle = document.getElementById('toggle-all');
+      const allCards = Array.from(document.querySelectorAll('#guide-body details.card'));
+      function setToggleLabel() {
+        if (!toggle) return;
+        const openCount = allCards.filter((d) => d.hasAttribute('open')).length;
+        // If majority are open, button collapses all; otherwise expands all
+        const allOpen = openCount === allCards.length;
+        toggle.setAttribute('data-state', allOpen ? 'open' : 'closed');
+        toggle.setAttribute('aria-pressed', allOpen ? 'true' : 'false');
+        const labelEl = toggle.querySelector('span:last-child');
+        if (labelEl) labelEl.textContent = allOpen ? 'Collapse all' : 'Expand all';
+        toggle.setAttribute('aria-label', allOpen ? 'Collapse all sections' : 'Expand all sections');
+      }
+      if (toggle) {
+        toggle.addEventListener('click', () => {
+          const state = toggle.getAttribute('data-state');
+          const open = state !== 'open';
+          allCards.forEach((d) => {
+            if (open) d.setAttribute('open', '');
+            else d.removeAttribute('open');
+          });
+          setToggleLabel();
+        });
+        // Keep label in sync if user manually opens/closes drawers
+        allCards.forEach((d) => d.addEventListener('toggle', setToggleLabel));
+      }
+
+      // --- 4. Hash deep-link: open the target <details> and clear filters
+      // that would hide it. Also scroll past the sticky chrome.
+      function openHashTarget() {
+        if (!location.hash) return;
+        const id = location.hash.slice(1);
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.tagName === 'DETAILS') {
+          // If a filter is hiding this card, clear filters so the user
+          // actually sees what they linked to.
+          if (el.classList.contains('filtered-out')) resetFilters();
+          el.setAttribute('open', '');
+          setToggleLabel();
+        }
+        requestAnimationFrame(() => {
+          const top =
+            el.getBoundingClientRect().top + window.scrollY -
+            (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 60) -
+            (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) || 56) -
+            12;
+          window.scrollTo({ top, behavior: 'smooth' });
+        });
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+
+      // --- 5. Mobile section nav (native <select>)
+      const mobileToc = document.getElementById('mobile-toc');
+      if (mobileToc) {
+        mobileToc.addEventListener('change', () => {
+          const v = mobileToc.value;
+          if (v) {
+            location.hash = v;
+            mobileToc.value = '';
+          }
+        });
+      }
+
+      // --- 6. Back-to-top
+      const backTop = document.getElementById('back-to-top');
+      if (backTop) {
+        const onScroll = () => {
+          backTop.classList.toggle('visible', window.scrollY > 600);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+        backTop.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      // --- 7. TOC scroll-spy
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionEls = Array.from(document.querySelectorAll('#guide-body > section[id]'));
+      if (sectionEls.length && tocLinks.length && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                const id = entry.target.id;
+                tocLinks.forEach((l) => {
+                  l.classList.toggle('active', l.getAttribute('data-toc-target') === id);
+                });
+              }
+            });
+          },
+          { rootMargin: '-30% 0px -60% 0px', threshold: 0 }
+        );
+        sectionEls.forEach((sec) => observer.observe(sec));
+      }
+    })();
+  </script>
+</BaseLayout>

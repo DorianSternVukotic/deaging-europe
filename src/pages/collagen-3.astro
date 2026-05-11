@@ -1,0 +1,278 @@
+---
+/**
+ * Variation 3 — Tabs
+ *
+ * Top-level horizontal tabs, one per group. Each tab body shows the cards
+ * for that group in a two-column grid with image placeholders. Good for
+ * users who want to "browse aisles" rather than scroll a long document.
+ *
+ * Tabs are progressively enhanced: without JS, all panels render stacked
+ * with anchor links — same content remains accessible to SEO/AI.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  heroFacts,
+  groups,
+  evidenceLabels,
+  focusLabels,
+  type Evidence,
+} from '../data/collagen';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Collagen — Tabbed view | DeAging Europe';
+const description = 'Browse collagen evidence by topic. Tabs across the top, cards inside each.';
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const tabIcon: Record<string, string> = {
+  basics: '◐',
+  benefits: '✚',
+  loss: '↘',
+  'boost-diet': '◇',
+  'boost-topical': '✦',
+  'boost-clinical': '✕',
+  safety: '⚠',
+  faq: '?',
+};
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="collagen-3" type="article">
+  <article class="bg-bone">
+    <!-- HERO -->
+    <header class="border-b border-ink/10">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+        <p class="text-xs uppercase tracking-[0.4em] text-sage">Tabbed view · Variation 3</p>
+        <h1 class="font-display text-5xl md:text-6xl mt-3 leading-[1.05]">Collagen, by topic</h1>
+        <p class="mt-4 max-w-2xl text-lg text-ink/75">
+          Pick a tab. Everything else stays out of the way. Best when you already know what you
+          came for.
+        </p>
+        <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {heroFacts.map((f) => (
+            <div class="bg-white p-4 border border-ink/5 rounded-xl">
+              <p class="font-display text-2xl text-rose leading-none">{f.stat}</p>
+              <p class="mt-2 text-xs text-ink/65">{f.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </header>
+
+    <!-- TAB BAR (sticky) -->
+    <div
+      class="sticky z-30 bg-bone/95 backdrop-blur border-b border-ink/10"
+      style="top: var(--header-h, 60px);"
+      id="tab-bar"
+    >
+      <div class="max-w-6xl mx-auto px-2 md:px-6">
+        <div role="tablist" aria-label="Sections" class="tablist flex gap-1 overflow-x-auto scrollbar-hide">
+          {groups.map((g, i) => (
+            <button
+              role="tab"
+              type="button"
+              id={`tab-${g.id}`}
+              aria-controls={`panel-${g.id}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? '0' : '-1'}
+              data-tab={g.id}
+              class={`tab whitespace-nowrap px-4 py-3 text-sm font-medium text-ink/55 border-b-2 border-transparent hover:text-ink transition flex items-center gap-2 ${i === 0 ? 'active' : ''}`}
+            >
+              <span class="text-base opacity-60">{tabIcon[g.id] ?? '◯'}</span>
+              <span>{g.title}</span>
+              <span class="text-[10px] text-ink/40 bg-ink/5 px-1.5 py-0.5 rounded-full">{g.sections.length}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB PANELS -->
+    <div class="max-w-6xl mx-auto px-6 py-10">
+      {groups.map((g, gi) => (
+        <section
+          id={`panel-${g.id}`}
+          role="tabpanel"
+          aria-labelledby={`tab-${g.id}`}
+          class={`tab-panel ${gi === 0 ? '' : 'hidden-js'}`}
+          data-panel={g.id}
+        >
+          <div class="mb-8 flex items-start justify-between gap-6 flex-wrap">
+            <div class="max-w-2xl">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Section {String(gi + 1).padStart(2, '0')}</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-1">{g.title}</h2>
+              <p class="mt-2 text-ink/70">{g.intro}</p>
+            </div>
+            {g.id === 'basics' && (
+              <div class="w-full md:w-80">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Intro · 90 sec" tone="sage" />
+              </div>
+            )}
+            {g.id === 'boost-clinical' && (
+              <div class="w-full md:w-80">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Procedure overview" tone="rose" />
+              </div>
+            )}
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-5">
+            {g.sections.map((s) => (
+              <article
+                id={s.id}
+                class="card bg-white border border-ink/5 rounded-2xl overflow-hidden flex flex-col hover:shadow-md transition"
+              >
+                {(g.id === 'boost-clinical' || g.id === 'boost-topical' || g.id === 'benefits') && (
+                  <MediaPlaceholder
+                    kind="image"
+                    ratio="16/9"
+                    label={s.title}
+                    tone={g.id === 'boost-clinical' ? 'rose' : g.id === 'boost-topical' ? 'gold' : 'bone'}
+                    class="[&_figure]:m-0 [&>div]:!rounded-none [&>div]:!border-x-0 [&>div]:!border-t-0"
+                  />
+                )}
+                <div class="p-5 flex-1 flex flex-col">
+                  <div class="flex flex-wrap items-center gap-2 mb-2">
+                    {s.evidence && (
+                      <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(s.evidence)}`}>
+                        {evidenceLabels[s.evidence]}
+                      </span>
+                    )}
+                    {s.focus && s.focus !== 'general' && (
+                      <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone text-ink/60 border border-ink/10">
+                        {focusLabels[s.focus]}
+                      </span>
+                    )}
+                  </div>
+                  <h3 class="font-display text-xl leading-tight">{s.title}</h3>
+                  <p class="mt-2 text-sm text-ink/70 leading-snug">{s.tldr}</p>
+                  {s.note && (
+                    <p class="mt-1 text-xs text-ink/50 italic">{s.note}</p>
+                  )}
+                  <details class="mt-3 group">
+                    <summary class="cursor-pointer text-xs font-medium text-rose hover:underline list-none flex items-center gap-1">
+                      <span class="more-label">Read full evidence</span>
+                      <span class="group-open:rotate-90 transition-transform inline-block">›</span>
+                    </summary>
+                    <div class="prose-card mt-3 text-ink/85 text-[14px]" set:html={s.bodyHtml}></div>
+                  </details>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <p class="max-w-6xl mx-auto px-6 pb-16 text-xs text-ink/50 italic">
+      Educational content, not medical advice. Consult a qualified clinician before starting
+      supplements or treatments.
+    </p>
+  </article>
+
+  <style>
+    /* When JS is enabled (.js added to <html>), only the active tab panel shows. */
+    .js .tab-panel.hidden-js { display: none; }
+
+    .tab.active {
+      color: var(--color-ink);
+      border-color: var(--color-rose);
+    }
+    .tab:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: 2px;
+      border-radius: 0.5rem;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { scrollbar-width: none; }
+
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+    details[open] .more-label::before { content: 'Hide '; }
+    details[open] .more-label { color: var(--color-ink); }
+
+    .prose-card :global(p) { margin-block: 0.65em; line-height: 1.65; }
+    .prose-card :global(p:first-child) { margin-top: 0; }
+    .prose-card :global(a) { color: var(--color-rose); text-decoration: underline; text-decoration-color: rgba(184,130,109,0.4); }
+    .prose-card :global(h4) { font-size: 0.95rem; margin-top: 1.1em; margin-bottom: 0.3em; font-weight: 600; }
+    .prose-card :global(ul), .prose-card :global(ol) { margin-block: 0.7em; padding-left: 1.2em; }
+    .prose-card :global(ul) { list-style: disc; }
+    .prose-card :global(ol) { list-style: decimal; }
+    .prose-card :global(li) { margin-block: 0.3em; line-height: 1.6; }
+
+    section[id] { scroll-margin-top: calc(var(--header-h, 60px) + 60px); }
+
+    @media (prefers-reduced-motion: reduce) { .tab { transition: none; } }
+  </style>
+
+  <script is:inline>
+    (function () {
+      // Mark <html> so CSS can hide inactive panels — graceful degradation
+      document.documentElement.classList.add('js');
+
+      const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+      const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
+
+      function activate(id, push) {
+        tabs.forEach((t) => {
+          const on = t.getAttribute('data-tab') === id;
+          t.classList.toggle('active', on);
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          t.setAttribute('tabindex', on ? '0' : '-1');
+        });
+        panels.forEach((p) => {
+          const on = p.getAttribute('data-panel') === id;
+          p.classList.toggle('hidden-js', !on);
+        });
+        if (push) {
+          history.replaceState(null, '', '#tab=' + id);
+        }
+      }
+
+      tabs.forEach((t) => {
+        t.addEventListener('click', () => activate(t.getAttribute('data-tab'), true));
+      });
+
+      // Keyboard navigation
+      document.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
+        const i = tabs.findIndex((t) => t === document.activeElement);
+        if (i < 0) return;
+        let next = i;
+        if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = tabs.length - 1;
+        else return;
+        e.preventDefault();
+        tabs[next].focus();
+        activate(tabs[next].getAttribute('data-tab'), true);
+      });
+
+      // Initial: if URL has #tab=foo or #section-id, activate the right tab.
+      function applyHash() {
+        const hash = location.hash.replace('#', '');
+        if (!hash) return;
+        if (hash.startsWith('tab=')) {
+          activate(hash.slice(4), false);
+          return;
+        }
+        // If the hash matches a card id, find its group and activate that tab
+        const card = document.getElementById(hash);
+        if (card) {
+          const panel = card.closest('[role="tabpanel"]');
+          if (panel) activate(panel.getAttribute('data-panel'), false);
+        }
+      }
+      applyHash();
+      window.addEventListener('hashchange', applyHash);
+    })();
+  </script>
+</BaseLayout>

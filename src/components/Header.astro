@@ -18,6 +18,7 @@ const { locale, path } = Astro.props;
     <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
       <a class="hover:text-rose transition" href={localePath(locale, '#problems')}>{t(locale, 'nav.problems')}</a>
       <a class="hover:text-rose transition" href={localePath(locale, '#products')}>{t(locale, 'nav.products')}</a>
+      <a class="hover:text-rose transition" href="/collagen">Collagen guide</a>
       <a class="hover:text-rose transition" href={localePath(locale, '#science')}>{t(locale, 'nav.science')}</a>
     </nav>
 
