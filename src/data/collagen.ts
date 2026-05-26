@@ -44,6 +44,10 @@ export interface Section {
   bodyHtml: string;
   /** Optional: shown as a small note under the summary (e.g. "Best for: photoaging"). */
   note?: string;
+  /** Clinical treatments only: typical course length, for the comparison table. */
+  sessions?: string;
+  /** Clinical treatments only: expected downtime, for the comparison table. */
+  downtime?: string;
 }
 
 export interface SectionGroup {
@@ -61,11 +65,11 @@ export const heroFacts: { stat: string; label: string }[] = [
 ];
 
 export const keyTakeaways: string[] = [
-  'Collagen is the most abundant protein in your body — it builds skin, tendons, ligaments, cartilage, bone, and the walls of your arteries.',
-  'Production declines naturally with age and is accelerated by sun, smoking, sugar, and alcohol. Once damaged, collagen does not fully recover on its own.',
-  'Hydrolyzed collagen peptide supplements (1–15 g/day) have strong evidence for improving skin hydration, elasticity, and wrinkles, and moderate evidence for joint stiffness and bone density.',
-  'For visible results in the skin, supplements work best alongside daily SPF, a topical retinoid at night, and vitamin C in the morning.',
-  'For deeper changes (loose skin, scars, deep wrinkles), in-office treatments — microneedling, fractional lasers, Ultherapy, Sculptra — stimulate the body to produce new collagen at a level no oral supplement can match.',
+  'Collagen builds skin, tendons, ligaments, cartilage, bone, and the walls of your arteries.',
+  'Collagen declines with age, sun, smoking, sugar, and alcohol. Once damaged, it does not fully recover on its own.',
+  'Hydrolyzed collagen peptide supplements (1–15 g/day) improve skin hydration, elasticity, and wrinkles, as well as joint stiffness and bone density.',
+  'For best results in the skin, supplements work best alongside daily SPF, a topical retinoid at night, and vitamin C in the morning.',
+  'For deeper changes (loose skin, scars, deep wrinkles), treatments like microneedling, fractional lasers, Ultherapy, Sculptra — stimulate the body to produce new collagen at a level no supplement can match.',
 ];
 
 // ---------------------------------------------------------------------------
@@ -77,7 +81,7 @@ const concept: Section[] = [
     id: 'what-is-collagen',
     category: 'concept',
     title: 'What is collagen?',
-    tldr: 'A structural protein that holds your body together — skin, bone, cartilage, tendons, arteries.',
+    tldr: 'A protein that holds your body together — skin, bone, cartilage, tendons, arteries.',
     bodyHtml: `
       <p>Collagen is a protein — specifically, the <a href="https://www.ncbi.nlm.nih.gov/books/NBK542226/" rel="noopener nofollow" target="_blank">most abundant structural protein</a> in animals. Structural proteins form the framework of your cells and tissues. There are <strong>28 known types</strong> of collagen; <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8399689/" rel="noopener nofollow" target="_blank">type I accounts for about 90%</a> of the collagen in the human body.</p>
       <p>Chemically, collagen is built mainly from three amino acids: <strong>glycine, proline, and hydroxyproline</strong>. These form three strands that wind around each other to make collagen's characteristic <em>triple helix</em>.</p>
@@ -381,10 +385,12 @@ const therapies: Section[] = [
     id: 'therapy-fractional-laser',
     category: 'therapy',
     title: 'Fractional lasers',
-    tldr: 'Microscopic columns of treatment surrounded by intact skin. 1–3 sessions, 3–14 days downtime depending on depth.',
+    tldr: 'Microscopic columns of laser treatment surrounded by intact skin, which speeds healing and amplifies collagen remodeling.',
     evidence: 'strong',
     focus: 'skin',
     note: 'Best for: photodamage, acne scars, fine lines, texture',
+    sessions: '1–3',
+    downtime: '3–14 days',
     bodyHtml: `
       <p>Fractional lasers create microscopic treatment zones while leaving the surrounding skin intact. The untreated tissue accelerates healing and amplifies collagen remodeling.</p>
       <p><strong>Course:</strong> 1–3 sessions typically. Downtime is roughly 3–7 days for gentler non-ablative platforms, 5–14 days for stronger resurfacing.</p>
@@ -397,10 +403,12 @@ const therapies: Section[] = [
     id: 'therapy-laser-resurfacing',
     category: 'therapy',
     title: 'Ablative laser resurfacing (CO₂ / erbium)',
-    tldr: 'The heavy artillery. One session, 1–2 weeks downtime, dramatic results for deep wrinkles and scars.',
+    tldr: 'The heavy artillery — removes the entire outer skin layer and heats the dermis for the most dramatic non-surgical results.',
     evidence: 'strong',
     focus: 'skin',
     note: 'Best for: deep wrinkles, acne scarring, photoaging',
+    sessions: '1 (CO₂)',
+    downtime: '1–2 weeks',
     bodyHtml: `
       <p>Ablative resurfacing removes the entire outer skin layer with controlled laser energy and heats the dermis to drive new collagen formation. CO₂ goes deeper; erbium is milder.</p>
       <p><strong>Course:</strong> typically a single treatment for full-field CO₂. Meaningful downtime — 1–2 weeks of redness, peeling, and social isolation — is the price for the deepest results available without surgery.</p>
@@ -413,10 +421,12 @@ const therapies: Section[] = [
     id: 'therapy-rf-microneedling',
     category: 'therapy',
     title: 'RF microneedling',
-    tldr: 'Microneedles deliver radiofrequency heat into the dermis. 2–4 sessions, ~24 hours redness.',
+    tldr: 'Microneedles deliver radiofrequency heat into the dermis — one of the most efficient collagen-induction methods available.',
     evidence: 'strong',
     focus: 'skin',
     note: 'Best for: acne scars, pores, mild laxity',
+    sessions: '2–4',
+    downtime: '~24 hours',
     bodyHtml: `
       <p>RF microneedling combines the mechanical injury of microneedles with radiofrequency heat delivered into the dermis. The dual stimulus is one of the most efficient collagen-induction methods available, with relatively low downtime.</p>
       <p><strong>Course:</strong> 2–4 sessions a few weeks apart. Redness usually settles within 24 hours.</p>
@@ -429,10 +439,12 @@ const therapies: Section[] = [
     id: 'therapy-microneedling-prp',
     category: 'therapy',
     title: 'Microneedling + PRP',
-    tldr: 'Microneedles paired with platelet-rich plasma from your own blood. 3–4 sessions, 24–48 hours redness.',
+    tldr: 'Microneedling paired with platelet-rich plasma drawn from your own blood, whose growth factors compound the healing response.',
     evidence: 'moderate',
     focus: 'skin',
     note: 'Best for: acne scarring, dullness, mild aging',
+    sessions: '3–4',
+    downtime: '24–48 hours',
     bodyHtml: `
       <p>PRP-enhanced microneedling applies platelet-rich plasma (drawn from your own blood and concentrated) over fresh microneedling channels. The platelets release growth factors that compound the wound-healing collagen response.</p>
       <p><strong>Course:</strong> 3–4 sessions. Downtime is usually 24–48 hours of redness.</p>
@@ -445,10 +457,12 @@ const therapies: Section[] = [
     id: 'therapy-microneedling',
     category: 'therapy',
     title: 'Standard microneedling (collagen induction therapy)',
-    tldr: 'Controlled micro-injuries trigger natural healing and collagen synthesis. 3–4 sessions, 1–5 days redness.',
+    tldr: 'The original collagen-induction therapy: controlled micro-injuries that trigger the body\'s natural wound-healing cascade.',
     evidence: 'strong',
     focus: 'skin',
     note: 'Best for: fine lines, acne scars, pores, stretch marks',
+    sessions: '3–4',
+    downtime: '1–5 days',
     bodyHtml: `
       <p>The original collagen-induction therapy. A device with fine needles creates controlled micro-injuries that trigger the body's wound-healing cascade — without the heat of RF microneedling or the depth of fractional lasers.</p>
       <p><strong>Course:</strong> 3–8 weeks apart, typically 3–4 sessions. Best results often build over 3–6 months, with yearly maintenance.</p>
@@ -461,10 +475,12 @@ const therapies: Section[] = [
     id: 'therapy-ultherapy',
     category: 'therapy',
     title: 'Microfocused ultrasound (Ultherapy)',
-    tldr: 'Ultrasound delivers heat to deep tissue layers — including SMAS. Single session, minimal downtime, results build over 2–6 months.',
+    tldr: 'Microfocused ultrasound delivers heat to deep tissue layers — including the SMAS a facelift addresses — for a lifting effect.',
     evidence: 'moderate',
     focus: 'skin',
     note: 'Best for: mild brow, jawline, neck, submental laxity',
+    sessions: '1',
+    downtime: 'Minimal',
     bodyHtml: `
       <p>Ultherapy uses microfocused ultrasound with real-time visualization to deliver energy deep into tissue layers — including the SMAS layer that a surgical facelift addresses. The heat stimulates collagen remodeling and provides a lifting effect.</p>
       <p><strong>Course:</strong> typically a single session. Zero to minimal downtime. Results build over 2–6 months.</p>
@@ -477,10 +493,12 @@ const therapies: Section[] = [
     id: 'therapy-rf-tightening',
     category: 'therapy',
     title: 'Monopolar RF tightening (Thermage)',
-    tldr: 'Bulk dermal heating from a single session. Little downtime. Peak result over 2–6 months, lasts 1–2 years.',
+    tldr: 'Bulk dermal heating that contracts collagen immediately and stimulates remodeling over the following months. No needles.',
     evidence: 'moderate',
     focus: 'skin',
     note: 'Best for: mild laxity, fine wrinkles',
+    sessions: '1',
+    downtime: 'Little to none',
     bodyHtml: `
       <p>Monopolar radiofrequency heats large volumes of dermal collagen, causing immediate contraction and stimulating remodeling over the following months. No needles, no breaks in the skin.</p>
       <p><strong>Course:</strong> usually one session. Little to no downtime. Peak improvement over 2–6 months, lasting roughly 1–2 years.</p>
@@ -493,10 +511,12 @@ const therapies: Section[] = [
     id: 'therapy-chemical-peels',
     category: 'therapy',
     title: 'Chemical peels (TCA, glycolic, phenol)',
-    tldr: 'Acid removes outer skin layers and triggers a healing-driven collagen response. Light to deep depending on agent.',
+    tldr: 'Acid removes skin layers in a controlled way, triggering a healing-driven collagen response that scales with peel depth.',
     evidence: 'strong',
     focus: 'skin',
     note: 'Best for: dyschromia, photoaging, mild wrinkles, acne scars',
+    sessions: 'Varies by depth',
+    downtime: 'Light–14 days',
     bodyHtml: `
       <p>Chemical peels apply acid to remove skin layers in a controlled way. Light peels (glycolic, salicylic) need minimal downtime; medium peels (TCA) heal in ~7–14 days; deep phenol peels are dramatic but slow to recover.</p>
       <p><strong>Best fits:</strong> dyschromia, sun damage, mild wrinkling, acne scars.</p>
@@ -508,10 +528,12 @@ const therapies: Section[] = [
     id: 'therapy-threads',
     category: 'therapy',
     title: 'Thread lifts (PDO / PLA / PCL)',
-    tldr: 'Absorbable threads physically reposition tissue and trigger collagen as they dissolve. Months-to-years effect.',
+    tldr: 'Absorbable threads physically reposition tissue and trigger collagen as the body resorbs them.',
     evidence: 'moderate',
     focus: 'skin',
     note: 'Best for: younger patients, mild-to-moderate laxity',
+    sessions: '1',
+    downtime: '~5 days',
     bodyHtml: `
       <p>Absorbable surgical threads (PDO, PLA, or PCL polymers) are placed under the skin to reposition tissue mechanically and simultaneously stimulate collagen as the body resorbs them.</p>
       <p><strong>Course:</strong> single placement. Recovery is fast — typically ~5 days of swelling and bruising. Results are subtler than a facelift and last months to a few years depending on thread type.</p>
@@ -523,10 +545,12 @@ const therapies: Section[] = [
     id: 'therapy-sculptra',
     category: 'therapy',
     title: 'Poly-L-lactic acid biostimulation (Sculptra)',
-    tldr: 'Injectable biostimulator. ~3 sessions over 3–4 months. Gradual collagen build over weeks to months. Lasts up to 2 years.',
+    tldr: 'An injectable biostimulator that prompts your body to build new collagen around the PLLA particles, gradually over months.',
     evidence: 'strong',
     focus: 'skin',
     note: 'Best for: diffuse volume loss, folds, jawline, overall skin quality',
+    sessions: '~3 over 3–4 mo',
+    downtime: 'Minimal',
     bodyHtml: `
       <p>Sculptra is poly-L-lactic acid (PLLA) injected into the dermis. Unlike a hyaluronic acid filler, it doesn't add volume directly — it triggers the body to build new collagen around the PLLA particles over weeks to months.</p>
       <p><strong>Course:</strong> typically about 3 sessions over 3–4 months. Minimal downtime. Results build gradually.</p>
@@ -543,6 +567,8 @@ const therapies: Section[] = [
     evidence: 'moderate',
     focus: 'skin',
     note: 'Best for: pigment, redness, mild fine lines, low-downtime maintenance',
+    sessions: 'Multiple / 1–3',
+    downtime: 'Minimal',
     bodyHtml: `
       <p><strong>LED red and near-infrared light</strong> (typically 630–850 nm) stimulates mitochondrial activity and collagen synthesis through photobiomodulation. Multiple weekly sessions are required to see results. Very low downtime. Devices range from clinic panels to wearable masks.</p>
       <p><strong>IPL photorejuvenation</strong> uses broad-spectrum light to target pigment irregularities, vascular changes, and some photoaging features. 1–3 sessions, minimal downtime. Some temporary darkening of pigmented spots is expected before they slough off.</p>
