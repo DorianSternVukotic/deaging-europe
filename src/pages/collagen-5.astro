@@ -120,10 +120,29 @@ const faqAnswer: Record<string, string> = {
 // Evidence-strength chart — one row per intervention that has an evidence rating.
 // 4 strong / 3 moderate / 2 emerging / 1 limited.
 const evidenceWidth: Record<Evidence, number> = { strong: 100, moderate: 75, emerging: 50, limited: 25 };
-const chartItems = allSections()
-  .filter((s) => s.evidence)
-  .map((s) => ({ id: s.id, title: s.title, evidence: s.evidence!, focus: s.focus ?? 'general' }))
-  .sort((a, b) => evidenceRank[a.evidence] - evidenceRank[b.evidence]);
+
+// Group the evidence chart by what each intervention is: a body benefit,
+// something you take, or something done to you. (Topical at-home interventions
+// are folded in with clinical treatments.)
+const chartBucket = (category: string): 'helps' | 'supplements' | 'treatments' | null => {
+  if (category === 'benefit') return 'helps';
+  if (category === 'supplement' || category === 'support-supplement') return 'supplements';
+  if (category === 'topical' || category === 'therapy') return 'treatments';
+  return null;
+};
+const chartGroups = (
+  [
+    { key: 'helps', label: 'What it helps with' },
+    { key: 'supplements', label: 'Supplements' },
+    { key: 'treatments', label: 'Treatments' },
+  ] as const
+).map((b) => ({
+  ...b,
+  items: allSections()
+    .filter((s) => s.evidence && chartBucket(s.category) === b.key)
+    .map((s) => ({ id: s.id, title: s.title, evidence: s.evidence! }))
+    .sort((a, b2) => evidenceRank[a.evidence] - evidenceRank[b2.evidence]),
+}));
 
 const allFocus: FocusArea[] = [
   'skin', 'joints', 'bones', 'muscle', 'heart', 'hair-nails', 'gut', 'brain', 'weight',
@@ -227,6 +246,9 @@ const topicalRows = topicalGroup?.sections
           ))}
         </ol>
       </div>
+      <div class="lg:col-span-2">
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
     </section>
 
     <!-- ════════════ EVIDENCE OVERVIEW CHART ════════════ -->
@@ -235,25 +257,32 @@ const topicalRows = topicalGroup?.sections
         <p class="text-xs uppercase tracking-[0.3em] text-sage">By evidence strength</p>
         <h2 class="font-display text-3xl md:text-4xl mt-2">Evidence at a glance</h2>
 
-        <div class="mt-8 grid md:grid-cols-2 gap-x-10 gap-y-1">
-          {chartItems.map((c) => (
-            <a href={`#${c.id}`} class="chart-row group flex items-center gap-3 py-2.5 px-3 -mx-3 rounded-lg border border-transparent cursor-pointer hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
-              <div class="w-40 md:w-56 shrink-0 text-sm font-medium text-ink/85 leading-snug group-hover:text-rose">{c.title}</div>
-              {/* Bar + label merged: a proportional "meter pill" whose width and
-                  color encode strength, with the label living inside the fill. */}
-              <div class="flex-1 h-6 bg-ink/[0.07] rounded-full relative">
-                <div
-                  class="absolute inset-y-0 left-0 rounded-full flex items-center px-3 min-w-max"
-                  style={`width: ${evidenceWidth[c.evidence]}%; background: ${evidenceColor[c.evidence]};`}
-                >
-                  <span class="text-[10px] uppercase tracking-widest font-semibold text-white">{c.evidence}</span>
-                </div>
+        <div class="mt-8 space-y-8">
+          {chartGroups.map((grp) => (
+            <div>
+              <h3 class="font-display text-xl md:text-2xl text-ink/90 mb-3 pb-2 border-b border-ink/10">{grp.label}</h3>
+              <div class="grid md:grid-cols-2 gap-x-10 gap-y-1">
+                {grp.items.map((c) => (
+                  <a href={`#${c.id}`} class="chart-row group flex items-center gap-3 py-2.5 px-3 -mx-3 rounded-lg border border-transparent cursor-pointer hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
+                    <div class="w-40 md:w-56 shrink-0 text-sm font-medium text-ink/85 leading-snug group-hover:text-rose">{c.title}</div>
+                    {/* Bar + label merged: a proportional "meter pill" whose width and
+                        color encode strength, with the label living inside the fill. */}
+                    <div class="flex-1 h-6 bg-ink/[0.07] rounded-full relative">
+                      <div
+                        class="absolute inset-y-0 left-0 rounded-full flex items-center px-3 min-w-max"
+                        style={`width: ${evidenceWidth[c.evidence]}%; background: ${evidenceColor[c.evidence]};`}
+                      >
+                        <span class="text-[10px] uppercase tracking-widest font-semibold text-white">{c.evidence}</span>
+                      </div>
+                    </div>
+                    <svg class="shrink-0 w-4 h-4 text-ink/25 group-hover:text-rose group-hover:translate-x-0.5 transition" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </a>
+                ))}
               </div>
-              <svg class="shrink-0 w-4 h-4 text-ink/25 group-hover:text-rose group-hover:translate-x-0.5 transition" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </a>
+            </div>
           ))}
         </div>
 
@@ -321,11 +350,6 @@ const topicalRows = topicalGroup?.sections
             {introFor(g) && <p class="mt-3 text-ink/70 max-w-2xl">{introFor(g)}</p>}
 
             {/* Featured media for high-impact sections */}
-            {g.id === 'basics' && (
-              <div class="mt-6">
-                <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
-              </div>
-            )}
             {g.id === 'boost-clinical' && (
               <div class="mt-6 grid md:grid-cols-2 gap-4">
                 <MediaPlaceholder kind="video" ratio="16/9" label="Inside a fractional laser session" tone="rose" />
