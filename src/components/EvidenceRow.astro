@@ -1,0 +1,157 @@
+---
+/**
+ * EvidenceRow — one collapsible row in the "what the evidence says" chart.
+ *
+ * EXPERIMENTAL: two variants of the evidence indicator, so they can be
+ * compared. Both cap the indicator to a fixed width (instead of letting it
+ * stretch across the whole row) and use the reclaimed space for the section's
+ * one-line summary, which was previously hidden until expansion.
+ *
+ *   variant="bar"  — fixed-width strength bar (longer = stronger) + word
+ *   variant="pips" — 4-segment strength meter + word
+ */
+import MediaPlaceholder from './MediaPlaceholder.astro';
+
+type Evidence = 'strong' | 'moderate' | 'emerging' | 'limited';
+
+// Structural shape, so the row works with any data module (collagen, jowls…)
+// without coupling to one Section type.
+interface EvidenceItem {
+  id: string;
+  title: string;
+  tldr: string;
+  evidence?: Evidence;
+  bodyHtml: string;
+  note?: string;
+  sessions?: string;
+  downtime?: string;
+  cost?: string;
+}
+
+interface Props {
+  s: EvidenceItem;
+  variant: 'bar' | 'pips';
+  /** Small label pill on the right (e.g. focus area or cause). Pre-resolved. */
+  tag?: string;
+  /** Show a 4/5 media placeholder in the expanded body. */
+  mediaTone?: 'rose' | 'gold';
+}
+const { s, variant, tag, mediaTone } = Astro.props;
+
+// Saturated colors read better than the muted brand tones at small sizes.
+const evidenceColor: Record<Evidence, string> = {
+  strong: '#16a34a',
+  moderate: '#e0a106',
+  emerging: '#e0673a',
+  limited: '#8c8079',
+};
+const evidenceWidth: Record<Evidence, number> = { strong: 100, moderate: 75, emerging: 50, limited: 25 };
+const evidenceLevel: Record<Evidence, number> = { strong: 4, moderate: 3, emerging: 2, limited: 1 };
+
+const evidence = s.evidence ?? 'limited';
+const hasRating = !!s.evidence;
+---
+
+<details id={s.id} class="card group scroll-mt-32 transition" data-evidence={s.evidence ?? 'none'}>
+  <summary class="chart-row cursor-pointer list-none flex items-center gap-3 py-2.5 px-3 -mx-3 rounded-lg border border-transparent hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
+    <div class="flex-1 min-w-0 md:flex-none md:w-52 text-base md:text-sm font-medium text-ink/85 leading-snug group-hover:text-rose">{s.title}</div>
+
+    {/* ── Evidence indicator ──
+         Mobile: a content-width pill, so weaker ratings don't trail a long
+         empty track. Desktop (md+): the capped strength bar, where length
+         still reads as longer = stronger across the sorted list. */}
+    {variant === 'bar' ? (
+      <>
+        {hasRating ? (
+          <span
+            class="md:hidden shrink-0 w-24 inline-flex items-center justify-center rounded-full py-1 text-xs uppercase tracking-widest font-semibold text-white"
+            style={`background: ${evidenceColor[evidence]};`}
+          >{evidence}</span>
+        ) : (
+          <span class="md:hidden shrink-0 w-24 inline-flex items-center justify-center rounded-full py-1 text-xs uppercase tracking-widest font-semibold bg-ink/10 text-ink/50">info</span>
+        )}
+        {hasRating ? (
+          <div class="hidden md:block shrink-0 md:w-48 h-6 bg-ink/[0.07] rounded-full relative">
+            <div
+              class="absolute inset-y-0 left-0 rounded-full flex items-center px-3 min-w-max"
+              style={`width: ${evidenceWidth[evidence]}%; background: ${evidenceColor[evidence]};`}
+            >
+              <span class="text-[10px] uppercase tracking-widest font-semibold text-white">{evidence}</span>
+            </div>
+          </div>
+        ) : (
+          <div class="hidden md:flex shrink-0 md:w-48 h-6 bg-ink/[0.07] rounded-full items-center px-3">
+            <span class="text-[10px] uppercase tracking-widest font-semibold text-ink/45">info</span>
+          </div>
+        )}
+      </>
+    ) : (
+      <div class="shrink-0 md:w-48 flex items-center gap-2">
+        {hasRating ? (
+          <>
+            <span class="flex gap-1" aria-hidden="true">
+              {[1, 2, 3, 4].map((i) => (
+                <span
+                  class="w-2.5 h-2.5 rounded-full"
+                  style={`background: ${i <= evidenceLevel[evidence] ? evidenceColor[evidence] : 'rgba(28,25,23,0.12)'};`}
+                ></span>
+              ))}
+            </span>
+            <span class="text-[10px] uppercase tracking-widest font-semibold" style={`color: ${evidenceColor[evidence]};`}>{evidence}</span>
+          </>
+        ) : (
+          <span class="text-[10px] uppercase tracking-widest font-semibold text-ink/45">info</span>
+        )}
+      </div>
+    )}
+
+    {/* ── Summary preview, fills the reclaimed space (desktop only) ── */}
+    <p class="hidden md:block flex-1 min-w-0 truncate text-sm text-ink/55 leading-snug">{s.tldr}</p>
+
+    {tag && (
+      <span class="hidden lg:inline-flex shrink-0 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone text-ink/60 border border-ink/10 whitespace-nowrap">
+        {tag}
+      </span>
+    )}
+    <span class="caret shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-ink/40 group-open:text-rose transition" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </span>
+  </summary>
+
+  <div class="card-body px-3 pb-6 pt-3 grid md:grid-cols-[1fr_auto] gap-6 items-start">
+    <div class="min-w-0">
+      <p class="text-ink/80 text-base leading-relaxed pb-4 mb-4 border-b border-ink/10">{s.tldr}</p>
+      {s.note && <p class="-mt-2 mb-4 text-xs text-ink/55 italic">{s.note}</p>}
+      <div class="prose-anti text-ink/85" set:html={s.bodyHtml}></div>
+      {(s.sessions || s.downtime || s.cost) && (
+        <dl class="mt-5 grid grid-cols-3 gap-3 text-xs">
+          {s.sessions && (
+            <div class="bg-bone/60 rounded-lg p-3">
+              <dt class="uppercase tracking-widest text-ink/50 text-[10px]">Sessions</dt>
+              <dd class="mt-1 font-medium text-ink/85">{s.sessions}</dd>
+            </div>
+          )}
+          {s.downtime && (
+            <div class="bg-bone/60 rounded-lg p-3">
+              <dt class="uppercase tracking-widest text-ink/50 text-[10px]">Downtime</dt>
+              <dd class="mt-1 font-medium text-ink/85">{s.downtime}</dd>
+            </div>
+          )}
+          {s.cost && (
+            <div class="bg-bone/60 rounded-lg p-3">
+              <dt class="uppercase tracking-widest text-ink/50 text-[10px]">Cost</dt>
+              <dd class="mt-1 font-medium text-ink/85">{s.cost}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </div>
+    {mediaTone && (
+      <div class="md:w-56 shrink-0">
+        <MediaPlaceholder kind="image" ratio="4/5" label={s.title} tone={mediaTone} />
+      </div>
+    )}
+  </div>
+</details>

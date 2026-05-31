@@ -25,6 +25,8 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
 import {
   keyTakeaways,
@@ -57,15 +59,6 @@ const evidencePillClass = (e?: Evidence) =>
     ? 'bg-rose/15 text-rose'
     : 'bg-ink/10 text-ink/60';
 
-// Vibrant, saturated colors for the evidence-at-a-glance chart specifically
-// (the muted brand tones read as washed-out at small bar/pill sizes).
-const evidenceColor: Record<Evidence, string> = {
-  strong: '#16a34a',
-  moderate: '#e0a106',
-  emerging: '#e0673a',
-  limited: '#8c8079',
-};
-
 // Per-group ordering overrides (the data's evidence sort leaves unrated
 // sections in source order). In "Causes & signs", lead with the signs.
 const groupOrder: Record<string, string[]> = { loss: ['signs', 'causes', 'prevent'] };
@@ -75,6 +68,13 @@ const titleFor = (g: (typeof groups)[number]) => groupTitle[g.id] ?? g.title;
 // Intro overrides — '' hides the group's intro line on this page.
 const groupIntro: Record<string, string> = { basics: '' };
 const introFor = (g: (typeof groups)[number]) => groupIntro[g.id] ?? g.intro;
+
+// Short, always-visible answer for the ExpandableDrawer. Defaults to the
+// section's tldr; a few sections get a punchier hand-written line.
+const drawerShort: Record<string, string> = {
+  'what-is-collagen': 'A protein that builds your body.',
+};
+const shortFor = (s: { id: string; tldr: string }) => drawerShort[s.id] ?? s.tldr;
 
 const orderedSections = (g: (typeof groups)[number]) => {
   const sorted = g.sections
@@ -98,16 +98,19 @@ const faqAnswer: Record<string, string> = {
   'faq-vs-treatments': 'Both',
 };
 
-// Evidence-strength chart — one row per intervention that has an evidence rating.
-// 4 strong / 3 moderate / 2 emerging / 1 limited.
-const evidenceWidth: Record<Evidence, number> = { strong: 100, moderate: 75, emerging: 50, limited: 25 };
-
 // Groups rendered as plain info sections (no evidence bars, no accordion):
 // foundational background + the side-effects / FAQ tail.
 const topInfoIds = new Set(['basics', 'loss']);
 const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
 const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
 const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+// The white "full breakdown" slab holds only the evidence-graded groups.
+// The safety / FAQ tail renders after it, back on the bone background, so
+// the plain white drawers float there (matching the basics/loss batch).
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+// Continuous "Part 0X" numbering across both, in mainGroups order.
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
 
 // Topical product comparison
 const topicalGroup = groups.find((g) => g.id === 'boost-topical');
@@ -126,10 +129,9 @@ const topicalRows = topicalGroup?.sections
   <article class="bg-bone">
     <!-- ════════════ HERO ════════════ -->
     <header class="relative border-b border-ink/10 overflow-hidden">
-      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-end">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
         <div>
-          <p class="text-xs uppercase tracking-[0.4em] text-sage">Recommended · Variation 5</p>
-          <h1 class="font-display text-5xl md:text-7xl mt-4 leading-[1.02] max-w-3xl">
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
             Collagen, end&#8209;to&#8209;end<span class="text-rose">.</span>
           </h1>
           <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
@@ -165,28 +167,15 @@ const topicalRows = topicalGroup?.sections
       </div>
 
       {/* Foundational info: what collagen is, and how/why it declines.
-          Drawer style — collapsed by default, no evidence bar. */}
+          ExpandableDrawer — title + always-visible short answer, expand
+          for the full explanation. */}
       {topInfoGroups.map((g) => (
         <section id={g.id} class="scroll-mt-32 pt-2">
           <h2 class="font-display text-3xl md:text-4xl">{titleFor(g)}</h2>
           {introFor(g) && <p class="mt-3 text-ink/70 max-w-3xl">{introFor(g)}</p>}
-          <div class="info-drawers mt-6 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+          <div class="mt-6 grid gap-2">
             {orderedSections(g).map((s) => (
-              <details id={s.id} class="card group scroll-mt-32 transition">
-                <summary class="info-row cursor-pointer list-none flex items-center gap-3 py-3 px-3 -mx-3 rounded-lg border border-transparent hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
-                  <span class="flex-1 text-sm md:text-base font-medium text-ink/85 leading-snug group-hover:text-rose">{s.title}</span>
-                  <span class="caret shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-ink/40 group-open:text-rose transition" aria-hidden="true">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </span>
-                </summary>
-                <div class="card-body px-3 pb-6 pt-3">
-                  <p class="text-ink/80 text-base leading-relaxed pb-4 mb-4 border-b border-ink/10">{s.tldr}</p>
-                  {s.note && <p class="-mt-2 mb-4 text-xs text-ink/55 italic">{s.note}</p>}
-                  <div class="prose-anti text-ink/85" set:html={s.bodyHtml}></div>
-                </div>
-              </details>
+              <ExpandableDrawer id={s.id} title={s.title} short={shortFor(s)} bodyHtml={s.bodyHtml} />
             ))}
           </div>
         </section>
@@ -203,10 +192,10 @@ const topicalRows = topicalGroup?.sections
         </div>
 
         <div id="guide-body" class="min-w-0">
-          {mainGroups.map((g, gi) => (
+          {evidenceGroups.map((g) => (
           <>
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(gi + 1).padStart(2, '0')}</p>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
             <h2 class="font-display text-3xl md:text-4xl mt-2">{titleFor(g)}</h2>
             {introFor(g) && <p class="mt-3 text-ink/70 max-w-2xl">{introFor(g)}</p>}
 
@@ -218,93 +207,16 @@ const topicalRows = topicalGroup?.sections
               </div>
             )}
 
-            {infoGroupIds.has(g.id) ? (
-              /* Info drawer layout — collapsed by default, no evidence bar.
-                 Used for side effects and FAQ where the evidence-strength
-                 framing isn't the point. */
-              <div class="info-drawers mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
                 {orderedSections(g).map((s) => (
-                  <details id={s.id} class="card group scroll-mt-32 transition">
-                    <summary class="info-row cursor-pointer list-none flex items-center gap-3 py-3 px-3 -mx-3 rounded-lg border border-transparent hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
-                      <span class="flex-1 text-sm md:text-base font-medium text-ink/85 leading-snug group-hover:text-rose">{s.title}</span>
-                      {faqAnswer[s.id] && (
-                        <span class="hidden sm:inline font-display text-base text-rose leading-tight">{faqAnswer[s.id]}</span>
-                      )}
-                      <span class="caret shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-ink/40 group-open:text-rose transition" aria-hidden="true">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </span>
-                    </summary>
-                    <div class="card-body px-3 pb-6 pt-3">
-                      {faqAnswer[s.id] && (
-                        <p class="mb-3 font-display text-lg text-rose leading-tight sm:hidden">{faqAnswer[s.id]}</p>
-                      )}
-                      <p class="text-ink/80 text-base leading-relaxed pb-4 mb-4 border-b border-ink/10">{s.tldr}</p>
-                      {s.note && <p class="-mt-2 mb-4 text-xs text-ink/55 italic">{s.note}</p>}
-                      <div class="prose-anti text-ink/85" set:html={s.bodyHtml}></div>
-                    </div>
-                  </details>
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'boost-clinical' ? 'rose' : g.id === 'boost-topical' ? 'gold' : undefined}
+                  />
                 ))}
-              </div>
-            ) : (
-              <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
-                {orderedSections(g).map((s) => {
-                  const evidence = s.evidence ?? 'limited';
-                  const hasRating = !!s.evidence;
-                  return (
-                    <details
-                      id={s.id}
-                      class="card group scroll-mt-32 transition"
-                      data-evidence={s.evidence ?? 'none'}
-                      data-focus={s.focus ?? 'general'}
-                      data-rank={evidenceRank[s.evidence ?? 'limited']}
-                    >
-                      <summary class="chart-row cursor-pointer list-none flex items-center gap-3 py-2.5 px-3 -mx-3 rounded-lg border border-transparent hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
-                        <div class="w-40 md:w-56 shrink-0 text-sm font-medium text-ink/85 leading-snug group-hover:text-rose">{s.title}</div>
-                        <div class="flex-1 h-6 bg-ink/[0.07] rounded-full relative">
-                          {hasRating ? (
-                            <div
-                              class="absolute inset-y-0 left-0 rounded-full flex items-center px-3 min-w-max"
-                              style={`width: ${evidenceWidth[evidence]}%; background: ${evidenceColor[evidence]};`}
-                            >
-                              <span class="text-[10px] uppercase tracking-widest font-semibold text-white">{evidence}</span>
-                            </div>
-                          ) : (
-                            <div class="absolute inset-y-0 left-0 right-0 rounded-full flex items-center px-3">
-                              <span class="text-[10px] uppercase tracking-widest font-semibold text-ink/45">info</span>
-                            </div>
-                          )}
-                        </div>
-                        {s.focus && s.focus !== 'general' && (
-                          <span class="hidden md:inline-flex shrink-0 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone text-ink/60 border border-ink/10 whitespace-nowrap">
-                            {focusLabels[s.focus]}
-                          </span>
-                        )}
-                        <span class="caret shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-ink/40 group-open:text-rose transition" aria-hidden="true">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                          </svg>
-                        </span>
-                      </summary>
-
-                      <div class="card-body px-3 pb-6 pt-3 grid md:grid-cols-[1fr_auto] gap-6 items-start">
-                        <div class="min-w-0">
-                          <p class="text-ink/80 text-base leading-relaxed pb-4 mb-4 border-b border-ink/10">{s.tldr}</p>
-                          {s.note && <p class="-mt-2 mb-4 text-xs text-ink/55 italic">{s.note}</p>}
-                          <div class="prose-anti text-ink/85" set:html={s.bodyHtml}></div>
-                        </div>
-                        {(g.id === 'boost-clinical' || g.id === 'boost-topical') && (
-                          <div class="md:w-56 shrink-0">
-                            <MediaPlaceholder kind="image" ratio="4/5" label={s.title} tone={g.id === 'boost-clinical' ? 'rose' : 'gold'} />
-                          </div>
-                        )}
-                      </div>
-                    </details>
-                  );
-                })}
-              </div>
-            )}
+            </div>
           </section>
 
           {/* Editorial picks — placed right after the clinical "Boost it"
@@ -375,8 +287,23 @@ const topicalRows = topicalGroup?.sections
       </div>
     </section>
 
-    <!-- ════════════ ROUTINE / TOPICAL PICKS / REFERENCES ════════════ -->
+    <!-- ════════════ SAFETY / FAQ TAIL + ROUTINE / PICKS / REFERENCES ════════════ -->
     <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {/* Side-effects & FAQ — back on the bone background so the plain
+            white ExpandableDrawers float, matching the basics/loss batch. */}
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{titleFor(g)}</h2>
+            {introFor(g) && <p class="mt-3 text-ink/70 max-w-2xl">{introFor(g)}</p>}
+            <div class="mt-8 grid gap-2">
+              {orderedSections(g).map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
 
         <!-- ════════════ BUILD-A-ROUTINE ════════════ -->
         <section id="routine" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">

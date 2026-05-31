@@ -1,0 +1,111 @@
+---
+/**
+ * ExpandableDrawer — EXPERIMENTAL.
+ *
+ * A self-contained drawer that always shows a title and a one-line short
+ * answer, and expands to reveal the full content. Unlike the page's existing
+ * `info-drawers` (which hide everything behind the summary), the short answer
+ * here stays visible whether open or closed — so a skimmer gets the gist
+ * without interacting, and only taps through when they want the detail.
+ *
+ * Native <details>, so it works without JS and is keyboard/screen-reader
+ * friendly. Full content goes in the default slot (or pass `bodyHtml`).
+ */
+interface Props {
+  id?: string;
+  title: string;
+  /** One-line plain-language answer, always visible. */
+  short: string;
+  /** Full content as HTML. Alternative to the default slot. */
+  bodyHtml?: string;
+  class?: string;
+}
+const { id, title, short, bodyHtml, class: className = '' } = Astro.props;
+---
+
+<details
+  id={id}
+  class:list={[
+    'exp-drawer group scroll-mt-32 rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 hover:shadow-sm open:border-rose/40 open:shadow-sm',
+    className,
+  ]}
+>
+  <summary class="exp-summary cursor-pointer list-none flex items-start gap-4">
+    <div class="min-w-0 flex-1">
+      <h3 class="font-display text-xl md:text-2xl leading-tight group-hover:text-rose group-open:text-rose transition">
+        {title}
+      </h3>
+      <p class="mt-1 text-ink/70 text-base leading-snug">{short}</p>
+      <span class="exp-cta mt-2 inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold text-rose group-open:hidden">
+        Read full answer
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </span>
+    </div>
+    <span
+      class="caret shrink-0 mt-1 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition"
+      aria-hidden="true"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </span>
+  </summary>
+
+  <div class="exp-body mt-3 pt-3 border-t border-ink/10">
+    {bodyHtml ? (
+      <div class="prose-anti text-ink/85" set:html={bodyHtml}></div>
+    ) : (
+      <div class="prose-anti text-ink/85"><slot /></div>
+    )}
+    <button
+      type="button"
+      class="exp-collapse mt-4 inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold text-ink/50 hover:text-rose transition"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+      Show less
+    </button>
+  </div>
+</details>
+
+<script>
+  // "Show less" lives at the bottom of the body, outside the <summary>, so a
+  // click there can't toggle the <details> natively — close it manually.
+  document.querySelectorAll<HTMLButtonElement>('.exp-collapse').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const drawer = btn.closest('details');
+      if (!drawer) return;
+      drawer.open = false;
+      drawer.querySelector('summary')?.scrollIntoView({ block: 'nearest' });
+    });
+  });
+</script>
+
+<style>
+  /* Reveal-on-open feel — the body slides/fades in. Respects reduced motion. */
+  .exp-drawer .exp-body {
+    animation: exp-reveal 0.22s ease-out;
+  }
+  @keyframes exp-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .exp-drawer .exp-body {
+      animation: none;
+    }
+  }
+  /* Hide the native disclosure triangle across browsers. */
+  .exp-summary::-webkit-details-marker {
+    display: none;
+  }
+</style>

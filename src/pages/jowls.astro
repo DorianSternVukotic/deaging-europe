@@ -1,0 +1,473 @@
+---
+/**
+ * Jowls — problem page in the collagen-5 design language.
+ *
+ * Same skeleton as /collagen-5: hero · key takeaways · drawer foundational
+ * info · evidence-chart cards for treatments · editorial picks · drawer
+ * at-home info · interactive "match a treatment to my cause" widget ·
+ * comparison cards · references · sticky clinician CTA.
+ *
+ * Why this design for this content:
+ *
+ *  1. Treatments span a huge evidence + invasiveness range (sunscreen to
+ *     deep-plane facelift). Evidence-strength bars are the right primary
+ *     visual signal, not pretty photos.
+ *
+ *  2. There are several legitimate root causes (loose skin, volume loss,
+ *     submental fat, platysmal bands). The interactive matcher lets users
+ *     filter the catalogue by their dominant cause without leaving the page.
+ *
+ *  3. The at-home section is mostly cautionary — drawers keep that content
+ *     skimmable without competing for attention with real treatments.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  causeLabels,
+  allSections,
+  type Evidence,
+  type Cause,
+} from '../data/jowls';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Jowls — causes, prevention and treatment | DeAging Europe';
+const description =
+  'Why jowls form, what slows them, and which treatments actually lift them — from sunscreen to deep-plane facelifts, evidence-graded.';
+
+const stripTags = (html: string) =>
+  html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const totalWords = allSections()
+  .map((s) => stripTags(s.bodyHtml).split(/\s+/).length)
+  .reduce((a, b) => a + b, 0);
+const readingMinutes = Math.max(1, Math.round(totalWords / 220));
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+// Bottom-line answer shown in the collapsed FAQ row (full answer is one tap deeper).
+const faqAnswer: Record<string, string> = {
+  'faq-when-start': '40s–50s',
+  'faq-prevent': 'No, only delay',
+  'faq-exercises': 'No',
+  'faq-cream-vs-treatment': 'No',
+  'faq-cheapest': 'SPF + retinoid',
+  'faq-best-overall': 'Facelift',
+};
+
+// Treatments are the evidence-chart groups; everything else renders as drawers.
+const chartGroupIds = new Set(['nonsurgical', 'surgical']);
+
+// Foundational drawer info lives above the white treatment block, on bone so
+// the white ExpandableDrawers contrast. 'prevent' stays here — before the
+// treatments — to preserve the original reading order.
+const topInfoIds = new Set(['basics', 'causes', 'prevent']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+
+// The white "what the evidence says" slab holds only the evidence-chart
+// groups; the at-home / FAQ tail renders after it, back on the bone background.
+const breakdownGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const chartGroups = breakdownGroups.filter((g) => chartGroupIds.has(g.id));
+const tailInfoGroups = breakdownGroups.filter((g) => !chartGroupIds.has(g.id));
+// Continuous "Part 0X" numbering across the slab and the tail.
+const partNo = (g: (typeof groups)[number]) => breakdownGroups.findIndex((x) => x.id === g.id) + 1;
+
+const orderedSections = (g: (typeof groups)[number]) => {
+  if (chartGroupIds.has(g.id)) {
+    return g.sections
+      .slice()
+      .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+  }
+  return g.sections;
+};
+
+// Causes the matcher widget knows about — order matters (first one is the default).
+const matcherCauses: Cause[] = [
+  'loose-skin',
+  'volume-loss',
+  'submental-fat',
+  'platysmal-bands',
+];
+
+// Pre-compute treatment lists per cause so the matcher widget can switch
+// instantly client-side without re-querying.
+const treatmentsByCause = Object.fromEntries(
+  matcherCauses.map((c) => [
+    c,
+    [...groups.find((g) => g.id === 'nonsurgical')!.sections, ...groups.find((g) => g.id === 'surgical')!.sections]
+      .filter((s) => s.cause === c)
+      .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']),
+  ])
+) as Record<Cause, typeof groups[number]['sections']>;
+
+// At-home product comparison cards (mirrors collagen-5's topical table).
+const homeGroup = groups.find((g) => g.id === 'home')!;
+const homeCardIds = ['home-sunscreen', 'home-retinol', 'home-peptides', 'home-vitamin-c', 'home-firming-creams', 'home-makeup'];
+const homeRows = homeCardIds
+  .map((id) => homeGroup.sections.find((s) => s.id === id))
+  .filter((s): s is NonNullable<typeof s> => !!s)
+  .map((s) => ({
+    id: s.id,
+    title: s.title,
+    tldr: s.tldr,
+    evidence: s.evidence ?? 'limited',
+    note: s.note?.replace(/^Best for:\s*/i, '') ?? '',
+  }));
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="jowls" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-end">
+        <div>
+          <p class="text-xs uppercase tracking-[0.4em] text-sage">Problem · Jowls</p>
+          <h1 class="font-display text-5xl md:text-7xl mt-4 leading-[1.02] max-w-3xl">
+            Jowls, end&#8209;to&#8209;end<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            What causes them, what you can do at home, and which treatments actually lift them.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 31 May 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Jawline portrait" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+
+    <!-- ════════════ TOP-FOLD SUMMARY ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Anatomy of a jowl · 2 min" tone="sage" />
+      </div>
+
+      {/* Foundational drawers — what jowls are, what drives them, how to slow
+          them. ExpandableDrawer: title + always-visible short answer. */}
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-3xl">{g.intro}</p>}
+          <div class="mt-6 grid gap-2">
+            {orderedSections(g).map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ TREATMENTS + AT-HOME + FAQ ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Jowls — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {chartGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {/* Featured media for the surgical block */}
+            {g.id === 'surgical' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Inside a deep-plane facelift" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Before / after grid" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+              {orderedSections(g).map((s) => (
+                <EvidenceRow
+                  s={s}
+                  variant="bar"
+                  tag={s.cause && s.cause !== 'general' ? causeLabels[s.cause] : undefined}
+                  mediaTone={g.id === 'surgical' ? 'rose' : 'gold'}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Editorial picks — slotted after the surgical block so users have
+              just finished reading the full treatment range. */}
+          {g.id === 'surgical' && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">Four interventions our team consistently recommends, ranging from a daily-care fundamental to a once-in-a-decade procedure.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-sunscreen',
+                    kind: 'Daily care',
+                    title: 'Broad-spectrum SPF 30+',
+                    blurb: 'The only at-home step with strong evidence for slowing the collagen damage that drives jowls.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'tx-biostimulator',
+                    kind: 'Injectable',
+                    title: 'Sculptra (PLLA biostimulator)',
+                    blurb: '71.6% responder rate at 12 months in trial. Rebuilds volume over months, lasts 2+ years.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'tx-rf-microneedling',
+                    kind: 'Energy device',
+                    title: 'RF microneedling (Morpheus8)',
+                    blurb: 'Heat-based collagen remodelling for mild–moderate laxity. 1–3 sessions, ~1 week downtime.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'sx-deep-plane',
+                    kind: 'Surgery',
+                    title: 'Deep-plane facelift',
+                    blurb: 'For advanced sagging only. Repositions deeper tissues — natural, dramatic, 7–10 year result.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ AT-HOME / FAQ TAIL + MATCHER / HOME PICKS / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {/* At-home & FAQ — back on bone so the white ExpandableDrawers float,
+            matching the foundational batch. */}
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {orderedSections(g).map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ TREATMENT MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a treatment to your jowls</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open whichever is most prominent when you look in the mirror to reveal the treatments matched to it, sorted by evidence strength.</p>
+
+          <div class="mt-8 grid gap-3" id="matcher-widget">
+            {matcherCauses.map((c, i) => (
+              <details class="matcher-drawer group bg-white rounded-xl border border-ink/10 open:border-rose/40 open:shadow-sm transition" open={i === 0}>
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4 p-4">
+                  <div class="flex items-baseline gap-3 min-w-0">
+                    <h3 class="font-display text-lg leading-tight group-hover:text-rose group-open:text-rose transition">{causeLabels[c]}</h3>
+                    <span class="shrink-0 text-[10px] uppercase tracking-widest font-semibold text-ink/45">
+                      {treatmentsByCause[c].length} {treatmentsByCause[c].length === 1 ? 'option' : 'options'}
+                    </span>
+                  </div>
+                  <span class="caret shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="px-4 pb-4 grid gap-3">
+                  {treatmentsByCause[c].length === 0 ? (
+                    <p class="text-ink/60 italic">No treatments tagged for this cause yet.</p>
+                  ) : (
+                    treatmentsByCause[c].map((t) => (
+                      <a
+                        href={`#${t.id}`}
+                        class="flex items-start justify-between gap-4 p-4 bg-bone/40 rounded-xl border border-ink/10 hover:border-rose/40 hover:bg-white hover:shadow-md transition group/item"
+                      >
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <h4 class="font-display text-lg leading-tight group-hover/item:text-rose">{t.title}</h4>
+                            <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(t.evidence)}`}>{t.evidence}</span>
+                          </div>
+                          <p class="mt-1 text-sm text-ink/65 leading-snug">{t.tldr}</p>
+                          {(t.sessions || t.cost) && (
+                            <p class="mt-2 text-xs text-ink/50">
+                              {t.sessions && <span>{t.sessions}</span>}
+                              {t.sessions && t.cost && <span class="mx-2">·</span>}
+                              {t.cost && <span>{t.cost}</span>}
+                            </p>
+                          )}
+                        </div>
+                        <svg class="shrink-0 mt-1 text-ink/40 group-hover/item:text-rose transition" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </a>
+                    ))
+                  )}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ AT-HOME PRODUCT CARDS ════════════ -->
+        <section id="compare-home" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">At-home picks</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Daily-care options by evidence</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">None of these lift sagging tissue. The strongest ones slow the process and improve skin quality over months.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {homeRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.title}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.tldr}</p>
+                {r.note && <p class="mt-3 text-xs font-medium text-ink/85">Best for: {r.note}</p>}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References & further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            Claims draw on peer-reviewed studies, clinical-society guidance, and dermatologist-reviewed
+            consumer references — including AAD, DermNet, Cleveland Clinic, peer-reviewed cosmetic
+            dermatology journals, and randomized trials of PLLA, RF and ultrasound for facial laxity.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Talk to a qualified clinician before starting
+          treatments, especially during pregnancy, breastfeeding, while on medications, or with a
+          chronic condition.
+        </p>
+    </div>
+
+    <!-- ════════════ CLINICIAN CTA ════════════ -->
+    <div class="sticky bottom-4 z-30 max-w-6xl mx-auto px-6 pointer-events-none">
+      <div class="ml-auto max-w-md p-4 bg-ink text-bone rounded-2xl shadow-2xl flex items-center justify-between gap-3 pointer-events-auto hidden md:flex">
+        <p class="text-sm">Not sure where to start? <span class="text-bone/70">Speak with a clinician.</span></p>
+        <a href="#" class="text-xs px-3 py-1.5 rounded-full bg-rose text-bone font-medium hover:bg-rose/90 transition whitespace-nowrap">Book a call</a>
+      </div>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
+    .prose-anti :global(p:first-child) { margin-top: 0; }
+    .prose-anti :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
+    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
+    .prose-anti :global(ul) { list-style: disc; }
+    .prose-anti :global(ol) { list-style: decimal; }
+    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      // 1. Chrome measurement for sticky scroll margins
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      // 2. Hash deep-link: open the targeted <details>
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
