@@ -53,7 +53,8 @@ const hasRating = !!s.evidence;
 ---
 
 <details id={s.id} class="card group scroll-mt-32 transition" data-evidence={s.evidence ?? 'none'}>
-  <summary class="chart-row cursor-pointer list-none flex items-center gap-3 py-2.5 px-3 -mx-3 rounded-lg border border-transparent hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
+  <summary class="chart-row cursor-pointer list-none block py-2.5 px-3 -mx-3 rounded-lg border border-transparent hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
+    <div class="flex items-center gap-3">
     <div class="flex-1 min-w-0 md:flex-none md:w-52 text-base md:text-sm font-medium text-ink/85 leading-snug group-hover:text-rose">{s.title}</div>
 
     {/* ── Evidence indicator ──
@@ -118,6 +119,17 @@ const hasRating = !!s.evidence;
         <polyline points="6 9 12 15 18 9"></polyline>
       </svg>
     </span>
+    </div>
+
+    {/* Full-width "Read more" affordance — its own row so the expand action
+        reads clearly, not just as a chevron. Swaps to "Show less" when open. */}
+    <div class="read-more-row mt-2 flex items-center justify-start gap-1.5 text-xs uppercase tracking-widest font-semibold text-rose">
+      <span class="group-open:hidden">Read more</span>
+      <span class="hidden group-open:inline">Show less</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180" aria-hidden="true">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
   </summary>
 
   <div class="card-body px-3 pb-6 pt-3 grid md:grid-cols-[1fr_auto] gap-6 items-start">
