@@ -1,0 +1,756 @@
+---
+/**
+ * Clinic template — instanced for EGP Aesthetics (Clapham, London).
+ *
+ * The clinic-page sibling of /collagen-5 (supplement) and /jowls (problem).
+ * All content lives in src/data/egp.ts; this file is the layout, designed to
+ * later become src/pages/clinics/[clinic].astro.
+ *
+ * Why this design for this content:
+ *
+ *  1. The client's strategy is the JOURNEY, not the treatment: one visit →
+ *     delight → a written multi-month plan. So the journey map is the page's
+ *     spine, placed BEFORE the treatment menu — the inversion of every
+ *     clinic site we researched — and maintenance is framed as biology
+ *     (fibroblast cycles, collagen-synthesis windows, ~1%/yr decline), never
+ *     as upselling. That framing IS the DeAging evidence-first brand.
+ *
+ *  2. Treatments render as the house evidence-graded chart (EvidenceRow),
+ *     including honest 'emerging' grades on the clinic's flagship — honesty
+ *     as the luxury trust signal.
+ *
+ *  3. UK compliance is structural, not cosmetic: POM treatments (botulinum
+ *     toxin for expression lines, hyaluronidase for filler correction) exist
+ *     only as consultation-led info rows — no brand, no price, no booking
+ *     link (Reg 284 HMR 2012 + CAP 12.12). No urgency
+ *     mechanics, no unverified award claims, gallery gated on consent.
+ *
+ *  4. Booking runs on Fresha (better booking flow is out of scope) — every
+ *     CTA deep-links there from one BookingConfig, revealed only after the
+ *     visitor has scrolled past the journey map, so the relationship framing
+ *     always precedes the ask.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../../components/ExpandableDrawer.astro';
+import EvidenceRow from '../../components/EvidenceRow.astro';
+import JourneyTimeline from '../../components/JourneyTimeline.astro';
+import { DEFAULT_LOCALE } from '../../i18n/ui';
+import { clinic, allTreatments, patientCueFor, type Evidence } from '../../data/egp';
+
+const locale = DEFAULT_LOCALE;
+const { meta, booking } = clinic;
+
+const title = `${meta.name} — evidence-graded clinic guide | DeAging Europe`;
+const description =
+  'A sister-led regenerative aesthetics clinic in Clapham, London — every treatment evidence-graded, every plan written for the long term. Consultations £50, redeemable.';
+
+// Surface unresolved client-facts loudly at build/dev time.
+if (clinic.verificationFlags.length > 0) {
+  console.warn(
+    `\n[clinics/${clinic.slug}] ${clinic.verificationFlags.length} verification flag(s) outstanding before launch:\n` +
+      clinic.verificationFlags.map((f) => `  • ${f}`).join('\n') +
+      '\n'
+  );
+}
+
+const stripTags = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const totalWords = [
+  ...allTreatments().map((t) => t.bodyHtml),
+  ...clinic.maintenance.map((m) => m.bodyHtml),
+  ...clinic.faqs.map((f) => f.bodyHtml),
+  ...clinic.journeyStages.map((s) => s.bodyHtml),
+]
+  .map((html) => stripTags(html).split(/\s+/).length)
+  .reduce((a, b) => a + b, 0);
+const readingMinutes = Math.max(1, Math.round(totalWords / 220));
+
+const metaLine = `${meta.address.area}, ${meta.address.city} ${meta.address.postcode.split(' ')[0]} · Sister-founded ${meta.established} · Updated ${meta.updated} · ~${readingMinutes} min read`;
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+// EvidenceRow's saturated indicator colors — reused for the legend.
+const legend: { grade: Evidence; color: string; means: string }[] = [
+  { grade: 'strong', color: '#16a34a', means: 'Multiple good trials agree' },
+  { grade: 'moderate', color: '#e0a106', means: 'Solid studies, fewer or smaller' },
+  { grade: 'emerging', color: '#e0673a', means: 'Promising; big trials pending' },
+  { grade: 'limited', color: '#8c8079', means: 'Thin or mixed evidence' },
+];
+
+const journeyDrawers = clinic.journeyDrawerIds
+  .map((id) => clinic.maintenance.find((m) => m.id === id))
+  .filter((m): m is NonNullable<typeof m> => !!m);
+
+// Continuous "Part 0X" numbering across the page's numbered sections.
+const partNo = { journey: 1, journeys: 2, treatments: 3, maintenance: 4, faq: 5 };
+const part = (n: number) => `Part ${String(n).padStart(2, '0')}`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BeautySalon',
+  name: meta.name,
+  legalName: meta.legalName,
+  description,
+  telephone: '+44 ' + meta.contact.phone.replace(/^0/, '').replace(/\s/g, ' '),
+  email: meta.contact.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: meta.address.line1,
+    addressLocality: meta.address.city,
+    postalCode: meta.address.postcode,
+    addressCountry: 'GB',
+  },
+  geo: { '@type': 'GeoCoordinates', latitude: meta.address.geo[0], longitude: meta.address.geo[1] },
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday'], opens: '10:00', closes: '18:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Thursday', opens: '10:00', closes: '19:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Friday', opens: '10:00', closes: '16:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: '09:00', closes: '16:00' },
+  ],
+  sameAs: [...meta.socials.map((s) => s.href), booking.venueBase],
+  priceRange: '££',
+};
+---
+
+<BaseLayout title={title} description={description} locale={locale} path={`clinics/${clinic.slug}`} type="article" jsonLd={jsonLd}>
+  <article class="bg-bone pb-20 md:pb-0">
+    <!-- ════════════ 01 · HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-end">
+        <div>
+          <p class="text-xs uppercase tracking-[0.4em] text-sage">{meta.heroEyebrow}</p>
+          <h1 class="font-display text-5xl md:text-7xl mt-4 leading-[1.02] max-w-3xl">
+            {meta.heroHeadline}<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">{meta.heroSub}</p>
+          <p class="mt-3 text-xs text-ink/50">{metaLine}</p>
+          <p class="mt-2 text-xs text-ink/60">
+            5.0 from 655 verified Fresha reviews · 4.9 on Google · Women-founded
+          </p>
+          <div class="mt-7 flex flex-wrap items-center gap-3">
+            <a
+              href={booking.consultation}
+              target="_blank"
+              rel="noopener nofollow"
+              data-cta="hero-book"
+              class="px-5 py-2.5 rounded-full bg-rose text-bone text-sm font-medium hover:bg-rose/90 transition"
+            >
+              Book a consultation — £50, redeemable
+            </a>
+            <a
+              href={booking.whatsapp}
+              target="_blank"
+              rel="noopener nofollow"
+              data-cta="hero-whatsapp"
+              class="px-5 py-2.5 rounded-full border border-ink/20 text-sm font-medium hover:border-rose hover:text-rose transition"
+            >
+              Ask us on WhatsApp
+            </a>
+          </div>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Eli & Galina Pavlova — founders" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ 02 · PROOF BAR ════════════ -->
+    <section class="bg-white border-b border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-8">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {meta.ratings.map((r) =>
+            r.href ? (
+              <a href={r.href} target="_blank" rel="noopener nofollow" class="block group">
+                <p class="font-display text-3xl leading-none group-hover:text-rose transition">{r.stat}</p>
+                <p class="mt-2 text-xs text-ink/60 leading-snug">{r.label}</p>
+              </a>
+            ) : (
+              <div>
+                <p class="font-display text-3xl leading-none">{r.stat}</p>
+                <p class="mt-2 text-xs text-ink/60 leading-snug">{r.label}</p>
+              </div>
+            )
+          )}
+        </div>
+        <p class="mt-6 pt-5 border-t border-ink/5 text-sm text-ink/60 italic">
+          "Amazing!!! The best facial ever and I've had a few!" — Julia L., Fresha, May 2026
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════════ 03 · IF YOU READ NOTHING ELSE ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {clinic.keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <MediaPlaceholder kind="video" ratio="16/9" label="A first visit at EGP · 2 min" tone="sage" />
+
+      <!-- ════════════ 04 · PHILOSOPHY + EVIDENCE PROMISE ════════════ -->
+      <div id="philosophy" class="scroll-mt-32 pt-2">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">Our philosophy</p>
+        <blockquote class="mt-4 max-w-3xl">
+          <p class="font-display text-2xl md:text-3xl leading-snug text-ink/90">
+            “{meta.philosophyQuote.text}”
+          </p>
+          <footer class="mt-3 text-sm text-ink/60">— {meta.philosophyQuote.attribution}</footer>
+        </blockquote>
+        <div class="mt-6 max-w-3xl text-ink/80 leading-relaxed prose-anti" set:html={meta.evidencePromiseHtml}></div>
+        <div class="mt-5 flex flex-wrap gap-2">
+          {legend.map((l) => (
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-ink/10 text-xs">
+              <span class="w-2.5 h-2.5 rounded-full" style={`background:${l.color};`} aria-hidden="true"></span>
+              <span class="uppercase tracking-widest font-semibold" style={`color:${l.color};`}>{l.grade}</span>
+              <span class="text-ink/55">{l.means}</span>
+            </span>
+          ))}
+        </div>
+        <p class="mt-5 text-sm text-ink/60">{meta.standardsLine}</p>
+      </div>
+    </section>
+
+    <!-- ════════════ 05 · MEET THE SISTERS ════════════ -->
+    <section id="founders" class="scroll-mt-32 bg-ink text-bone">
+      <div class="max-w-6xl mx-auto px-6 py-14">
+        <p class="text-xs uppercase tracking-[0.3em] text-gold">The founders</p>
+        <h2 class="font-display text-3xl md:text-4xl mt-2 max-w-2xl">
+          You will always be treated by Eli or Galina.
+        </h2>
+        <div class="mt-10 grid md:grid-cols-2 gap-8">
+          {clinic.practitioners.map((p) => (
+            <div class="grid grid-cols-[120px_1fr] gap-5 items-start">
+              <MediaPlaceholder kind="image" ratio="4/5" label={p.photoLabel} tone="bone" />
+              <div>
+                <h3 class="font-display text-2xl">{p.name}</h3>
+                <p class="text-gold text-sm mt-0.5">{p.title}</p>
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  {p.credentials.map((c) => (
+                    <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-bone/10 text-bone/75">{c}</span>
+                  ))}
+                </div>
+                <div class="mt-3 text-sm text-bone/75 leading-relaxed clinic-bio" set:html={p.bioHtml}></div>
+                {p.rating && <p class="mt-2 text-xs text-gold/90">{p.rating}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <p class="mt-10 max-w-2xl text-bone/80 border-l-2 border-gold/50 pl-4 text-[15px] leading-relaxed">
+          {clinic.continuityPromise}
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════════ 06 · PART 01 — THE JOURNEY MAP ════════════ -->
+    <section id="journey" class="scroll-mt-32 bg-white border-b border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-14">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">{part(partNo.journey)} · How it works here</p>
+        <h2 class="font-display text-4xl md:text-5xl mt-2 leading-[1.05] max-w-3xl">
+          One appointment is a treatment. A year is a transformation.
+        </h2>
+        <p class="mt-4 text-ink/70 max-w-2xl">
+          Every client at EGP is on a written plan — here is the shape of it, before you see a single price.
+        </p>
+
+        <JourneyTimeline stages={clinic.journeyStages} class="mt-10" />
+
+        <div class="mt-12">
+          <h3 class="font-display text-2xl md:text-3xl">Why maintenance is biology, not upselling</h3>
+          <div class="mt-5 grid gap-2">
+            {journeyDrawers.map((m) => (
+              <ExpandableDrawer id={`journey-${m.id}`} title={m.title} short={m.tldr} bodyHtml={m.bodyHtml} class="!bg-bone/40" />
+            ))}
+          </div>
+        </div>
+
+        <div class="mt-10 flex flex-wrap items-center gap-4">
+          <a
+            href={booking.consultation}
+            target="_blank"
+            rel="noopener nofollow"
+            data-cta="journey-book"
+            class="px-5 py-2.5 rounded-full bg-rose text-bone text-sm font-medium hover:bg-rose/90 transition"
+          >
+            Start with the consultation
+          </a>
+          <p class="text-sm text-ink/55">£50, fully redeemed against your first treatment.</p>
+        </div>
+
+        <p class="mt-8 text-xs text-ink/40">
+          EGP practitioners —
+          <a href="/clinics/egp/journey" class="underline decoration-ink/20 underline-offset-2 hover:text-rose hover:decoration-rose transition">open the in-person present view →</a>
+          the same four stages, with the delivery playbook for the room.
+        </p>
+      </div>
+    </section>
+    {/* Sentinel: the sticky CTAs reveal only after the journey framing has been seen. */}
+    <div id="cta-sentinel" aria-hidden="true"></div>
+
+    <!-- ════════════ 07 · PART 02 — SIGNATURE JOURNEYS ════════════ -->
+    <section id="signature-journeys" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-14">
+      <p class="text-xs uppercase tracking-[0.3em] text-sage">{part(partNo.journeys)} · Signature journeys</p>
+      <h2 class="font-display text-3xl md:text-4xl mt-2">Three ways a year with us can look</h2>
+      <p class="mt-3 text-ink/70 max-w-2xl">
+        Not packages, not bundles — examples of how a First-Year Map tends to read, with real prices from the clinic's live booking list.
+      </p>
+
+      <div class="mt-8 grid md:grid-cols-3 gap-5">
+        {clinic.signatureJourneys.map((j) => (
+          <div class="flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose/40 hover:shadow-md transition">
+            <MediaPlaceholder kind="image" ratio="4/3" label={j.name} tone={j.tone} />
+            <div class="p-6 flex flex-col flex-1">
+              <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{j.eyebrow}</p>
+              <h3 class="font-display text-2xl leading-tight mt-1">{j.name}</h3>
+              <p class="mt-2 text-sm text-ink/65 leading-snug">{j.forWhom}</p>
+              <ol class="mt-4 space-y-2.5 flex-1">
+                {j.steps.map((s) => (
+                  <li class="grid grid-cols-[5.5rem_1fr] gap-2 text-sm">
+                    <span class="text-[11px] uppercase tracking-wider font-semibold text-sage pt-0.5">{s.when}</span>
+                    <span class="text-ink/80 leading-snug">
+                      {s.what}
+                      {s.priceFrom && <span class="text-ink/50"> · {s.priceFrom}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              {j.indicativeYearCost && (
+                <p class="mt-4 text-sm font-medium text-ink/85">{j.indicativeYearCost}</p>
+              )}
+              {j.guideHref && (
+                <a href={j.guideHref} class="mt-2 text-xs text-rose underline decoration-rose/40 underline-offset-2 hover:decoration-rose">
+                  {j.guideLabel ?? 'Read the science'} →
+                </a>
+              )}
+              <p class="mt-3 text-xs text-ink/50 italic">{clinic.journeyDisclaimer}</p>
+              <a
+                href={booking.consultation}
+                target="_blank"
+                rel="noopener nofollow"
+                data-cta={`journey-${j.id}`}
+                class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose hover:gap-2 transition-all"
+              >
+                Begin this journey
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ════════════ 08 · PART 03 — TREATMENTS, GRADED ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">{part(partNo.treatments)} · The full menu</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05] max-w-4xl">
+            Every treatment, graded — including the ones we are still watching
+          </h2>
+          <p class="mt-4 text-ink/70 max-w-2xl">
+            Prices come from the clinic's live Fresha listing. The evidence bars use the same rubric as every DeAging Europe guide — and yes, that means some of the clinic's favourites are graded "emerging". That honesty is the point.
+          </p>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {clinic.treatmentGroups.map((g) => (
+            <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+              <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+              {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+              <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {g.treatments.map((t) => (
+                  <EvidenceRow s={{ ...t, followUp: patientCueFor(t.id) }} variant="bar" mediaTone={g.mediaTone} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ 09 · PART 04 — THE BIOLOGY OF MAINTENANCE ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+      <section id="maintenance" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">{part(partNo.maintenance)} · The science of the schedule</p>
+        <h2 class="font-display text-3xl md:text-4xl mt-2">When biology will ask for the next visit</h2>
+        <p class="mt-3 text-ink/70 max-w-2xl">
+          The bar grades how certain the published interval data is — so you can see which return dates are hard science and which are clinical convention.
+        </p>
+
+        <div class="mt-8 bg-white rounded-xl border border-ink/10 px-3">
+          <div class="divide-y divide-ink/[0.07]">
+            {clinic.maintenance.map((m) => (
+              <EvidenceRow s={m} variant="bar" />
+            ))}
+          </div>
+        </div>
+
+        <p class="mt-6 text-sm text-ink/60 max-w-2xl">
+          Unsure about committing to a year? Start with one phase. Plans are sequenced — more now, gentler maintenance later — and shortened as happily as they are extended.
+        </p>
+      </section>
+
+      <!-- ════════════ 10 · WHERE JOURNEYS BEGIN — PICKS ════════════ -->
+      <div id="picks" class="mb-16 scroll-mt-32">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+        <h2 class="font-display text-3xl md:text-4xl mt-2">Where journeys begin</h2>
+        <p class="mt-3 text-ink/70 max-w-2xl">
+          Four honest starting points — from the half-hour that costs nothing if you proceed, to the clinic's regenerative signature.
+        </p>
+
+        <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {clinic.picks.map((pick) => (
+            <a
+              href={pick.href}
+              class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+            >
+              <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+              <div class="p-5 flex flex-col flex-1">
+                <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                  View details
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ 11 · RESULTS — QUIET PROOF ════════════ -->
+    <section id="results" class="scroll-mt-32 bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">Results</p>
+        <h2 class="font-display text-3xl md:text-4xl mt-2">Subtle is the point</h2>
+        <p class="mt-3 text-ink/70 max-w-2xl">
+          Real cases, told plainly. Photography appears here only with written, dated consent — placeholders mark the cases awaiting it.
+        </p>
+
+        <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {clinic.gallery.map((c) => (
+            <figure class="bg-bone/40 rounded-2xl border border-ink/5 overflow-hidden">
+              {/* Real imagery may only be wired in when consentOnFile === true (CAP 3.45–3.50). */}
+              <MediaPlaceholder kind="image" ratio="4/3" label={c.mediaLabel} tone="bone" />
+              <figcaption class="p-5">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <h3 class="font-display text-lg leading-tight">{c.title}</h3>
+                  {c.evidence && (
+                    <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(c.evidence)}`}>{c.evidence}</span>
+                  )}
+                </div>
+                {c.date && <p class="mt-0.5 text-xs text-ink/50">{c.date}</p>}
+                <p class="mt-2 text-sm text-ink/70 leading-snug">{c.whatWasDone}</p>
+                {c.journeyNote && <p class="mt-3 text-xs font-medium text-sage">{c.journeyNote}</p>}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+        <p class="mt-6 text-xs text-ink/50 italic">{clinic.galleryDisclaimer}</p>
+      </div>
+    </section>
+
+    <!-- ════════════ 12 · VOICES — CLIENTS WHO STAYED ════════════ -->
+    <section id="voices" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-14">
+      <p class="text-xs uppercase tracking-[0.3em] text-sage">Client voices</p>
+      <h2 class="font-display text-3xl md:text-4xl mt-2">People don't visit EGP. They stay.</h2>
+
+      <div class="mt-8 grid md:grid-cols-3 gap-5">
+        {clinic.reviews.map((r) => (
+          <figure class="bg-white rounded-2xl p-6 border border-ink/5 shadow-sm flex flex-col">
+            {r.relationship && (
+              <span class="self-start text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-gold/15 text-gold">{r.relationship}</span>
+            )}
+            <blockquote class="mt-3 text-ink/85 leading-relaxed flex-1">“{r.quote}”</blockquote>
+            <figcaption class="mt-4 text-sm">
+              <span class="font-semibold">{r.author}</span>
+              <span class="text-ink/50"> · {r.source}, {r.date}</span>
+              {r.excerpted && <span class="block mt-1 text-[11px] text-ink/40 italic">Excerpt — full review on file.</span>}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <a
+        href={clinic.reviewsAllHref}
+        target="_blank"
+        rel="noopener nofollow"
+        class="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-rose hover:gap-2.5 transition-all"
+      >
+        Read all 655 reviews on Fresha
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </a>
+    </section>
+
+    <!-- ════════════ 13 · WAYS TO BELONG ════════════ -->
+    <section id="belong" class="scroll-mt-32 max-w-6xl mx-auto px-6 pb-14">
+      <p class="text-xs uppercase tracking-[0.3em] text-sage">Ways to belong</p>
+      <h2 class="font-display text-3xl md:text-4xl mt-2">For clients in it for the long run</h2>
+      <div class="mt-8 grid md:grid-cols-3 gap-5">
+        {clinic.belonging.map((b) => (
+          <div class="bg-white rounded-2xl border border-ink/10 p-6 flex flex-col hover:border-rose/40 hover:shadow-sm transition">
+            <h3 class="font-display text-xl leading-tight">{b.title}</h3>
+            <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{b.blurb}</p>
+            {b.href && (
+              <a
+                href={b.href}
+                target="_blank"
+                rel="noopener nofollow"
+                data-cta={b.id}
+                class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose hover:gap-2 transition-all"
+              >
+                {b.cta ?? 'Learn more'}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ════════════ 14 · PART 05 — HONEST ANSWERS ════════════ -->
+    <section id="faq" class="scroll-mt-32 max-w-6xl mx-auto px-6 pb-14">
+      <p class="text-xs uppercase tracking-[0.3em] text-sage">{part(partNo.faq)} · Honest answers</p>
+      <h2 class="font-display text-3xl md:text-4xl mt-2">Asked before booking</h2>
+      <div class="mt-8 grid gap-2">
+        {clinic.faqs.map((f) => (
+          <ExpandableDrawer id={f.id} title={f.question} short={f.short} bodyHtml={f.bodyHtml} />
+        ))}
+      </div>
+    </section>
+
+    <!-- ════════════ 15 · VISIT US ════════════ -->
+    <section id="visit" class="scroll-mt-32 bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-2 gap-10">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Visit us</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">{meta.address.area}, {meta.address.city}</h2>
+          <p class="mt-4 text-ink/80">
+            {meta.address.line1}, {meta.address.city} {meta.address.postcode}
+          </p>
+          <ul class="mt-4 space-y-1.5 text-sm text-ink/70">
+            {meta.transport.map((t) => (
+              <li class="flex gap-2"><span class="text-rose">●</span><span>{t}</span></li>
+            ))}
+            <li class="flex gap-2"><span class="text-rose">●</span><span>{meta.parking}</span></li>
+          </ul>
+
+          <dl class="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm max-w-xs">
+            {meta.hours.map((h) => (
+              <>
+                <dt class="text-ink/55">{h.day}</dt>
+                <dd class={h.open === 'Closed' ? 'text-ink/45' : 'text-ink/85'}>{h.open}</dd>
+              </>
+            ))}
+          </dl>
+          <p class="mt-2 text-xs text-ink/45">{meta.hoursSource}</p>
+
+          <div class="mt-6 flex flex-wrap gap-3 text-sm">
+            <a href={`tel:+44${meta.contact.phone.replace(/\s/g, '').slice(1)}`} class="text-rose hover:underline">{meta.contact.phone}</a>
+            <span class="text-ink/30">·</span>
+            <a href={meta.contact.whatsappHref} target="_blank" rel="noopener nofollow" class="text-rose hover:underline">WhatsApp</a>
+            <span class="text-ink/30">·</span>
+            <a href={`mailto:${meta.contact.email}`} class="text-rose hover:underline">{meta.contact.email}</a>
+          </div>
+          <div class="mt-3 flex flex-wrap gap-3 text-xs text-ink/55">
+            {meta.socials.map((s) => (
+              <a href={s.href} target="_blank" rel="noopener nofollow" class="hover:text-rose transition">{s.label}</a>
+            ))}
+          </div>
+        </div>
+        <div class="flex flex-col gap-4">
+          <a href={meta.mapsHref} target="_blank" rel="noopener nofollow" aria-label="Open in Google Maps">
+            <MediaPlaceholder kind="image" ratio="16/9" label="Map — 809 Wandsworth Road, SW8" tone="sage" />
+          </a>
+          <div class="flex flex-wrap gap-3">
+            <a
+              href={booking.consultation}
+              target="_blank"
+              rel="noopener nofollow"
+              data-cta="visit-book"
+              class="px-5 py-2.5 rounded-full bg-rose text-bone text-sm font-medium hover:bg-rose/90 transition"
+            >
+              Book a consultation
+            </a>
+            <a
+              href={booking.whatsapp}
+              target="_blank"
+              rel="noopener nofollow"
+              data-cta="visit-whatsapp"
+              class="px-5 py-2.5 rounded-full border border-ink/20 text-sm font-medium hover:border-rose hover:text-rose transition"
+            >
+              Ask us on WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ 16 · REFERENCES + COMPLIANCE ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+      <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+        <h2 class="font-display text-3xl">References & further reading</h2>
+        <p class="mt-2 text-ink/70 text-sm">{clinic.references}</p>
+      </section>
+
+      <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+        Educational content, not medical advice. Talk to a qualified clinician before starting
+        treatments, especially during pregnancy, breastfeeding, while on medications, or with a
+        chronic condition.
+      </p>
+      <div class="mt-4 text-xs text-ink/45 italic max-w-3xl clinic-compliance" set:html={clinic.complianceFooterHtml}></div>
+    </div>
+
+    <!-- ════════════ 17 · STICKY CTAs (revealed after the journey map) ════════════ -->
+    <div class="sticky bottom-4 z-30 max-w-6xl mx-auto px-6 pointer-events-none hidden md:block">
+      <div class="clinic-cta ml-auto max-w-md p-4 bg-ink text-bone rounded-2xl shadow-2xl flex items-center justify-between gap-3">
+        <p class="text-sm">Begin with a consultation. <span class="text-bone/70">£50, redeemed against your first treatment.</span></p>
+        <a
+          href={booking.consultation}
+          target="_blank"
+          rel="noopener nofollow"
+          data-cta="sticky-book"
+          class="text-xs px-3 py-1.5 rounded-full bg-rose text-bone font-medium hover:bg-rose/90 transition whitespace-nowrap"
+        >
+          Book on Fresha
+        </a>
+      </div>
+    </div>
+    <div class="clinic-cta fixed bottom-0 inset-x-0 z-40 md:hidden bg-ink text-bone px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex items-center gap-3 shadow-2xl">
+      <a
+        href={booking.consultation}
+        target="_blank"
+        rel="noopener nofollow"
+        data-cta="mobile-book"
+        class="flex-1 text-center text-sm px-4 py-2.5 rounded-full bg-rose text-bone font-medium"
+      >
+        Book a consultation
+      </a>
+      <a
+        href={booking.whatsapp}
+        target="_blank"
+        rel="noopener nofollow"
+        data-cta="mobile-whatsapp"
+        class="text-sm px-4 py-2.5 rounded-full border border-bone/30"
+      >
+        WhatsApp
+      </a>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    .clinic-bio :global(p) { margin-block: 0.5em; }
+    .clinic-bio :global(p:first-child) { margin-top: 0; }
+    .clinic-compliance :global(p) { margin-block: 0.5em; }
+
+    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
+    .prose-anti :global(p:first-child) { margin-top: 0; }
+    .prose-anti :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
+    .prose-anti :global(ul) { list-style: disc; }
+    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
+
+    /* Sticky CTAs stay hidden until the visitor has scrolled past the journey map. */
+    .clinic-cta {
+      opacity: 0;
+      transform: translateY(0.75rem);
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .clinic-cta.cta-visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none, .clinic-cta { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      // 1. Chrome measurement for sticky scroll margins
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      // 2. Hash deep-link: open the targeted <details>
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+
+      // 3. Sticky CTAs appear only once the journey framing has been seen,
+      //    so the relationship pitch always precedes the booking ask.
+      const sentinel = document.getElementById('cta-sentinel');
+      const ctas = document.querySelectorAll('.clinic-cta');
+      if (!sentinel || !('IntersectionObserver' in window)) {
+        ctas.forEach((c) => c.classList.add('cta-visible'));
+        return;
+      }
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting || e.boundingClientRect.top < 0) {
+            ctas.forEach((c) => c.classList.add('cta-visible'));
+            io.disconnect();
+          }
+        });
+      });
+      io.observe(sentinel);
+    })();
+  </script>
+</BaseLayout>
