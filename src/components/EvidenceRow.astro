@@ -26,8 +26,6 @@ interface EvidenceItem {
   sessions?: string;
   downtime?: string;
   cost?: string;
-  /** Optional "what comes next" cue — sets the follow-up expectation on the row. */
-  followUp?: string;
 }
 
 interface Props {
@@ -122,17 +120,6 @@ const hasRating = !!s.evidence;
       </svg>
     </span>
     </div>
-
-    {/* Follow-up cue — always visible, so the next visit is expected, not sold. */}
-    {s.followUp && (
-      <p class="mt-2 flex items-center gap-1.5 text-xs text-sage leading-snug">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-        <span><span class="uppercase tracking-widest font-semibold text-[10px] text-sage/90">Then</span> · {s.followUp}</span>
-      </p>
-    )}
 
     {/* Full-width "Read more" affordance — its own row so the expand action
         reads clearly, not just as a chevron. Swaps to "Show less" when open. */}
