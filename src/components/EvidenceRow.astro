@@ -11,10 +11,9 @@
  *   variant="pips" — 4-segment strength meter + word
  */
 import MediaPlaceholder from './MediaPlaceholder.astro';
+import { evidenceColor, type Evidence } from '../data/evidence';
 
-type Evidence = 'strong' | 'moderate' | 'emerging' | 'limited';
-
-// Structural shape, so the row works with any data module (collagen, jowls…)
+// Structural shape, so the row works with any data module (collagen, future guides…)
 // without coupling to one Section type.
 interface EvidenceItem {
   id: string;
@@ -38,13 +37,6 @@ interface Props {
 }
 const { s, variant, tag, mediaTone } = Astro.props;
 
-// Saturated colors read better than the muted brand tones at small sizes.
-const evidenceColor: Record<Evidence, string> = {
-  strong: '#16a34a',
-  moderate: '#e0a106',
-  emerging: '#e0673a',
-  limited: '#8c8079',
-};
 const evidenceWidth: Record<Evidence, number> = { strong: 100, moderate: 75, emerging: 50, limited: 25 };
 const evidenceLevel: Record<Evidence, number> = { strong: 4, moderate: 3, emerging: 2, limited: 1 };
 

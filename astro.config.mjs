@@ -7,6 +7,8 @@ const site = process.env.SITE_URL ?? 'https://deagingeurope.example';
 export default defineConfig({
   site,
   trailingSlash: 'never',
+  // The collagen guide is /collagen (formerly /collagen-5; earlier drafts removed).
+  redirects: { '/collagen-5': '/collagen' },
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'bg', 'de', 'fr', 'it', 'es'],

@@ -1,12 +1,14 @@
 /**
  * Collagen guide — single source of truth.
  *
- * Both /collagen (drawer-based) and /collagen-deep (long-form) consume this.
+ * Consumed by /collagen (the guide page) and the homepage spotlight.
  * `bodyHtml` is plain HTML — rendered with `set:html`. Keep external links
  * with rel="noopener nofollow" and target="_blank".
  */
 
-export type Evidence = 'strong' | 'moderate' | 'emerging' | 'limited';
+import { type Evidence, countByTier, readingMinutesFor } from './evidence';
+export type { Evidence };
+export { evidenceColor, evidenceLabels } from './evidence';
 
 export type FocusArea =
   | 'skin'
@@ -907,13 +909,6 @@ export const groups: SectionGroup[] = [
 // FILTER METADATA
 // ---------------------------------------------------------------------------
 
-export const evidenceLabels: Record<Evidence, string> = {
-  strong: 'Strong evidence',
-  moderate: 'Moderate evidence',
-  emerging: 'Emerging evidence',
-  limited: 'Limited evidence',
-};
-
 export const focusLabels: Record<FocusArea, string> = {
   skin: 'Skin',
   joints: 'Joints',
@@ -929,4 +924,14 @@ export const focusLabels: Record<FocusArea, string> = {
 
 export function allSections(): Section[] {
   return groups.flatMap((g) => g.sections);
+}
+
+/** Tier counts for this guide — drives the homepage evidence ledger. */
+export function evidenceCounts(): Record<Evidence, number> {
+  return countByTier(allSections());
+}
+
+/** Full-read time of this guide at ~220 wpm. */
+export function readingMinutes(): number {
+  return readingMinutesFor(allSections());
 }

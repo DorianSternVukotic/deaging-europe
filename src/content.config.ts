@@ -3,33 +3,6 @@ import { glob } from 'astro/loaders';
 
 const localeSchema = z.enum(['en', 'bg', 'de', 'fr', 'it', 'es']);
 
-const problems = defineCollection({
-  loader: glob({
-    pattern: '**/*.md',
-    base: './src/content/problems',
-    generateId: ({ entry }) => entry.replace(/\.md$/, ''),
-  }),
-  schema: z.object({
-    title: z.string(),
-    locale: localeSchema,
-    slug: z.string(),
-    bodyArea: z.string(),
-    image: z.string(),
-    summary: z.string(),
-    solutions: z.array(
-      z.object({
-        name: z.string(),
-        kind: z.enum(['ingredient', 'treatment', 'device', 'lifestyle']),
-        description: z.string(),
-        productSlug: z.string().optional(),
-        evidence: z.enum(['strong', 'moderate', 'emerging']).default('moderate'),
-      })
-    ),
-    seoTitle: z.string().optional(),
-    seoDescription: z.string().optional(),
-  }),
-});
-
 const infoBlock = z.discriminatedUnion('type', [
   z.object({ type: z.literal('paragraph'), title: z.string().optional(), body: z.string() }),
   z.object({ type: z.literal('image'), src: z.string(), alt: z.string(), caption: z.string().optional() }),
@@ -90,4 +63,4 @@ const products = defineCollection({
   }),
 });
 
-export const collections = { problems, products };
+export const collections = { products };

@@ -2,79 +2,98 @@
 // Default-locale (en) homepage lives at "/"
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ProblemCard from '../components/ProblemCard.astro';
 import { localePath, t } from '../i18n/utils';
 import { type Locale } from '../i18n/ui';
+import { allSections, evidenceCounts, readingMinutes } from '../data/collagen';
+import { EVIDENCE_TIERS, evidenceColor, evidenceLabels } from '../data/evidence';
 
 const locale: Locale = 'en';
 
-const allProblems = await getCollection('problems', ({ data }) => data.locale === locale);
 const allProducts = await getCollection('products', ({ data }) => data.locale === locale);
 
-const faqJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: allProblems.slice(0, 5).map((p) => ({
-    '@type': 'Question',
-    name: `What helps with ${p.data.title.toLowerCase()}?`,
-    acceptedAnswer: {
-      '@type': 'Answer',
-      text: `${p.data.summary} Top solutions: ${p.data.solutions.slice(0, 3).map((s) => s.name).join(', ')}.`,
-    },
-  })),
-};
+// Collagen spotlight — the flagship guide. Everything here is derived from the
+// guide's own data module so the card can't drift from /collagen.
+const tiers = EVIDENCE_TIERS;
+const counts = evidenceCounts();
+const maxCount = Math.max(...tiers.map((e) => counts[e]));
+const gradedCount = tiers.reduce((n, e) => n + counts[e], 0);
+const ledger = tiers.map((e) => ({
+  tier: e,
+  label: evidenceLabels[e],
+  count: counts[e],
+  pct: Math.round((counts[e] / maxCount) * 100),
+  color: evidenceColor[e],
+}));
+const guideMinutes = readingMinutes();
+const sectionCount = allSections().length;
+
 ---
 <BaseLayout
   title="DeAging Europe — Evidence-based anti-aging information & products"
   description="The European hub for anti-aging protocols, ingredients and devices that actually work — backed by science, reviewed by clinicians."
   locale={locale}
-  jsonLd={faqJsonLd}
 >
   <section class="relative overflow-hidden">
-    <div class="max-w-6xl mx-auto px-6 py-24 md:py-32">
+    <div class="max-w-6xl mx-auto px-6 pt-24 md:pt-32 pb-16 md:pb-20">
       <p class="text-xs uppercase tracking-[0.4em] text-sage">{t(locale, 'home.hero.eyebrow')}</p>
       <h1 class="font-display text-5xl md:text-7xl mt-6 max-w-4xl leading-[1.05]">
         {t(locale, 'home.hero.title')}
       </h1>
       <p class="mt-8 text-xl text-ink/75 max-w-2xl leading-relaxed">{t(locale, 'home.hero.sub')}</p>
       <div class="mt-10 flex gap-4 flex-wrap">
-        <a href="#problems" class="bg-ink text-bone px-8 py-4 rounded-full font-semibold hover:bg-rose transition">
-          {t(locale, 'home.cta.explore')}
-        </a>
-        <a href="/collagen-5" class="border border-ink/20 px-8 py-4 rounded-full font-semibold hover:border-ink hover:bg-ink/5 transition">
+        <a href="/collagen" class="bg-ink text-bone px-8 py-4 rounded-full font-semibold hover:bg-rose transition">
           Read the collagen guide
         </a>
-        <a href="/jowls" class="border border-ink/20 px-8 py-4 rounded-full font-semibold hover:border-ink hover:bg-ink/5 transition">
-          Read the jowls guide
-        </a>
       </div>
+
+      {/* Flagship guide — collagen spotlight. One block link; the evidence
+          ledger on the right is the guide's real grading, drawn to scale. */}
+      <a
+        href="/collagen"
+        class="group relative mt-14 md:mt-16 grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-14 items-center bg-white rounded-3xl border border-ink/10 p-7 md:p-10 hover:border-rose hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose transition"
+      >
+        <div>
+          <p class="text-[11px] uppercase tracking-[0.3em] font-semibold text-sage">The flagship guide</p>
+          <h2 class="font-display text-4xl md:text-5xl mt-3 leading-[1.02]">
+            Collagen, end&#8209;to&#8209;end<span class="text-rose">.</span>
+          </h2>
+          <p class="mt-4 text-ink/70 max-w-md leading-relaxed">
+            What it is, what supplements actually do, and which clinical treatments stimulate new collagen.
+          </p>
+          <span class="mt-6 inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2.5 transition-all">
+            Read the guide
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </span>
+          <p class="mt-3 text-xs text-ink/50">
+            ~{guideMinutes} min full read · skim it in 3 · {sectionCount} sections
+          </p>
+        </div>
+
+        <div aria-label="Evidence at a glance">
+          <p class="text-[11px] uppercase tracking-[0.3em] font-semibold text-ink/45">
+            {gradedCount} options, graded by clinical evidence
+          </p>
+          <ul class="mt-4 space-y-2.5">
+            {ledger.map((row) => (
+              <li class="grid grid-cols-[5.5rem_1fr_2.5ch] items-center gap-3" aria-label={`${row.label}: ${row.count} options`}>
+                <span class="text-[11px] uppercase tracking-widest font-semibold" style={`color: ${row.color};`}>{row.tier}</span>
+                <span class="block h-6 rounded-full bg-ink/[0.07] overflow-hidden">
+                  <span class="block h-full rounded-full" style={`width: ${row.pct}%; background: ${row.color};`}></span>
+                </span>
+                <span class="text-sm font-semibold tabular-nums text-right text-ink/80">{row.count}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </a>
     </div>
     <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
   </section>
 
-  <section id="problems" class="py-20 bg-white border-t border-ink/5">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="max-w-2xl mb-12">
-        <h2 class="font-display text-4xl md:text-5xl">{t(locale, 'home.problems.title')}</h2>
-        <p class="mt-4 text-ink/70 text-lg">{t(locale, 'home.problems.sub')}</p>
-      </div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {allProblems.map((p) => (
-          <ProblemCard
-            locale={locale}
-            slug={p.data.slug}
-            title={p.data.title}
-            bodyArea={p.data.bodyArea}
-            image={p.data.image}
-            summary={p.data.summary}
-            topSolutions={p.data.solutions.slice(0, 3)}
-          />
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <section id="products" class="py-20">
+  <section id="products" class="py-20 bg-white border-t border-ink/5">
     <div class="max-w-6xl mx-auto px-6">
       <h2 class="font-display text-4xl md:text-5xl mb-10">Featured products</h2>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
