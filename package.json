@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "build": "wix build",
+    "preview": "wix preview",
+    "release": "wix release",
+    "astro": "astro",
+    "wix": "wix"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
@@ -17,5 +19,16 @@
     "astro": "^5.1.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@astrojs/react": "^4.4.2",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@wix/astro": "^2.68.0",
+    "@wix/astro-pages": "^2.0.4",
+    "@wix/astro-wix-hosting-adapter": "^2.0.0",
+    "@wix/cli": "^1.1.240",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }

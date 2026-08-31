@@ -13,112 +13,52 @@ npm run preview      # serve ./dist locally
 
 ## Configuration
 
-Set the canonical site URL before building. It's used for canonical tags, hreflang links, sitemap, and robots.txt:
+The canonical origin defaults to the production domain, **`https://www.deage.eu`** (see `astro.config.mjs`). It drives canonical tags, hreflang links, the sitemap and `public/robots.txt`. Override it for previews:
 
 ```bash
-export SITE_URL="https://deagingeurope.com"
-npm run build
+SITE_URL="https://preview.example" npm run build
 ```
 
-If `SITE_URL` is unset, the build falls back to `https://deagingeurope.example` (placeholder — do not deploy with this).
+`npm run build`, `npm run dev` and `npm run release` go through the Wix CLI, which needs the site's environment file. Once per machine:
 
-After picking a real domain, also update the `Sitemap:` line in `public/robots.txt`.
+```bash
+npx wix login        # a Wix account that owns or collaborates on the "deage.eu" site
+npx wix env pull     # writes .env.local (WIX_CLIENT_ID/SECRET …) — gitignored, never commit it
+```
+
+Without `.env.local` the build fails with `WIX_CLIENT_ID not found in loaded environment variables`.
 
 ## Deployment
 
-The build output (`dist/`) is plain static HTML/CSS/JS. Any static host works.
-
-### Vercel (recommended — fastest path)
-
-1. Push the repo to GitHub.
-2. Import it at <https://vercel.com/new>. Vercel auto-detects Astro (build: `npm run build`, output: `dist`).
-3. Project → Settings → Environment Variables → add `SITE_URL=https://your-domain.com`.
-4. Project → Domains → add your domain and follow the DNS instructions.
-5. Redeploy after adding `SITE_URL` so the sitemap and canonical tags pick it up.
-
-### Netlify
-
-1. Push to GitHub, then "Add new site → Import from Git" at <https://app.netlify.com>.
-2. Build command: `npm run build`. Publish directory: `dist`.
-3. Site settings → Environment variables → add `SITE_URL`.
-4. Add custom domain under Domain management.
-
-Or via CLI:
+Production is **Wix-managed headless hosting** on the custom domain **https://www.deage.eu** (apex `deage.eu` 301s to `www`). The Wix site is identified by `wix.config.json` (`siteId` `398db007-…`, private app `eaace53d-…`); its dashboard is <https://manage.wix.com/dashboard/398db007-abb0-43d7-b2f8-ff01c7cabc22>.
 
 ```bash
-npm install -g netlify-cli
-SITE_URL=https://your-domain.com npm run build
-netlify deploy --prod --dir=dist
+npm run release      # = wix release: uploads dist/ and publishes → "Site published on deage.eu"
 ```
 
-### Cloudflare Pages
+Run `npm run build` first when you want to inspect the bundle; `release` uses whatever is in `dist/`. Releases take seconds and clear Wix's CDN cache. If `release` fails with a transient network error, just run it again (build failures are not transient — fix the code).
 
-Good fit for European audiences (edge in EU regions, free tier covers this site).
+### How it's hosted (and why it's not a static upload)
 
-1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git.
-2. Build command: `npm run build`. Output directory: `dist`.
-3. Environment variables → add `SITE_URL`.
-4. Custom domains → add and complete DNS.
+Wix's static file host serves *exact paths only* — no `/collagen` → `/collagen/index.html` directory-index resolution and no extensionless lookup — so a plain `dist/` upload 404s every nested route. Instead the site builds with `output: 'server'` (`@wix/astro` + `@wix/astro-wix-hosting-adapter`) and Wix's edge worker renders each route on demand; `/_astro/*`, the sitemap files and `_redirects` are served as static assets. Pages resolve their content from `Astro.params` at request time and return a 404 `Response` for unknown slugs/locales (rendered by `src/pages/404.astro`). Nothing calls the Wix SDK — the integration is only the hosting contract.
 
-### GitHub Pages
+The hosting adapter is attached only when `NODE_ENV=production` (`isBuild` in `astro.config.mjs`): its local emulator (Cloudflare `workerd`) needs glibc ≥ 2.32, so `npm run dev` (= `astro dev`) runs plain Node SSR without it. `npx wix dev` also works for the site owner, but for collaborator accounts the CLI may exit with `FailedToGetGitHubOnboardingStatus` right after starting.
 
-Add `.github/workflows/deploy.yml`:
+### robots.txt and sitemaps on Wix
 
-```yaml
-name: Deploy to Pages
-on:
-  push:
-    branches: [main]
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci
-      - run: npm run build
-        env:
-          SITE_URL: https://YOUR-USER.github.io/deagingeurope
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: dist }
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: { name: github-pages, url: ${{ steps.deployment.outputs.page_url }} }
-    steps:
-      - uses: actions/deploy-pages@v4
-        id: deployment
-```
+- Wix serves its **own** `robots.txt` (auto-generated; `public/robots.txt` is ignored). Edit it in the dashboard under **SEO & GEO → Robots.txt Editor** and add `Sitemap: https://www.deage.eu/sitemap-index.xml` — Wix's default points at its own `/sitemap.xml`, which only lists fixed routes.
+- The complete sitemap (all locales + product pages, with hreflang alternates) is **`/sitemap-index.xml` → `/sitemap-0.xml`**, produced by `@astrojs/sitemap`. Dynamic routes are rendered on demand, so `astro.config.mjs` enumerates them (`dynamicPages()`) from `src/content/products` — extend that function if you add another dynamic route family.
+- Wix's edge appends its own dashboard-derived SEO tags (`wix-seo-tag="true"` — a second `<title>`, canonical, OG and Twitter tags) after ours on every page. Ours come first and the canonicals match; there is no opt-out. If the duplicate titles matter, set per-page titles in the dashboard's **SEO Settings → Main Pages** (fixed routes only) or strip `[wix-seo-tag]` nodes client-side.
 
-Then enable Pages: repo Settings → Pages → Source: GitHub Actions.
+### Hosting elsewhere
 
-If serving from a project subpath (not a custom domain), also set `base: '/deagingeurope'` in `astro.config.mjs`.
-
-### Any static host (S3/CloudFront, nginx, Caddy)
-
-```bash
-SITE_URL=https://your-domain.com npm run build
-rsync -av --delete dist/ user@server:/var/www/deagingeurope/
-```
-
-For nginx, ensure pretty URLs work:
-
-```nginx
-location / {
-  try_files $uri $uri/index.html =404;
-}
-```
+The build is a standard Astro server build; to move hosts, swap `wixHostingAdapter()` for that host's adapter (or drop `output: 'server'` and go back to a static build on a host that resolves directory indexes — Vercel, Netlify, Cloudflare Pages and GitHub Pages all do).
 
 ## Post-deploy checklist
 
-- [ ] `SITE_URL` is set to the real domain in production env
-- [ ] `public/robots.txt` `Sitemap:` line updated to the real domain
-- [ ] Submit `https://your-domain.com/sitemap-index.xml` to Google Search Console + Bing Webmaster Tools
+- [x] Canonical origin is `https://www.deage.eu` (default in `astro.config.mjs`)
+- [ ] Wix dashboard → SEO & GEO → Robots.txt Editor: add `Sitemap: https://www.deage.eu/sitemap-index.xml`
+- [ ] Submit `https://www.deage.eu/sitemap-index.xml` to Google Search Console + Bing Webmaster Tools
 - [ ] Verify hreflang in Search Console → International Targeting
 - [ ] Replace affiliate URLs in `src/content/products/*/*.md` (`buyUrl` field) with real tracking links
 - [ ] Replace placeholder Unsplash images with self-hosted assets in `public/`

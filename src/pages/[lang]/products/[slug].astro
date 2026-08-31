@@ -5,21 +5,16 @@ import ProductHero from '../../../components/ProductHero.astro';
 import InfoSection from '../../../components/InfoSection.astro';
 import DoctorSection from '../../../components/DoctorSection.astro';
 import Testimonials from '../../../components/Testimonials.astro';
-import { t, getLocaleFromParams } from '../../../i18n/utils';
-import { LOCALES, DEFAULT_LOCALE } from '../../../i18n/ui';
+import { t, isLocale } from '../../../i18n/utils';
+import { DEFAULT_LOCALE } from '../../../i18n/ui';
 
-export async function getStaticPaths() {
-  const all = await getCollection('products');
-  return all
-    .filter((p) => p.data.locale !== DEFAULT_LOCALE && (LOCALES as readonly string[]).includes(p.data.locale))
-    .map((p) => ({
-      params: { lang: p.data.locale, slug: p.data.slug },
-      props: { product: p },
-    }));
-}
-
-const locale = getLocaleFromParams(Astro.params.lang);
-const { product } = Astro.props;
+// Rendered on demand (Wix hosting): the URL must name a real non-default locale
+// and a product that exists in that locale — otherwise 404 (→ src/pages/404.astro).
+const { lang, slug } = Astro.params;
+if (!isLocale(lang) || lang === DEFAULT_LOCALE) return new Response(null, { status: 404 });
+const locale = lang;
+const [product] = await getCollection('products', ({ data }) => data.locale === locale && data.slug === slug);
+if (!product) return new Response(null, { status: 404 });
 const d = product.data;
 
 const productJsonLd = {

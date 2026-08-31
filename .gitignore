@@ -7,3 +7,9 @@ dist/
 
 # playwright-cli tool artifacts
 .playwright-cli/
+
+# Wix CLI local state (release logs, env)
+.wix/
+
+# Claude Code machine-local settings
+.claude/settings.local.json

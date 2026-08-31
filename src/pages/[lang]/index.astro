@@ -1,14 +1,14 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { localePath, t, getLocaleFromParams } from '../../i18n/utils';
-import { LOCALES, DEFAULT_LOCALE } from '../../i18n/ui';
+import { localePath, t, isLocale } from '../../i18n/utils';
+import { DEFAULT_LOCALE } from '../../i18n/ui';
 
-export async function getStaticPaths() {
-  return LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((lang) => ({ params: { lang } }));
-}
-
-const locale = getLocaleFromParams(Astro.params.lang);
+// Rendered on demand (Wix hosting): only real non-default locales get a page;
+// anything else (e.g. /xx) is a 404, not an English page at a wrong URL.
+const { lang } = Astro.params;
+if (!isLocale(lang) || lang === DEFAULT_LOCALE) return new Response(null, { status: 404 });
+const locale = lang;
 const allProducts = await getCollection('products', ({ data }) => data.locale === locale);
 ---
 <BaseLayout

@@ -8,13 +8,12 @@ import Testimonials from '../../components/Testimonials.astro';
 import { t } from '../../i18n/utils';
 import { DEFAULT_LOCALE } from '../../i18n/ui';
 
-export async function getStaticPaths() {
-  const all = await getCollection('products', ({ data }) => data.locale === DEFAULT_LOCALE);
-  return all.map((p) => ({ params: { slug: p.data.slug }, props: { product: p } }));
-}
-
+// Rendered on demand (Wix hosting): resolve the product from the URL and 404
+// (→ src/pages/404.astro) when no English entry has this slug.
 const locale = DEFAULT_LOCALE;
-const { product } = Astro.props;
+const { slug } = Astro.params;
+const [product] = await getCollection('products', ({ data }) => data.locale === locale && data.slug === slug);
+if (!product) return new Response(null, { status: 404 });
 const d = product.data;
 
 const productJsonLd = {
