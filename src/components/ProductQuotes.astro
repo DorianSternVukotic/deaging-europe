@@ -1,0 +1,34 @@
+---
+/**
+ * ProductQuotes — buyer reviews quoted from the shop itself, with a note on
+ * where they come from. No invented names, no invented stars.
+ */
+import { t } from '../i18n/utils';
+import type { Locale } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+  quotes: { name: string; body: string; source?: string }[];
+  note?: string;
+}
+const { locale, quotes, note } = Astro.props;
+---
+{quotes.length > 0 && (
+  <section id="quotes" class="scroll-mt-32 bg-white border-y border-ink/5">
+    <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
+      <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.quotes.title')}</h2>
+      <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {quotes.map((q) => (
+          <figure class="flex flex-col rounded-2xl border border-ink/10 bg-bone/60 p-6">
+            <blockquote class="font-display text-xl leading-snug text-ink/90 flex-1">“{q.body}”</blockquote>
+            <figcaption class="mt-5 text-xs text-ink/60">
+              <span class="font-semibold text-ink/80">{q.name}</span>
+              {q.source && <span> · {q.source}</span>}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      {note && <p class="mt-5 text-xs text-ink/50 max-w-2xl">{note}</p>}
+    </div>
+  </section>
+)}

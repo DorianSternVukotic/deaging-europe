@@ -1,0 +1,72 @@
+---
+/**
+ * ProductFacts — a nutrition-label style panel (ruled rows, tabular figures)
+ * next to the plain-spoken caveats. The panel says what the maker publishes
+ * and, just as plainly, what it doesn't.
+ */
+import { t } from '../i18n/utils';
+import type { Locale } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+  facts?: {
+    servingSize: string;
+    servingsPerPack: string;
+    rows: { label: string; amount: string; note?: string }[];
+    footnotes: string[];
+  };
+  caveats: { title: string; body: string }[];
+}
+const { locale, facts, caveats } = Astro.props;
+---
+{(facts || caveats.length > 0) && (
+  <section id="label" class="scroll-mt-32">
+    <div class="max-w-6xl mx-auto px-6 py-16 md:py-20 grid lg:grid-cols-[minmax(0,420px)_1fr] gap-12 lg:gap-16 items-start">
+      {facts && (
+        <div>
+          <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.facts.title')}</h2>
+          <div class="facts-panel mt-6 bg-white border-2 border-ink rounded-xl p-5 font-sans">
+            <div class="flex justify-between gap-4 text-sm py-1.5">
+              <span>{t(locale, 'product.facts.serving')}</span>
+              <span class="font-mono text-right">{facts.servingSize}</span>
+            </div>
+            <div class="flex justify-between gap-4 text-sm py-1.5 border-b-[6px] border-ink">
+              <span>{t(locale, 'product.facts.servings')}</span>
+              <span class="font-mono text-right">{facts.servingsPerPack}</span>
+            </div>
+            <dl>
+              {facts.rows.map((r) => (
+                <div class="flex justify-between gap-4 py-2 border-b border-ink/20 text-sm">
+                  <dt>
+                    {r.label}
+                    {r.note && <span class="block text-xs text-ink/50 mt-0.5">{r.note}</span>}
+                  </dt>
+                  <dd class="font-mono text-right whitespace-nowrap">{r.amount}</dd>
+                </div>
+              ))}
+            </dl>
+            {facts.footnotes.length > 0 && (
+              <ul class="mt-3 space-y-1.5 text-xs text-ink/60 leading-snug">
+                {facts.footnotes.map((f) => <li>{f}</li>)}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
+      {caveats.length > 0 && (
+        <div>
+          <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.caveats.title')}</h2>
+          <ul class="mt-6 divide-y divide-ink/10">
+            {caveats.map((c) => (
+              <li class="py-5 grid sm:grid-cols-[220px_1fr] gap-2 sm:gap-6">
+                <h3 class="font-display text-xl leading-tight">{c.title}</h3>
+                <p class="text-sm text-ink/75 leading-relaxed">{c.body}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  </section>
+)}

@@ -50,6 +50,8 @@ export interface Section {
   sessions?: string;
   /** Clinical treatments only: expected downtime, for the comparison table. */
   downtime?: string;
+  /** Optional photo for the expanded row (4:5). Without it the row shows a placeholder. */
+  image?: { src: string; alt: string };
 }
 
 export interface SectionGroup {
@@ -58,6 +60,16 @@ export interface SectionGroup {
   intro: string;
   sections: Section[];
 }
+
+/** The collagen supplement we sell — every supplement mention in the guide links here. */
+export const PRODUCT_PATH = '/products/collagen-max-pro';
+const productLink = (text: string) => `<a href="${PRODUCT_PATH}" class="product-link">${text}</a>`;
+
+/** Pexels photo (free licence, hotlinking allowed) at a given width. */
+const pexels = (id: number, alt: string, w = 800) => ({
+  src: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`,
+  alt,
+});
 
 export const heroFacts: { stat: string; label: string }[] = [
   { stat: '28 types', label: 'of collagen — type I makes up ~90% of what your body produces' },
@@ -91,6 +103,21 @@ const concept: Section[] = [
       <p>As you age, fibroblasts become less effective and existing collagen fibers fragment. Combined with the loss of <strong>elastin</strong> (another structural protein), this produces the classic signs of aging: sagging skin, lines, thinning bones, joint stiffness.</p>
     `,
   },
+  {
+    id: 'how-to-boost',
+    category: 'concept',
+    title: 'How do you boost collagen?',
+    tldr: 'Supplements nudge, topicals protect and stimulate, clinical treatments rebuild — each tier does more than the last.',
+    bodyHtml: `
+      <p>Three tiers, doing very different amounts of work. Match the tier to the change you want.</p>
+      <ol class="list-decimal pl-5 space-y-3">
+        <li><strong>Supplements.</strong> <a href="#supplement-collagen">Hydrolyzed collagen peptides</a> (1–15 g/day, most trials around 10 g) taken for 8–12 weeks measurably improve skin hydration, elasticity and wrinkles, as well as joint stiffness; bone density needs about a year. Real, but incremental. Our pick is <a href="${PRODUCT_PATH}" class="product-link">Aeterna COLLAGEN MAX PRO</a>. <a href="#boost-diet">Diet &amp; supplements →</a></li>
+        <li><strong>Topicals.</strong> Daily <a href="#topical-sunscreen">sunscreen</a> prevents most of the damage in the first place; a <a href="#topical-retinoids">retinoid</a> at night drives new collagen; <a href="#topical-vitamin-c">vitamin C</a> in the morning is a required cofactor for building it. Supplements work best on top of this routine, not instead of it. <a href="#boost-topical">Topicals &amp; at-home devices →</a></li>
+        <li><strong>Clinical treatments.</strong> For loose skin, scars and deep wrinkles, <a href="#therapy-microneedling">microneedling</a>, <a href="#therapy-fractional-laser">fractional lasers</a>, <a href="#therapy-ultherapy">Ultherapy</a> and <a href="#therapy-sculptra">Sculptra</a> stimulate the body to build new collagen at a depth and scale no supplement or cream can reach. <a href="#boost-clinical">Clinical treatments →</a></li>
+      </ol>
+      <p class="mt-4">Prevention and maintenance: topicals first, a supplement if you want the extra few percent. Visible remodelling: a clinical treatment, with the topicals kept up to protect the result.</p>
+    `,
+  },
 ];
 
 const benefits: Section[] = [
@@ -104,7 +131,7 @@ const benefits: Section[] = [
     bodyHtml: `
       <p>Collagen is a major component of your skin. It provides strength, elasticity, and helps retain hydration. As you age, your body <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8824545/" rel="noopener nofollow" target="_blank">produces less collagen</a>, leading to dry skin and wrinkles.</p>
       <p>A <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10180699/" rel="noopener nofollow" target="_blank">2023 review of 26 studies</a> (mostly in women) found that 1–12 grams of collagen per day for 4–12 weeks improved skin elasticity and hydration. A <a href="https://onlinelibrary.wiley.com/doi/10.1111/ijd.15518" rel="noopener nofollow" target="_blank">separate review of 19 trials</a> (1,125 participants, ages 20–70) reached the same conclusion for wrinkle reduction.</p>
-      <p>The mechanism is thought to be indirect: ingested collagen peptides may signal fibroblasts to produce more collagen, elastin, and fibrillin in the dermis.</p>
+      <p>The mechanism is thought to be indirect: ingested <a href="${PRODUCT_PATH}" class="product-link">collagen peptides</a> may signal fibroblasts to produce more collagen, elastin, and fibrillin in the dermis.</p>
       <p><strong>Hydrolyzed collagen</strong> — collagen broken into smaller peptides by enzymatic hydrolysis — is the form used in most studies, because it is <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566347/" rel="noopener nofollow" target="_blank">more readily absorbed</a> than intact collagen.</p>
       <p class="text-ink/60 text-sm italic">Caveat: many of these trials are industry-funded. The effect sizes are real but moderate; collagen is a supporting actor to sunscreen and retinoids, not a replacement.</p>
     `,
@@ -117,7 +144,7 @@ const benefits: Section[] = [
     evidence: 'moderate',
     focus: 'joints',
     bodyHtml: `
-      <p>Cartilage — the cushion between your joints — is largely collagen. As cartilage degrades, joints stiffen and develop osteoarthritis. <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10058045/" rel="noopener nofollow" target="_blank">Several trials</a> suggest collagen supplementation can help.</p>
+      <p>Cartilage — the cushion between your joints — is largely collagen. As cartilage degrades, joints stiffen and develop osteoarthritis. <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10058045/" rel="noopener nofollow" target="_blank">Several trials</a> suggest <a href="${PRODUCT_PATH}" class="product-link">collagen supplementation</a> can help.</p>
       <p>A <a href="https://pubmed.ncbi.nlm.nih.gov/30368550/" rel="noopener nofollow" target="_blank">2018 meta-analysis</a> of trials in people with osteoarthritis found significant improvements in <strong>joint stiffness</strong>, though not in pain scores or functional limitation. The proposed mechanism: oral collagen peptides accumulate in cartilage and prompt local tissue to produce more collagen, reducing inflammation.</p>
       <p>Type II collagen (specifically <em>undenatured</em> type II, UC-II) is sometimes marketed for joints, but evidence between hydrolyzed type I/III blends and UC-II is comparable at the doses used.</p>
     `,
@@ -131,7 +158,7 @@ const benefits: Section[] = [
     focus: 'bones',
     bodyHtml: `
       <p>Bone is mostly collagen — the calcium and other minerals are layered onto a collagen scaffold. As you age, this scaffold deteriorates, leading to <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7415937/" rel="noopener nofollow" target="_blank">osteoporosis</a>.</p>
-      <p>In a 12-month trial, postmenopausal women who took calcium, vitamin D, and 5 g of collagen daily showed <a href="https://pubmed.ncbi.nlm.nih.gov/25314004/" rel="noopener nofollow" target="_blank">significantly less bone breakdown</a> and better preservation of mineral density than those taking calcium and vitamin D alone. A separate 66-woman study found an <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5793325/" rel="noopener nofollow" target="_blank">increase of up to 7% in bone mineral density</a> after 12 months on 5 g of specific collagen peptides daily.</p>
+      <p>In a 12-month trial, postmenopausal women who took calcium, vitamin D, and 5 g of collagen daily showed <a href="https://pubmed.ncbi.nlm.nih.gov/25314004/" rel="noopener nofollow" target="_blank">significantly less bone breakdown</a> and better preservation of mineral density than those taking calcium and vitamin D alone. A separate 66-woman study found an <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5793325/" rel="noopener nofollow" target="_blank">increase of up to 7% in bone mineral density</a> after 12 months on 5 g of specific <a href="${PRODUCT_PATH}" class="product-link">collagen peptides</a> daily.</p>
       <p>Bone is slow to remodel — expect 6–12 months of consistent supplementation before any meaningful DEXA-measurable change.</p>
     `,
   },
@@ -143,7 +170,7 @@ const benefits: Section[] = [
     evidence: 'moderate',
     focus: 'muscle',
     bodyHtml: `
-      <p>Collagen makes up 1–10% of skeletal muscle by weight. In a <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4594048/" rel="noopener nofollow" target="_blank">12-week study of 26 older men with sarcopenia</a>, 15 g of collagen daily combined with a resistance program produced significantly greater muscle mass and strength gains than exercise alone.</p>
+      <p>Collagen makes up 1–10% of skeletal muscle by weight. In a <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4594048/" rel="noopener nofollow" target="_blank">12-week study of 26 older men with sarcopenia</a>, <a href="${PRODUCT_PATH}" class="product-link">15 g of collagen daily</a> combined with a resistance program produced significantly greater muscle mass and strength gains than exercise alone.</p>
       <p>For pure hypertrophy in healthy adults, whey protein remains the better-evidenced choice because of its leucine content. Collagen is low in leucine and not a complete protein. But for older adults losing muscle, collagen plus resistance training is a reasonable strategy.</p>
     `,
   },
@@ -157,7 +184,7 @@ const benefits: Section[] = [
     bodyHtml: `
       <p>Arteries are lined with collagen. Without enough of it, artery walls lose flexibility — a step toward atherosclerosis, heart attack, and stroke.</p>
       <p>In a <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5429168/" rel="noopener nofollow" target="_blank">6-month trial of 30 healthy adults</a>, daily 16 g of collagen produced a significant reduction in measures of artery stiffness, and HDL ("good") cholesterol rose by an average of 6%.</p>
-      <p>This is a single small trial. Promising, but don't replace your statin or your cardiologist with collagen powder.</p>
+      <p>This is a single small trial. Promising, but don't replace your statin or your cardiologist with <a href="${PRODUCT_PATH}" class="product-link">collagen powder</a>.</p>
     `,
   },
   {
@@ -168,7 +195,7 @@ const benefits: Section[] = [
     evidence: 'limited',
     focus: 'gut',
     bodyHtml: `
-      <p>Some practitioners and patients report that collagen supplements help with "leaky gut syndrome" (intestinal permeability) — the idea being that glycine and proline support the cells lining the gut wall.</p>
+      <p>Some practitioners and patients report that <a href="${PRODUCT_PATH}" class="product-link">collagen supplements</a> help with "leaky gut syndrome" (intestinal permeability) — the idea being that glycine and proline support the cells lining the gut wall.</p>
       <p>There are no randomized controlled trials confirming this benefit in humans. Self-reports are positive but unverified. Bone broth is the food-based form usually associated with this use case.</p>
     `,
   },
@@ -180,7 +207,7 @@ const benefits: Section[] = [
     evidence: 'moderate',
     focus: 'hair-nails',
     bodyHtml: `
-      <p>In a 2017 study published in the <a href="https://onlinelibrary.wiley.com/doi/10.1111/jocd.12393" rel="noopener nofollow" target="_blank">Journal of Cosmetic Dermatology</a>, daily collagen produced measurable improvements in nail growth rate, brittleness, and breakage.</p>
+      <p>In a 2017 study published in the <a href="https://onlinelibrary.wiley.com/doi/10.1111/jocd.12393" rel="noopener nofollow" target="_blank">Journal of Cosmetic Dermatology</a>, <a href="${PRODUCT_PATH}" class="product-link">daily collagen</a> produced measurable improvements in nail growth rate, brittleness, and breakage.</p>
       <p>Hair evidence is thinner but consistent in self-reports — less breakage and slightly faster growth. Mechanism is plausible because hair is keratin and collagen provides amino acid precursors and dermal papilla support.</p>
     `,
   },
@@ -298,6 +325,7 @@ const collagenSupplements: Section[] = [
     tldr: 'The convenient daily form. 10 g of bovine or marine hydrolyzed peptides covers the trial-validated dose range.',
     evidence: 'strong',
     focus: 'general',
+    note: 'Our pick: Aeterna COLLAGEN MAX PRO — 10 g Peptan® peptides per scoop',
     bodyHtml: `
       <p>The most common form of supplemental collagen is <strong>hydrolyzed collagen peptides</strong> (also sold as "collagen hydrolysate"). Hydrolysis breaks the protein into short chains the body can absorb easily.</p>
       <p>A <a href="https://www.sciencedirect.com/science/article/pii/S2405844023021680" rel="noopener nofollow" target="_blank">2023 review</a> concludes that hydrolyzed collagen reduces wrinkle formation, increases skin elasticity, and improves hydration. A <a href="https://onlinelibrary.wiley.com/doi/10.1155/2024/8752787" rel="noopener nofollow" target="_blank">2024 study</a> reported skin, scalp, and hair benefits at daily or every-other-day dosing.</p>
@@ -315,6 +343,11 @@ const collagenSupplements: Section[] = [
         <li>Take with a source of vitamin C for collagen synthesis cofactor support.</li>
         <li>Timing doesn't matter much; consistency does.</li>
       </ul>
+      <div class="product-pick mt-6 rounded-xl border border-rose/30 bg-rose/5 p-4">
+        <p class="text-[10px] uppercase tracking-[0.25em] text-rose">Our pick</p>
+        <p class="mt-1"><strong>Aeterna COLLAGEN MAX PRO</strong> — 10 g of Peptan® collagen peptides per 13 g scoop, the dose the placebo-controlled skin trials used, with a hyaluronic-acid matrix, plant ceramides and acerola vitamin C. Bovine, or fish in the Marin C+ version.</p>
+        <p class="mt-4"><a href="${PRODUCT_PATH}" class="product-btn">See the product<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a><span class="block sm:inline mt-3 sm:mt-0 sm:ml-3 text-sm text-ink/60">Label facts, prices, the evidence graded.</span></p>
+      </div>
     `,
   },
 ];
@@ -338,6 +371,7 @@ const supportSupplements: Section[] = [
         <li>Oral capsules (smaller effect, but systemic)</li>
       </ul>
       <p class="text-sm text-ink/60 mt-2">Side effects from injections may include pain, itching, bruising, swelling, or temporary skin discoloration.</p>
+      <p>Our pick, <a href="${PRODUCT_PATH}" class="product-link">Aeterna COLLAGEN MAX PRO</a>, pairs its peptides with a Dermial® hyaluronic-acid matrix in the same scoop.</p>
     `,
   },
   {
@@ -351,6 +385,7 @@ const supportSupplements: Section[] = [
       <p>Vitamin C is <a href="https://ods.od.nih.gov/factsheets/VitaminC-HealthProfessional/" rel="noopener nofollow" target="_blank">essential</a> for collagen cross-linking. Without it, collagen cannot be assembled properly — severe deficiency causes <em>scurvy</em> (gum bleeding, poor wound healing, skin breakdown).</p>
       <p>Your body can't make vitamin C. You have to eat it. Best sources: citrus, red and green peppers, strawberries, broccoli, kiwi.</p>
       <p><strong>Topical vitamin C</strong> — typically 10–20% L-ascorbic acid at pH below 3.5 — also <a href="https://onlinelibrary.wiley.com/doi/10.1111/jocd.15748" rel="noopener nofollow" target="_blank">supports collagen and protects against UV damage</a> when applied in the morning under sunscreen.</p>
+      <p>Our pick, <a href="${PRODUCT_PATH}" class="product-link">Aeterna COLLAGEN MAX PRO</a>, puts acerola vitamin C in the same scoop as the peptides.</p>
     `,
     note: 'Top product: SkinCeuticals C E Ferulic',
   },
@@ -385,6 +420,7 @@ const supportSupplements: Section[] = [
 const therapies: Section[] = [
   {
     id: 'therapy-fractional-laser',
+    image: pexels(12556700, 'Laser handpiece on a patient wearing protective goggles'),
     category: 'therapy',
     title: 'Fractional lasers',
     tldr: 'Microscopic columns of laser treatment surrounded by intact skin, which speeds healing and amplifies collagen remodeling.',
@@ -403,6 +439,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-laser-resurfacing',
+    image: pexels(7363189, 'Clinician in full protective gear operating a resurfacing laser'),
     category: 'therapy',
     title: 'Ablative laser resurfacing (CO₂ / erbium)',
     tldr: 'The heavy artillery — removes the entire outer skin layer and heats the dermis for the most dramatic non-surgical results.',
@@ -421,6 +458,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-rf-microneedling',
+    image: pexels(34220312, 'A microneedling pen held in gloved hands'),
     category: 'therapy',
     title: 'RF microneedling',
     tldr: 'Microneedles deliver radiofrequency heat into the dermis — one of the most efficient collagen-induction methods available.',
@@ -439,6 +477,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-microneedling-prp',
+    image: pexels(29648626, 'Microneedling treatment with a syringe of plasma at the ready'),
     category: 'therapy',
     title: 'Microneedling + PRP',
     tldr: 'Microneedling paired with platelet-rich plasma drawn from your own blood, whose growth factors compound the healing response.',
@@ -457,6 +496,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-microneedling',
+    image: pexels(30809949, 'A microneedling pen moving across a cheek'),
     category: 'therapy',
     title: 'Standard microneedling (collagen induction therapy)',
     tldr: 'The original collagen-induction therapy: controlled micro-injuries that trigger the body\'s natural wound-healing cascade.',
@@ -475,6 +515,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-ultherapy',
+    image: pexels(5069425, 'Ultrasound handpiece being applied to a face'),
     category: 'therapy',
     title: 'Microfocused ultrasound (Ultherapy)',
     tldr: 'Microfocused ultrasound delivers heat to deep tissue layers — including the SMAS a facelift addresses — for a lifting effect.',
@@ -493,6 +534,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-rf-tightening',
+    image: pexels(36930299, 'Radiofrequency handpiece on a gel-covered face'),
     category: 'therapy',
     title: 'Monopolar RF tightening (Thermage)',
     tldr: 'Bulk dermal heating that contracts collagen immediately and stimulates remodeling over the following months. No needles.',
@@ -511,6 +553,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-chemical-peels',
+    image: pexels(5069429, 'A brush applying peel solution to a face'),
     category: 'therapy',
     title: 'Chemical peels (TCA, glycolic, phenol)',
     tldr: 'Acid removes skin layers in a controlled way, triggering a healing-driven collagen response that scales with peel depth.',
@@ -528,6 +571,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-threads',
+    image: pexels(6080267, 'Gloved clinician working on a face during an aesthetic procedure'),
     category: 'therapy',
     title: 'Thread lifts (PDO / PLA / PCL)',
     tldr: 'Absorbable threads physically reposition tissue and trigger collagen as the body resorbs them.',
@@ -545,6 +589,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-sculptra',
+    image: pexels(34775441, 'An injection into the cheek by a gloved clinician'),
     category: 'therapy',
     title: 'Poly-L-lactic acid biostimulation (Sculptra)',
     tldr: 'An injectable biostimulator that prompts your body to build new collagen around the PLLA particles, gradually over months.',
@@ -563,6 +608,7 @@ const therapies: Section[] = [
   },
   {
     id: 'therapy-led-ipl',
+    image: pexels(10600169, 'A clinician holding an LED light handpiece over a face'),
     category: 'therapy',
     title: 'LED red light & IPL photorejuvenation',
     tldr: 'LED (low-power) is gentle and protocol-based; IPL (intense pulsed light) targets pigment and vessels more aggressively.',
@@ -582,6 +628,7 @@ const therapies: Section[] = [
 const topicals: Section[] = [
   {
     id: 'topical-sunscreen',
+    image: pexels(28112145, 'Woman applying sunscreen to her face'),
     category: 'topical',
     title: 'Broad-spectrum sunscreen (SPF 30+)',
     tldr: 'The single highest-impact daily intervention. Regular use prevents an estimated 80% of photoaging.',
@@ -596,6 +643,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-retinoids',
+    image: pexels(34823988, 'A retinol serum bottle on a glass shelf'),
     category: 'topical',
     title: 'Topical retinoids (tretinoin, retinol)',
     tldr: 'The gold standard for photoaging. Drives new collagen and elastin while reducing breakdown.',
@@ -611,6 +659,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-vitamin-c',
+    image: pexels(28255124, 'Vitamin C serum bottle surrounded by sliced citrus'),
     category: 'topical',
     title: 'Topical vitamin C (L-ascorbic acid)',
     tldr: 'Antioxidant + collagen cross-linking cofactor. Pairs with SPF in the morning.',
@@ -625,6 +674,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-exfoliants',
+    image: pexels(5308647, 'Woman applying an exfoliant to her cheek'),
     category: 'topical',
     title: 'Chemical exfoliants (AHAs / BHAs)',
     tldr: 'Controlled epidermal turnover. Glycolic acid upregulates collagen production in studies.',
@@ -639,6 +689,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-niacinamide',
+    image: pexels(27393234, 'A jar of moisturising cream in soft light'),
     category: 'topical',
     title: 'Niacinamide & ceramides',
     tldr: 'Boring but effective. Niacinamide supports collagen cross-linking; ceramides protect the barrier.',
@@ -653,6 +704,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-peptides',
+    image: pexels(8101534, 'A serum bottle with a dropper casting shadows'),
     category: 'topical',
     title: 'Peptides (Matrixyl, copper peptides)',
     tldr: 'Small chains that signal fibroblasts to produce collagen, elastin, and HA. Modest effects.',
@@ -667,6 +719,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-growth-factors',
+    image: pexels(10819538, 'Dropper held above an amber serum bottle'),
     category: 'topical',
     title: 'Growth-factor serums (EGF / FGF)',
     tldr: 'Recombinant growth factors that mimic wound-healing signals. Limited evidence, premium pricing.',
@@ -681,6 +734,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-antioxidants',
+    image: pexels(4857813, 'Serum bottle and pipette on marble with a eucalyptus twig'),
     category: 'topical',
     title: 'Topical antioxidants (vitamin E, polyphenols)',
     tldr: 'Scavenge free radicals before they damage collagen. Best paired with vitamin C.',
@@ -695,6 +749,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-led',
+    image: pexels(7216285, 'An LED light-therapy mask glowing red'),
     category: 'topical',
     title: 'At-home LED therapy (red / near-infrared)',
     tldr: 'Photobiomodulation. 10–20 minute sessions, 3–5× per week. Many small trials show wrinkle improvement.',
@@ -709,6 +764,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-sauna',
+    image: pexels(25084818, 'A warm wooden sauna interior'),
     category: 'topical',
     title: 'Infrared / far-infrared sauna',
     tldr: 'Heat may induce heat-shock proteins; near-IR may also upregulate collagenase. Mixed evidence.',
@@ -723,6 +779,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-cryo',
+    image: pexels(37274629, 'A jade roller resting on ice cubes'),
     category: 'topical',
     title: 'Cold therapy / cryotherapy',
     tldr: 'Reduces inflammation; collagen effects unproven.',
@@ -736,6 +793,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-microcurrent',
+    image: pexels(4862193, 'Woman using a handheld facial device in front of a mirror'),
     category: 'topical',
     title: 'Microcurrent facials',
     tldr: 'Low-level electrical currents claimed to "tone" facial muscles. Mostly transient firming; collagen impact unclear.',
@@ -750,6 +808,7 @@ const topicals: Section[] = [
   },
   {
     id: 'topical-massage',
+    image: pexels(9774580, 'Woman massaging her face with a gua sha stone'),
     category: 'topical',
     title: 'Facial massage, dermaplaning, gua sha, rollers',
     tldr: 'Pleasant, transiently de-puffing. Negligible long-term collagen effects.',
@@ -770,7 +829,7 @@ const safety: Section[] = [
     title: 'Side effects and safety',
     tldr: 'Generally well tolerated. Watch for allergens (fish, shellfish, eggs) and kidney-stone risk in susceptible people.',
     bodyHtml: `
-      <p>Collagen supplements are generally well tolerated. The most important caveats:</p>
+      <p><a href="${PRODUCT_PATH}" class="product-link">Collagen supplements</a> are generally well tolerated. The most important caveats:</p>
       <ul class="list-disc pl-5 space-y-2">
         <li><strong>Allergens.</strong> Many collagens are made from fish, shellfish, or eggs. Read the label if you have allergies.</li>
         <li><strong>Mild GI symptoms.</strong> Some users report nausea, bloating, or heartburn, though <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8824545/" rel="noopener nofollow" target="_blank">research has not consistently identified these as side effects</a>.</li>
@@ -788,7 +847,7 @@ const faq: Section[] = [
     title: 'How long until I see results from collagen?',
     tldr: '8–12 weeks for skin and joint changes. Bone density needs about 12 months.',
     bodyHtml: `
-      <p>Collagen turnover is slow. Most skin and joint trials use a minimum of <strong>8 weeks</strong> to detect effects. Some bone-health trials run <strong>12 months</strong> before measurable density changes appear. Consistency matters more than dose — daily intake over months beats sporadic megadoses.</p>
+      <p>Collagen turnover is slow. Most skin and joint trials use a minimum of <strong>8 weeks</strong> to detect effects. Some bone-health trials run <strong>12 months</strong> before measurable density changes appear. Consistency matters more than dose — <a href="${PRODUCT_PATH}" class="product-link">daily intake</a> over months beats sporadic megadoses.</p>
     `,
   },
   {
@@ -797,7 +856,7 @@ const faq: Section[] = [
     title: 'Is it safe to take collagen every day?',
     tldr: 'Yes for most people. Few side effects reported across multi-year trials.',
     bodyHtml: `
-      <p>For most healthy adults, daily collagen supplementation appears safe. Reported side effects in trials are infrequent and mild. The main exceptions are people with allergies to the source protein, oxalate-stone formers, and individuals on a clinician-supervised low-protein diet for kidney disease.</p>
+      <p>For most healthy adults, daily <a href="${PRODUCT_PATH}" class="product-link">collagen supplementation</a> appears safe. Reported side effects in trials are infrequent and mild. The main exceptions are people with allergies to the source protein, oxalate-stone formers, and individuals on a clinician-supervised low-protein diet for kidney disease.</p>
     `,
   },
   {
@@ -806,7 +865,7 @@ const faq: Section[] = [
     title: 'Is collagen safe for your kidneys?',
     tldr: 'Usually yes. If you have a history of kidney stones, reconsider.',
     bodyHtml: `
-      <p>Collagen contains the amino acid hydroxyproline, which the body converts to oxalate. Excess oxalate can contribute to kidney stones in susceptible people. If you have a history of oxalate stones or stage 3+ kidney disease, talk to a clinician before adding daily collagen.</p>
+      <p>Collagen contains the amino acid hydroxyproline, which the body converts to oxalate. Excess oxalate can contribute to kidney stones in susceptible people. If you have a history of oxalate stones or stage 3+ kidney disease, talk to a clinician before adding <a href="${PRODUCT_PATH}" class="product-link">daily collagen</a>.</p>
     `,
   },
   {
@@ -815,7 +874,7 @@ const faq: Section[] = [
     title: 'Is there a vegan collagen?',
     tldr: 'No — true collagen is animal-derived. "Vegan collagen boosters" supply the amino acids and cofactors instead.',
     bodyHtml: `
-      <p>All true collagen comes from animals. Products marketed as "vegan collagen" supply the building blocks (glycine, proline, lysine), the cofactor (vitamin C), and sometimes peptide signals — but they do not contain collagen itself. The evidence base for these blends is much thinner than for actual hydrolyzed collagen peptides.</p>
+      <p>All true collagen comes from animals. Products marketed as "vegan collagen" supply the building blocks (glycine, proline, lysine), the cofactor (vitamin C), and sometimes peptide signals — but they do not contain collagen itself. The evidence base for these blends is much thinner than for actual <a href="${PRODUCT_PATH}" class="product-link">hydrolyzed collagen peptides</a>.</p>
     `,
   },
   {
@@ -824,7 +883,7 @@ const faq: Section[] = [
     title: 'Powder, pill, liquid, or gummy — which is best?',
     tldr: 'Powder gives you the most collagen per dollar and the largest dose. Pills and gummies usually under-dose.',
     bodyHtml: `
-      <p>Powder is the most cost-effective and easiest to dose at clinical-trial levels (10–15 g/day). A typical capsule contains 0.5–1 g of collagen — you'd need 10–20 pills daily to match a powder serving. Gummies are similar: pleasant, severely under-dosed, and usually loaded with sugar.</p>
+      <p><a href="${PRODUCT_PATH}" class="product-link">Powder</a> is the most cost-effective and easiest to dose at clinical-trial levels (10–15 g/day). A typical capsule contains 0.5–1 g of collagen — you'd need 10–20 pills daily to match a powder serving. Gummies are similar: pleasant, severely under-dosed, and usually loaded with sugar.</p>
       <p>Liquid collagen is convenient but expensive per gram. Choose based on consistency-of-use, not marketing.</p>
     `,
   },
@@ -834,7 +893,7 @@ const faq: Section[] = [
     title: 'Should I combine collagen with other supplements?',
     tldr: 'Vitamin C is the most useful pairing. Hyaluronic acid is reasonable for skin. Avoid stacking unproven extras.',
     bodyHtml: `
-      <p>Vitamin C is the only supplement with a clear mechanistic reason to pair with collagen — it's the cofactor your body needs to assemble collagen properly. 200–500 mg/day is plenty.</p>
+      <p>Vitamin C is the only supplement with a clear mechanistic reason to pair with <a href="${PRODUCT_PATH}" class="product-link">collagen</a> — it's the cofactor your body needs to assemble collagen properly. 200–500 mg/day is plenty.</p>
       <p>Hyaluronic acid (oral or topical) is reasonable for skin-focused users. Beyond that, most "collagen-boosting" stacks are marketing — the evidence for one extra ingredient on top of collagen + vitamin C + a retinoid + SPF is thin.</p>
     `,
   },
@@ -844,7 +903,7 @@ const faq: Section[] = [
     title: 'Supplements vs. in-office treatments — what works better?',
     tldr: 'Different magnitudes. Supplements give incremental improvement; in-office treatments produce visible, often dramatic change.',
     bodyHtml: `
-      <p>Oral collagen produces measurable but moderate effects on the skin (typically 10–20% improvement in elasticity scores over 8–12 weeks). In-office treatments — fractional lasers, RF microneedling, Ultherapy, Sculptra — produce visible results that are often dramatic.</p>
+      <p><a href="${PRODUCT_PATH}" class="product-link">Oral collagen</a> produces measurable but moderate effects on the skin (typically 10–20% improvement in elasticity scores over 8–12 weeks). In-office treatments — fractional lasers, RF microneedling, Ultherapy, Sculptra — produce visible results that are often dramatic.</p>
       <p>The two strategies aren't competing. Supplements maintain a baseline; in-office treatments make step changes. Most people who care about long-term anti-aging use both.</p>
     `,
   },

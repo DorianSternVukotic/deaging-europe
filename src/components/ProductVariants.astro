@@ -1,0 +1,66 @@
+---
+/**
+ * ProductVariants — every pack the shop sells, side by side, with the
+ * per-serving price worked out so the comparison is honest.
+ */
+import { t } from '../i18n/utils';
+import type { Locale } from '../i18n/ui';
+
+interface Variant { name: string; short: string; flavour: string; source: string; pack: string; servings: number; price: string; url: string }
+interface Props {
+  locale: Locale;
+  variants: Variant[];
+  currency: string;
+  subscription?: { price: string; note: string };
+  priceNote?: string;
+}
+const { locale, variants, currency, subscription, priceNote } = Astro.props;
+const symbol = currency === 'EUR' ? '€' : `${currency} `;
+const per = (v: Variant) => (Number(v.price) / v.servings).toFixed(2);
+---
+{variants.length > 0 && (
+  <section id="variants" class="scroll-mt-32">
+    <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
+      <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.variants.title')}</h2>
+      <div class="mt-8 overflow-x-auto rounded-2xl border border-ink/10 bg-white">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-bone text-[11px] uppercase tracking-widest text-ink/55">
+            <tr>
+              <th class="px-5 py-3 font-semibold"></th>
+              <th class="px-5 py-3 font-semibold">{t(locale, 'product.variants.flavour')}</th>
+              <th class="px-5 py-3 font-semibold">{t(locale, 'product.variants.source')}</th>
+              <th class="px-5 py-3 font-semibold">{t(locale, 'product.variants.pack')}</th>
+              <th class="px-5 py-3 font-semibold text-right">{t(locale, 'product.variants.price')}</th>
+              <th class="px-5 py-3 font-semibold text-right">{t(locale, 'product.perServing')}</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-ink/[0.07]">
+            {variants.map((v) => (
+              <tr class="hover:bg-bone/50 transition">
+                <td class="px-5 py-4 font-display text-lg leading-tight">{v.name}</td>
+                <td class="px-5 py-4 text-ink/75">{v.flavour}</td>
+                <td class="px-5 py-4 text-ink/75">{v.source}</td>
+                <td class="px-5 py-4 text-ink/75 whitespace-nowrap">{v.pack}</td>
+                <td class="px-5 py-4 text-right font-mono whitespace-nowrap">{symbol}{v.price}</td>
+                <td class="px-5 py-4 text-right font-mono text-ink/60 whitespace-nowrap">{symbol}{per(v)}</td>
+                <td class="px-5 py-4 text-right">
+                  <a href={v.url} target="_blank" rel="sponsored noopener" class="inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose hover:gap-2 transition-all whitespace-nowrap">
+                    {t(locale, 'product.buy')}
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {(subscription || priceNote) && (
+        <p class="mt-4 text-sm text-ink/60">
+          {subscription && <><span class="font-semibold text-ink/80">{symbol}{subscription.price}</span>{' '}{subscription.note}{' '}</>}
+          {priceNote && <span class="text-ink/45">{priceNote}</span>}
+        </p>
+      )}
+    </div>
+  </section>
+)}

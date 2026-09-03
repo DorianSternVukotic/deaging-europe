@@ -25,6 +25,8 @@ interface EvidenceItem {
   sessions?: string;
   downtime?: string;
   cost?: string;
+  /** Optional 4:5 photo shown beside the expanded body (needs `mediaTone`). */
+  image?: { src: string; alt: string };
 }
 
 interface Props {
@@ -144,7 +146,11 @@ const hasRating = !!s.evidence;
     </div>
     {mediaTone && (
       <div class="md:w-56 shrink-0">
-        <MediaPlaceholder kind="image" ratio="4/5" label={s.title} tone={mediaTone} />
+        {s.image ? (
+          <img src={s.image.src} alt={s.image.alt} loading="lazy" class="w-full aspect-[4/5] object-cover rounded-xl" />
+        ) : (
+          <MediaPlaceholder kind="image" ratio="4/5" label={s.title} tone={mediaTone} />
+        )}
       </div>
     )}
   </div>

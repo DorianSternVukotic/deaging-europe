@@ -1,0 +1,65 @@
+---
+/**
+ * ProductActives — one card per active ingredient: who makes it and where,
+ * how much per serving, what it does, what the evidence found, and the
+ * evidence tier. Links each active to its section of the collagen guide.
+ */
+import { evidenceColor, type Evidence } from '../data/evidence';
+import { t } from '../i18n/utils';
+import type { Locale } from '../i18n/ui';
+
+interface Active {
+  name: string;
+  brand?: string;
+  supplier: string;
+  country: string;
+  perServing: string;
+  role: string;
+  finding: string;
+  evidence: Evidence;
+  guideId?: string;
+}
+interface Props { locale: Locale; actives: Active[]; guidePath: string }
+const { locale, actives, guidePath } = Astro.props;
+const barWidth: Record<Evidence, number> = { strong: 100, moderate: 66, emerging: 40, limited: 18 };
+---
+<section id="actives" class="scroll-mt-32 bg-white border-y border-ink/5">
+  <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
+    <p class="text-xs uppercase tracking-[0.3em] text-sage">{t(locale, 'product.actives.eyebrow')}</p>
+    <h2 class="font-display text-3xl md:text-4xl mt-2 max-w-2xl">{t(locale, 'product.actives.title')}</h2>
+
+    <div class="mt-10 grid md:grid-cols-2 gap-5">
+      {actives.map((a) => (
+        <article class="flex flex-col rounded-2xl border border-ink/10 bg-bone/60 p-6">
+          <p class="text-[11px] uppercase tracking-widest text-ink/50">{a.supplier} · {a.country}</p>
+          <h3 class="font-display text-2xl leading-tight mt-1">{a.name}</h3>
+          {a.brand && <p class="text-sm text-ink/55">{a.brand}</p>}
+
+          <div class="mt-4 flex items-baseline justify-between gap-4 border-y border-ink/10 py-3">
+            <span class="text-[10px] uppercase tracking-widest text-ink/50">{t(locale, 'product.actives.perServing')}</span>
+            <span class="font-mono text-sm text-right">{a.perServing}</span>
+          </div>
+
+          <p class="mt-4 text-sm text-ink/80 leading-relaxed">{a.role}</p>
+
+          <div class="mt-4 flex items-center gap-3">
+            <span class="w-24 h-1.5 rounded-full bg-ink/10 overflow-hidden" aria-hidden="true">
+              <span class="block h-full rounded-full" style={`width:${barWidth[a.evidence]}%;background:${evidenceColor[a.evidence]}`}></span>
+            </span>
+            <span class="text-[10px] uppercase tracking-widest font-semibold" style={`color:${evidenceColor[a.evidence]}`}>
+              {t(locale, `product.evidence.${a.evidence}`)}
+            </span>
+          </div>
+          <p class="mt-2 text-sm text-ink/65 leading-relaxed flex-1">{a.finding}</p>
+
+          {a.guideId && (
+            <a href={`${guidePath}#${a.guideId}`} class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose hover:gap-2 transition-all">
+              {t(locale, 'product.actives.guide')}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+            </a>
+          )}
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

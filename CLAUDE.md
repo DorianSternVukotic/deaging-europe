@@ -53,8 +53,8 @@ Two page families that share one layout but are built differently:
 
 ## Gotchas
 
-- `MediaPlaceholder` slots are intentional placeholders for images/video that don't exist yet — keep them; humans fill media later.
-- Much product/guide content is still demo-grade (fictional doctor/testimonials on the product page, uncited treatment sections, stock images) — see the `content-status-audit` memory before treating anything as verified.
+- `MediaPlaceholder` slots are intentional placeholders for images/video that don't exist yet — keep them; humans fill media later. `/collagen` is fully photographed (Pexels hotlinks via the `pexels()` helper in `collagen.ts` for section rows, page slots in `collagen.astro`); the other guides still show placeholders.
+- The product page (`/products/collagen-max-pro`) was rebuilt 2026-09-03 from Aeterna's real product data: structured fields in the Markdown (variants, actives graded with the evidence tiers, label facts, studies, buyer quotes copied from aeterna.bg, FAQ) rendered by the `Product*` components. Three per-serving amounts (Dermial, Ceramosides, vitamin C) are not published online and are marked "on the tub label" until someone transcribes a pack. Guide treatment sections are still partly uncited and images are stock — see the `content-status-audit` memory.
 - Tailwind 4 via `@tailwindcss/vite` — no `tailwind.config`; theme lives in `global.css` `@theme`.
 - `EvidenceRow` has two indicator variants (`bar`, `pips`) marked experimental; `collagen.astro` uses `bar`.
 - `.env.local` (from `npx wix env pull`) holds `WIX_CLIENT_SECRET` — it is gitignored; never commit or print it. `.wix/` is CLI state, also ignored.

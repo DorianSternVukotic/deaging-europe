@@ -23,16 +23,15 @@
  *     skimmable, searchable, AI-indexable, printable.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
 import {
-  keyTakeaways,
   groups,
   focusLabels,
   allSections,
   readingMinutes as guideReadingMinutes,
+  PRODUCT_PATH,
   type Evidence,
 } from '../data/collagen';
 
@@ -42,6 +41,19 @@ const description =
   'Skim it in 3 minutes, dig into a specific concern, or read every page. Evidence-graded, with comparison tables for products and clinical treatments.';
 
 const readingMinutes = guideReadingMinutes();
+
+// Page-level photography. Section rows carry their own `image` in the data
+// module; these are the slots that belong to the page layout, not to a section.
+const pexels = (id: number, w: number) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
+const aeterna = (file: string, w: number, h: number) =>
+  `https://static.wixstatic.com/media/51aaad_${file}/v1/fill/w_${w},h_${h},al_c,q_85/file.jpg`;
+const media = {
+  hero: { src: pexels(8626076, 900), alt: 'A mature woman in profile, neck and shoulder in soft light' },
+  explainer: { src: aeterna('bd29c290d4494161932ff0defcd744e2~mv2.png', 1600, 900), alt: 'A woman resting her head beside a tub of Aeterna COLLAGEN MAX PRO' },
+  laser: { src: pexels(4586726, 1400), alt: 'Aesthetician performing a laser treatment on a patient wearing goggles' },
+  assessment: { src: pexels(7446660, 1400), alt: 'Dermatologist examining a patient\'s skin with a dermatoscope' },
+};
 
 const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
 
@@ -55,13 +67,14 @@ const evidencePillClass = (e?: Evidence) =>
     : 'bg-ink/10 text-ink/60';
 
 // Per-group ordering overrides (the data's evidence sort leaves unrated
-// sections in source order). In "Causes & signs", lead with the signs.
+// sections in source order). In the top "read nothing else" batch, lead the
+// loss group with the signs, then causes, then prevention.
 const groupOrder: Record<string, string[]> = { loss: ['signs', 'causes', 'prevent'] };
-// Title overrides — signs lead this group now, so reflect that in the heading.
-const groupTitle: Record<string, string> = { loss: 'Signs & causes of collagen loss' };
+// Title overrides (group id → heading). None currently.
+const groupTitle: Record<string, string> = {};
 const titleFor = (g: (typeof groups)[number]) => groupTitle[g.id] ?? g.title;
-// Intro overrides — '' hides the group's intro line on this page.
-const groupIntro: Record<string, string> = { basics: '' };
+// Intro overrides — '' hides the group's intro line on this page. None currently.
+const groupIntro: Record<string, string> = {};
 const introFor = (g: (typeof groups)[number]) => groupIntro[g.id] ?? g.intro;
 
 const orderedSections = (g: (typeof groups)[number]) => {
@@ -86,11 +99,29 @@ const faqAnswer: Record<string, string> = {
   'faq-vs-treatments': 'Both',
 };
 
+// One-sentence explainer shown in the closed drawer under the title, so the
+// "If you read nothing else" batch reads as the key takeaways without a tap:
+// "What is collagen?" → "A protein that builds your skin, bones…". Falls
+// back to the section's tldr.
+const drawerShort: Record<string, string> = {
+  'what-is-collagen': 'A protein that builds your skin, bones, cartilage, tendons and artery walls.',
+  signs: 'Looser skin, deeper lines, stiffer joints and weaker tendons — there is no blood test, the body shows it.',
+  causes: 'Age, sun, smoking, sugar and alcohol — and once collagen is damaged it does not fully recover on its own.',
+  prevent: 'Daily sunscreen, no smoking, less sugar and alcohol, enough protein — boring, but it beats everything else.',
+  'how-to-boost': 'Supplements nudge, topicals protect and stimulate, clinical treatments rebuild — each tier does more than the last.',
+};
+// Reading order of the merged top batch: what it is → signs → causes →
+// prevention → how to boost. Anything not listed keeps its group order after.
+const topOrder = ['what-is-collagen', 'signs', 'causes', 'prevent', 'how-to-boost'];
+
 // Groups rendered as plain info sections (no evidence bars, no accordion):
 // foundational background + the side-effects / FAQ tail.
 const topInfoIds = new Set(['basics', 'loss']);
 const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
 const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+// The basics + loss groups merge into one flat drawer list at the top.
+const topRank = (id: string) => (topOrder.indexOf(id) < 0 ? 99 : topOrder.indexOf(id));
+const topSections = topInfoGroups.flatMap(orderedSections).sort((a, b) => topRank(a.id) - topRank(b.id));
 const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
 // The white "full breakdown" slab holds only the evidence-graded groups.
 // The safety / FAQ tail renders after it, back on the bone background, so
@@ -130,43 +161,28 @@ const topicalRows = topicalGroup?.sections
             Updated 10 May 2026 · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
-        <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait" tone="rose" class="w-full lg:w-72" />
+        <img src={media.hero.src} alt={media.hero.alt} class="w-full lg:w-72 aspect-[4/5] object-cover rounded-2xl shadow-lg" />
       </div>
       <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
 
-
     <!-- ════════════ TOP-FOLD SUMMARY + STATS ════════════ -->
     <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      {/* Foundational info — what collagen is, the signs it is dropping, what
+          burns through it, and how to slow that. Each drawer shows a one-line
+          explainer while closed (the takeaway); expand for the full text. */}
       <div>
-        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
-        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
-        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
-          {keyTakeaways.map((k, i) => (
-            <li class="flex gap-3">
-              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
-              <span>{k}</span>
-            </li>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">Start here</p>
+        <h2 class="font-display text-3xl md:text-4xl mt-2">If you read nothing else</h2>
+        <div class="mt-6 grid gap-2">
+          {topSections.map((s) => (
+            <ExpandableDrawer id={s.id} title={s.title} short={drawerShort[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
           ))}
-        </ol>
+        </div>
       </div>
       <div>
-        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+        <img src={media.explainer.src} alt={media.explainer.alt} loading="lazy" class="w-full aspect-video object-cover rounded-2xl" />
       </div>
-
-      {/* Foundational info: what collagen is, and how/why it declines.
-          ExpandableDrawer, title only — expand for the full explanation. */}
-      {topInfoGroups.map((g) => (
-        <section id={g.id} class="scroll-mt-32 pt-2">
-          <h2 class="font-display text-3xl md:text-4xl">{titleFor(g)}</h2>
-          {introFor(g) && <p class="mt-3 text-ink/70 max-w-3xl">{introFor(g)}</p>}
-          <div class="mt-6 grid gap-2">
-            {orderedSections(g).map((s) => (
-              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
-            ))}
-          </div>
-        </section>
-      ))}
     </section>
 
     <!-- ════════════ MAIN CONTENT (benefits, boost-it, safety, FAQ) ════════════ -->
@@ -189,8 +205,8 @@ const topicalRows = topicalGroup?.sections
             {/* Featured media for high-impact sections */}
             {g.id === 'boost-clinical' && (
               <div class="mt-6 grid md:grid-cols-2 gap-4">
-                <MediaPlaceholder kind="video" ratio="16/9" label="Inside a fractional laser session" tone="rose" />
-                <MediaPlaceholder kind="image" ratio="16/9" label="Before / after grid" tone="bone" />
+                <img src={media.laser.src} alt={media.laser.alt} loading="lazy" class="w-full aspect-video object-cover rounded-xl" />
+                <img src={media.assessment.src} alt={media.assessment.alt} loading="lazy" class="w-full aspect-video object-cover rounded-xl" />
               </div>
             )}
 
@@ -223,6 +239,9 @@ const topicalRows = topicalGroup?.sections
                     title: 'Hydrolyzed collagen peptides',
                     blurb: '10 g/day for 8–12 weeks — the most studied way to nudge skin, joints, and bone.',
                     tone: 'sage' as const,
+                    image: { src: aeterna('1e62623a558d455dbb34d101b5c40a20~mv2.png', 1200, 900), alt: 'Aeterna COLLAGEN MAX PRO tub on a mint background' },
+                    href: PRODUCT_PATH,
+                    cta: 'See the product',
                   },
                   {
                     id: 'topical-peptides',
@@ -230,6 +249,7 @@ const topicalRows = topicalGroup?.sections
                     title: 'Peptide serum (Matrixyl / copper)',
                     blurb: 'Signal peptides that tell skin to build more of its own collagen — pairs well with retinol.',
                     tone: 'gold' as const,
+                    image: { src: pexels(8054400, 900), alt: 'An amber serum bottle with a dropper on a glass surface' },
                   },
                   {
                     id: 'therapy-sculptra',
@@ -237,6 +257,7 @@ const topicalRows = topicalGroup?.sections
                     title: 'Sculptra (poly-L-lactic acid)',
                     blurb: 'Injectable biostimulator that rebuilds volume over months — results last ~2 years.',
                     tone: 'rose' as const,
+                    image: { src: pexels(37663096, 900), alt: 'A clinician injecting a biostimulator near the cheekbone' },
                   },
                   {
                     id: 'therapy-microneedling-prp',
@@ -244,19 +265,20 @@ const topicalRows = topicalGroup?.sections
                     title: 'Microneedling + PRP',
                     blurb: 'Controlled micro-injury plus your own growth factors — for texture, tone and scars.',
                     tone: 'bone' as const,
+                    image: { src: pexels(39303923, 900), alt: 'Close-up of a microneedling pen on the forehead' },
                   },
                 ].map((pick) => (
                   <a
-                    href={`#${pick.id}`}
+                    href={'href' in pick ? pick.href : `#${pick.id}`}
                     class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
                   >
-                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <img src={pick.image.src} alt={pick.image.alt} loading="lazy" class="w-full aspect-[4/3] object-cover" />
                     <div class="p-5 flex flex-col flex-1">
                       <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
                       <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
                       <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
                       <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
-                        View details
+                        {'cta' in pick ? pick.cta : 'View details'}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <line x1="5" y1="12" x2="19" y2="12"></line>
                           <polyline points="12 5 19 12 12 19"></polyline>
@@ -391,20 +413,6 @@ const topicalRows = topicalGroup?.sections
       border-color: var(--color-rose);
     }
 
-    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
-    .prose-anti :global(p:first-child) { margin-top: 0; }
-    .prose-anti :global(a) {
-      color: var(--color-rose);
-      text-decoration: underline;
-      text-decoration-color: rgba(184,130,109,0.4);
-      text-underline-offset: 2px;
-    }
-    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
-    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
-    .prose-anti :global(ul) { list-style: disc; }
-    .prose-anti :global(ol) { list-style: decimal; }
-    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
-
     section[id], details[id] {
       scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
     }
@@ -450,7 +458,7 @@ const topicalRows = topicalGroup?.sections
           const key = row.getAttribute('data-key');
           row.querySelectorAll('.routine-opt').forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
-          selected[key] = { label: row.querySelector('p').textContent, choice: btn.getAttribute('data-opt') };
+          selected[key] = { key, label: row.querySelector('p').textContent, choice: btn.getAttribute('data-opt') };
           renderRoutine();
         });
       });
@@ -464,7 +472,12 @@ const topicalRows = topicalGroup?.sections
         empty.classList.add('hidden');
         list.classList.remove('hidden');
         list.innerHTML = items
-          .map((i) => `<li class="flex justify-between gap-3 border-b border-ink/5 py-2 last:border-0"><span class="text-ink/60 text-sm">${i.label}</span><span class="font-medium">${i.choice}</span></li>`)
+          .map((i) => {
+            const pick = i.key === 'collagen' && !/^skip/i.test(i.choice)
+              ? ' <a href="/products/collagen-max-pro" class="text-rose text-sm underline decoration-rose/40 underline-offset-2 hover:decoration-rose">our pick →</a>'
+              : '';
+            return `<li class="flex justify-between gap-3 border-b border-ink/5 py-2 last:border-0"><span class="text-ink/60 text-sm">${i.label}</span><span class="font-medium">${i.choice}${pick}</span></li>`;
+          })
           .join('');
       }
     })();
