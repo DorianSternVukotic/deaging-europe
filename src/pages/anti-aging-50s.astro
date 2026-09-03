@@ -1,0 +1,447 @@
+---
+/**
+ * Anti-aging in your 50s (/anti-aging-50s) — decade guide in the collagen-guide
+ * layout: evidence strength as the primary visual signal, one interactive
+ * block (decade-plan builder).
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/anti-aging-50s';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Anti-aging in your 50s — the evidence guide | DeAging Europe';
+const description =
+  'The estrogen cliff, hormone therapy and skin, resurfacing, and when surgery beats repeated devices — skincare, procedures, surgery and the body at 50–59, every option graded.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-hrt-reverse': 'Preserves, not reverses',
+  'faq-facelift-or-ultherapy': 'Jowls: surgery',
+  'faq-tretinoin-55': 'No',
+  'faq-face-changed': 'Three processes',
+  'faq-fillers-55': 'Yes, small volumes',
+  'faq-pellets': 'No',
+  'faq-dexa-52': 'With any risk, yes',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Budget-tier comparison cards.
+const tierRows = [
+  {
+    id: 'routine-and-budget',
+    tier: 'Foundation',
+    price: '≈ €400–900 / yr',
+    evidence: 'strong' as Evidence,
+    blurb: 'Tretinoin over a ceramide cream, SPF 50, minoxidil if thinning, a yearly skin check — and two heavy training sessions a week.',
+  },
+  {
+    id: 'routine-and-budget',
+    tier: 'Maintenance',
+    price: '≈ €2,500–6,000 / yr',
+    evidence: 'strong' as Evidence,
+    blurb: 'Add toxin 2–3×/year, an IPL or non-ablative course for pigment, a PLLA series or fractional-laser session, DEXA and lipids.',
+  },
+  {
+    id: 'routine-and-budget',
+    tier: 'Structural',
+    price: '€8,000–35,000 once',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Blepharoplasty; a SMAS/deep-plane facelift with neck and fat grafting, ideally with resurfacing under one anaesthetic.',
+  },
+  {
+    id: 'safety',
+    tier: 'Not at any budget',
+    price: 'Save it',
+    evidence: 'limited' as Evidence,
+    blurb: 'Threads for real laxity, compounded pellets, testosterone for "vitality", IV drips, filler stacked on a calendar.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="anti-aging-50s" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">By decade · 50–59</p>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Your 50s, evidence first<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            The estrogen cliff, what hormone therapy does and doesn&rsquo;t do for skin, the
+            resurfacing decade &mdash; and when surgery beats repeated devices.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait — 50s" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Your 50s — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'surgery' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Device vs facelift — what each moves" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Bone, fat, skin: the three layers" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' || g.id === 'surgery' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The four decisions with the deepest evidence between 50 and 60.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'health-mht',
+                    kind: 'The window',
+                    title: 'A menopause specialist, now',
+                    blurb: 'Under 60 or within 10 years of menopause — for symptoms and bone, transdermally.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'health-liftmor',
+                    kind: 'The bone',
+                    title: 'Heavy lifting, twice a week',
+                    blurb: 'LIFTMOR: ~4% better spine density in postmenopausal women with low bone mass.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'clinic-resurfacing',
+                    kind: 'The corrector',
+                    title: 'Fractional resurfacing',
+                    blurb: 'The most effective device for etched lines, texture and spots — this decade\'s sweet spot.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'surg-blepharoplasty',
+                    kind: 'The surgery with data',
+                    title: 'Blepharoplasty',
+                    blurb: 'RCT-level technique data, high satisfaction at any severity, a decade of result.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + PLAN BUILDER / TIERS / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ BUILD-YOUR-50s-PLAN ════════════ -->
+        <section id="routine" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Build your 50s plan</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Pick one option per row. Your plan appears below. Saved to your browser only.</p>
+
+          <div class="mt-8 space-y-6" id="routine-builder">
+            {[
+              { key: 'topical', label: 'The topical base', evidence: 'strong', opts: ['Tretinoin over ceramide cream + SPF 50', 'Retinol + ceramides + SPF 50', 'SPF 50 + barrier only'] },
+              { key: 'pigment', label: 'Sun spots', evidence: 'strong', opts: ['IPL course + yearly upkeep', 'Picosecond laser per spot', 'Topical lighteners first'] },
+              { key: 'lines', label: 'Lines & texture', evidence: 'strong', opts: ['Toxin upper face 2–3×/yr', 'Toxin + fractional resurfacing', 'Toxin + medium/deep peel'] },
+              { key: 'volume', label: 'Deflation', evidence: 'moderate', opts: ['Small-volume structural HA', 'PLLA series', 'Fat grafting with surgery', 'Leave it'] },
+              { key: 'laxity', label: 'Laxity / jowls', evidence: 'moderate', opts: ['Ultherapy (early laxity)', 'Facelift consultation', 'Blepharoplasty first', 'Not yet'] },
+              { key: 'hormones', label: 'Menopause', evidence: 'strong', opts: ['Menopause-specialist consult', 'On transdermal HT + progesterone', 'Non-hormonal options', 'No symptoms'] },
+              { key: 'body', label: 'Bone & muscle', evidence: 'strong', opts: ['Heavy lifting 2×/wk + impact', 'Lifting + creatine + protein', 'Starting from zero — supervised'] },
+              { key: 'screen', label: 'Screening this year', evidence: 'strong', opts: ['DEXA + lipids/ApoB + Lp(a)', 'Mammography + colorectal + skin check', 'All of the above'] },
+            ].map((row) => (
+              <div class="routine-row" data-key={row.key}>
+                <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                  <p class="font-display text-lg">{row.label}</p>
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(row.evidence as Evidence)}`}>{row.evidence}</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  {row.opts.map((opt) => (
+                    <button type="button" data-opt={opt} class="routine-opt text-sm px-3 py-1.5 rounded-full border border-ink/15 bg-white hover:border-rose transition">{opt}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div id="routine-summary" class="mt-10 p-6 bg-white rounded-xl border border-ink/10">
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Your plan</p>
+            <p id="routine-empty" class="mt-3 text-ink/60 italic">Pick at least one option above to see your plan.</p>
+            <ul id="routine-list" class="mt-3 space-y-2 hidden text-[15px]"></ul>
+            <p class="mt-4 text-xs text-ink/50">Once jowls dominate, repeated devices usually cost more than surgery within 5–7 years.</p>
+          </div>
+        </section>
+
+        <!-- ════════════ BUDGET TIERS ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">By budget</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">What each tier buys — and what it doesn't</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Indicative Western-European figures; the UK runs roughly 0.85× in pounds.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {tierRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.tier}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">{r.price}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References & further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, meta-analyses, cohort reports, or society
+            statements, linked inline within each section. Primary sources: Menopause (journal),
+            JAMA, NEJM/WHI publications, SWAN, PubMed/PMC, JAAD, Aesthetic Surgery Journal,
+            USPSTF, the EU Council screening recommendation.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Hormone therapy, surgery and prescription
+          treatments need individual assessment — a certified menopause specialist and a
+          board-certified surgeon are the two consultations this decade calls for.
+        </p>
+    </div>
+
+    <!-- ════════════ CLINICIAN CTA ════════════ -->
+    <div class="sticky bottom-4 z-30 max-w-6xl mx-auto px-6 pointer-events-none">
+      <div class="ml-auto max-w-md p-4 bg-ink text-bone rounded-2xl shadow-2xl flex items-center justify-between gap-3 pointer-events-auto hidden md:flex">
+        <p class="text-sm">Want personalized advice? <span class="text-bone/70">Speak with a clinician.</span></p>
+        <a href="#" class="text-xs px-3 py-1.5 rounded-full bg-rose text-bone font-medium hover:bg-rose/90 transition whitespace-nowrap">Book a call</a>
+      </div>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    .routine-opt.active {
+      background: var(--color-rose);
+      color: var(--color-bone);
+      border-color: var(--color-rose);
+    }
+
+    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
+    .prose-anti :global(p:first-child) { margin-top: 0; }
+    .prose-anti :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
+    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
+    .prose-anti :global(ul) { list-style: disc; }
+    .prose-anti :global(ol) { list-style: decimal; }
+    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+
+      const builder = document.getElementById('routine-builder');
+      const list = document.getElementById('routine-list');
+      const empty = document.getElementById('routine-empty');
+      const selected = {};
+      builder?.querySelectorAll('.routine-opt').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const row = btn.closest('.routine-row');
+          const key = row.getAttribute('data-key');
+          row.querySelectorAll('.routine-opt').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          selected[key] = { label: row.querySelector('p').textContent, choice: btn.getAttribute('data-opt') };
+          renderRoutine();
+        });
+      });
+      function renderRoutine() {
+        const items = Object.values(selected);
+        if (!items.length) {
+          empty.classList.remove('hidden');
+          list.classList.add('hidden');
+          return;
+        }
+        empty.classList.add('hidden');
+        list.classList.remove('hidden');
+        list.innerHTML = items
+          .map((i) => `<li class="flex justify-between gap-3 border-b border-ink/5 py-2 last:border-0"><span class="text-ink/60 text-sm">${i.label}</span><span class="font-medium">${i.choice}</span></li>`)
+          .join('');
+      }
+    })();
+  </script>
+</BaseLayout>

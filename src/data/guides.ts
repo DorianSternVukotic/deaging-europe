@@ -12,7 +12,7 @@ export interface GuideMeta {
   /** One-line card blurb. */
   tagline: string;
   /** Card grouping on the homepage. */
-  kind: 'foundation' | 'clinic' | 'lifestyle';
+  kind: 'foundation' | 'clinic' | 'lifestyle' | 'decade';
 }
 
 export const guides: GuideMeta[] = [
@@ -81,5 +81,29 @@ export const guides: GuideMeta[] = [
     title: 'Ceramides',
     tagline: 'The barrier lipids — creams, supplements, and boosters graded by what trials show.',
     kind: 'foundation',
+  },
+  {
+    path: 'neck',
+    title: 'Crepey neck & neck lines',
+    tagline: 'Texture, necklace lines, platysmal bands and laxity — every fix graded, home to surgery.',
+    kind: 'clinic',
+  },
+  {
+    path: 'anti-aging-30s',
+    title: 'Anti-aging in your 30s',
+    tagline: 'What is actually changing, the prevention core with proof, and the prejuvenation hype to skip.',
+    kind: 'decade',
+  },
+  {
+    path: 'anti-aging-40s',
+    title: 'Anti-aging in your 40s',
+    tagline: 'Perimenopause, deflation and the decade where in-office treatments earn their keep.',
+    kind: 'decade',
+  },
+  {
+    path: 'anti-aging-50s',
+    title: 'Anti-aging in your 50s',
+    tagline: 'The estrogen cliff, HRT and skin, resurfacing, and when surgery beats repeated devices.',
+    kind: 'decade',
   },
 ];
