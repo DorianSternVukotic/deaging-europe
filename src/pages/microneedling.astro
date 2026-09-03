@@ -1,0 +1,441 @@
+---
+/**
+ * The microneedling & RF guide (/microneedling) — collagen-guide layout:
+ * evidence strength as the primary visual signal, one interactive block
+ * (concern matcher).
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/microneedling';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Microneedling & RF microneedling — the evidence guide | DeAging Europe';
+const description =
+  'Collagen induction from dermarollers to Morpheus8 — acne scars, hair loss, melasma, laxity claims and the safety rules, all graded by clinical evidence.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-works': 'For scars, yes',
+  'faq-dark-skin': 'The best option',
+  'faq-sessions': '3–6',
+  'faq-morpheus': 'For scars, maybe',
+  'faq-home': 'Barely',
+  'faq-numbing': 'Clinic-applied only',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Acne scars',
+    paths: [
+      { id: 'mn-scars', title: 'Classic microneedling', why: 'the flagship indication — meta-analyses at every level' },
+      { id: 'rf-scars', title: 'RF microneedling', why: 'rivals fractional laser with less pigment risk' },
+    ],
+  },
+  {
+    concern: 'Fine lines & dull texture',
+    paths: [
+      { id: 'mn-rejuvenation', title: 'Rejuvenation course', why: '3–4 sessions for texture and glow — honest expectations' },
+      { id: 'rf-wrinkles', title: 'RF for wrinkles', why: 'stronger remodelling per session, at 3× the price' },
+    ],
+  },
+  {
+    concern: 'Melasma / stubborn pigment',
+    paths: [{ id: 'mn-melasma', title: 'Microneedling + tranexamic acid', why: 'the delivery-system play, backed by meta-analyses' }],
+  },
+  {
+    concern: 'Thinning hair',
+    paths: [{ id: 'mn-hair', title: 'Microneedling + minoxidil', why: 'one of the biggest adjunct effects in the alopecia literature' }],
+  },
+  {
+    concern: 'Mild sagging / laxity',
+    paths: [{ id: 'rf-laxity', title: 'RF microneedling for laxity', why: 'real but modest — read the fat-loss signal before booking deep settings' }],
+  },
+  {
+    concern: 'Excessive underarm sweating',
+    paths: [{ id: 'rf-hyperhidrosis', title: 'RF for hyperhidrosis', why: 'durable, toxin-free option — botulinum toxin still wins on efficacy' }],
+  },
+  {
+    concern: 'Can I just do it at home?',
+    paths: [
+      { id: 'mn-home', title: 'At-home dermarollers', why: 'absorption boost only — and read the serum rule first' },
+      { id: 'mn-cosmeceuticals', title: 'The serum rule', why: 'what must never go into open channels' },
+    ],
+  },
+];
+
+// Format comparison cards.
+const formatRows = [
+  {
+    id: 'mn-scars',
+    name: 'Classic microneedling',
+    evidence: 'strong' as Evidence,
+    blurb: 'Scars, texture, delivery, hair — the trial-backed core at the friendliest price.',
+    price: '€150–400/session',
+  },
+  {
+    id: 'rf-scars',
+    name: 'RF microneedling',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Adds dermal heating: stronger per-session remodelling, modest firmness — laxity claims graded separately.',
+    price: '€500–1,200/session',
+  },
+  {
+    id: 'mn-prp',
+    name: 'Microneedling + PRP',
+    evidence: 'moderate' as Evidence,
+    blurb: 'The evidence-backed upgrade for scars — triples the odds of a big improvement.',
+    price: '€300–600/session',
+  },
+  {
+    id: 'mn-home',
+    name: 'Home dermaroller',
+    evidence: 'limited' as Evidence,
+    blurb: 'Serum absorption, not remodelling. Simple formulas only; replace heads often.',
+    price: '€20–100 device',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="microneedling" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Needles, graded finely<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            Collagen induction from dermarollers to Morpheus8 &mdash; what the trials support, what
+            the marketing invents, and the two rules that prevent disasters.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — pen close-up" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Microneedling — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'mn' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="A scar course, session by session" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Depth chart by indication" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'mn' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">Where the needles are genuinely worth it.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'mn-scars',
+                    kind: 'The flagship',
+                    title: 'A professional scar course',
+                    blurb: '3–6 sessions at proper depth — the meta-analysis-backed core.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'mn-hair',
+                    kind: 'The sleeper',
+                    title: 'Needling + minoxidil',
+                    blurb: 'The alopecia adjunct with a strikingly large pooled effect.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'rf-scars',
+                    kind: 'The upgrade',
+                    title: 'RF for scars + texture',
+                    blurb: 'Laser-class scar results with less pigment risk — conservative settings.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'darker-skin-advantage',
+                    kind: 'For deeper tones',
+                    title: 'The Fitzpatrick IV–VI choice',
+                    blurb: 'The collagen-induction method with the cleanest pigment record.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / FORMATS / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a needle to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points — each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ FORMAT COMPARISON ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The formats</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Needling formats compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Same principle, very different depths, doses, and price tags.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {formatRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.name}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">{r.price}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References & further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, meta-analyses, or consensus statements, linked
+            inline within each section. Primary sources: PubMed/PMC, JAAD, Dermatologic Surgery,
+            British Journal of Dermatology.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Needling is a skin-penetrating procedure —
+          verify your provider, disclose your history, and defer during pregnancy.
+        </p>
+    </div>
+
+    <!-- ════════════ CLINICIAN CTA ════════════ -->
+    <div class="sticky bottom-4 z-30 max-w-6xl mx-auto px-6 pointer-events-none">
+      <div class="ml-auto max-w-md p-4 bg-ink text-bone rounded-2xl shadow-2xl flex items-center justify-between gap-3 pointer-events-auto hidden md:flex">
+        <p class="text-sm">Want personalized advice? <span class="text-bone/70">Speak with a clinician.</span></p>
+        <a href="#" class="text-xs px-3 py-1.5 rounded-full bg-rose text-bone font-medium hover:bg-rose/90 transition whitespace-nowrap">Book a call</a>
+      </div>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
+    .prose-anti :global(p:first-child) { margin-top: 0; }
+    .prose-anti :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
+    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
+    .prose-anti :global(ul) { list-style: disc; }
+    .prose-anti :global(ol) { list-style: decimal; }
+    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

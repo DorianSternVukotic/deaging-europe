@@ -6,6 +6,7 @@ import { localePath, t } from '../i18n/utils';
 import { type Locale } from '../i18n/ui';
 import { allSections, evidenceCounts, readingMinutes } from '../data/collagen';
 import { EVIDENCE_TIERS, evidenceColor, evidenceLabels } from '../data/evidence';
+import { guides } from '../data/guides';
 
 const locale: Locale = 'en';
 
@@ -26,6 +27,13 @@ const ledger = tiers.map((e) => ({
 }));
 const guideMinutes = readingMinutes();
 const sectionCount = allSections().length;
+
+// The guide library — from the shared registry so links can't drift.
+const kindLabels: Record<string, string> = {
+  foundation: 'Foundation',
+  clinic: 'In-clinic',
+  lifestyle: 'Lifestyle',
+};
 
 ---
 <BaseLayout
@@ -91,6 +99,36 @@ const sectionCount = allSections().length;
       </a>
     </div>
     <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+  </section>
+
+  <section id="guides" class="py-20 border-t border-ink/5">
+    <div class="max-w-6xl mx-auto px-6">
+      <p class="text-xs uppercase tracking-[0.3em] text-sage">The library</p>
+      <h2 class="font-display text-4xl md:text-5xl mt-2 mb-4">Every guide, evidence-graded</h2>
+      <p class="text-ink/70 max-w-2xl mb-10">
+        Ten deep dives into the anti-aging toolbox — each claim ranked by clinical evidence, each
+        guide honest about what it can't prove.
+      </p>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {guides.map((g) => (
+          <a
+            href={`/${g.path}`}
+            class="group flex flex-col p-6 bg-white rounded-2xl border border-ink/10 hover:border-rose hover:shadow-md transition"
+          >
+            <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{kindLabels[g.kind] ?? g.kind}</p>
+            <h3 class="font-display text-2xl leading-tight mt-1 group-hover:text-rose transition">{g.title}</h3>
+            <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{g.tagline}</p>
+            <span class="mt-4 inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2.5 transition-all">
+              Read the guide
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
   </section>
 
   <section id="products" class="py-20 bg-white border-t border-ink/5">
