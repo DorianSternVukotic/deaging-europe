@@ -16,8 +16,14 @@ const year = new Date().getFullYear();
       <p class="text-bone/70">{t(locale, 'footer.disclaimer')}</p>
     </div>
     <div>
-      <h3 class="font-display text-lg mb-3">© {year}</h3>
-      <p class="text-bone/70">DeAging Europe. All rights reserved.</p>
+      <h3 class="font-display text-lg mb-3">{t(locale, 'nav.contact')}</h3>
+      <p class="text-bone/70">
+        <a href="mailto:dorian.sternvukotic@gmail.com" class="hover:text-bone underline decoration-bone/30 underline-offset-2">dorian.sternvukotic@gmail.com</a>
+      </p>
+      <p class="mt-2 text-bone/70">
+        <a href="/contact" class="hover:text-bone underline decoration-bone/30 underline-offset-2">List your product in Europe</a> — we handle everything.
+      </p>
+      <p class="mt-4 text-bone/50">© {year} DeAging Europe. All rights reserved.</p>
     </div>
   </div>
 </footer>

@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+
+const locale = DEFAULT_LOCALE;
+const email = 'dorian.sternvukotic@gmail.com';
+---
+<BaseLayout
+  title="Contact | DeAging Europe"
+  description="Reach DeAging Europe, or list your product in Europe — we handle the guide, the product page, the translations and the updates."
+  locale={locale}
+  path="contact"
+>
+  <article class="max-w-6xl mx-auto px-6 pt-20 md:pt-28 pb-24 grid lg:grid-cols-[1fr_1.2fr] gap-14 lg:gap-24 items-start">
+    <header>
+      <p class="text-xs uppercase tracking-[0.4em] text-sage">Contact</p>
+      <h1 class="font-display text-5xl md:text-6xl mt-5 leading-[1.05]">Write to us<span class="text-rose">.</span></h1>
+      <a
+        href={`mailto:${email}`}
+        class="mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-7 py-4 text-bone font-semibold hover:bg-rose transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose"
+      >
+        {email}
+      </a>
+      <p class="mt-4 text-sm text-ink/55 max-w-sm">
+        One address for everything: questions about a guide, corrections, and product listings.
+      </p>
+    </header>
+
+    <section class="bg-white rounded-3xl border border-ink/10 p-8 md:p-12">
+      <p class="text-[11px] uppercase tracking-[0.3em] font-semibold text-sage">For brands</p>
+      <h2 class="font-display text-3xl md:text-4xl mt-3 leading-tight">
+        List your product in Europe. We handle everything.
+      </h2>
+      <p class="mt-6 text-ink/80 leading-relaxed">
+        You make the product; we take it to Europe. DeAging Europe writes the independent, evidence-graded
+        guide for your category, builds a product page with the label facts and the studies behind them,
+        photographs it, translates it for the markets you sell in, links it from every relevant mention
+        across the site, and keeps it current as the evidence moves. Research, copy, design, localisation,
+        the buy links and the updates: one partner, one email, no agency layers. Send us the product and the
+        countries you want, and we come back with a plan and a price.
+      </p>
+      <a
+        href={`mailto:${email}?subject=${encodeURIComponent('Listing a product in Europe')}`}
+        class="mt-8 inline-flex items-center gap-2 rounded-full bg-rose px-7 py-3.5 text-bone font-semibold hover:bg-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose"
+      >
+        Start with an email
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+      </a>
+    </section>
+  </article>
+</BaseLayout>

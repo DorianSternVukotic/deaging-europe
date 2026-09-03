@@ -36,8 +36,10 @@ interface Props {
   tag?: string;
   /** Show a 4/5 media placeholder in the expanded body. */
   mediaTone?: 'rose' | 'gold';
+  /** Render expanded on load (e.g. the row that carries the product pick). */
+  open?: boolean;
 }
-const { s, variant, tag, mediaTone } = Astro.props;
+const { s, variant, tag, mediaTone, open = false } = Astro.props;
 
 const evidenceWidth: Record<Evidence, number> = { strong: 100, moderate: 75, emerging: 50, limited: 25 };
 const evidenceLevel: Record<Evidence, number> = { strong: 4, moderate: 3, emerging: 2, limited: 1 };
@@ -46,7 +48,7 @@ const evidence = s.evidence ?? 'limited';
 const hasRating = !!s.evidence;
 ---
 
-<details id={s.id} class="card group scroll-mt-32 transition" data-evidence={s.evidence ?? 'none'}>
+<details id={s.id} class="card group scroll-mt-32 transition" data-evidence={s.evidence ?? 'none'} open={open}>
   <summary class="chart-row cursor-pointer list-none block py-2.5 px-3 -mx-3 rounded-lg border border-transparent hover:border-ink/10 hover:bg-bone/70 hover:shadow-sm transition">
     <div class="flex items-center gap-3">
     <div class="flex-1 min-w-0 md:flex-none md:w-52 text-base md:text-sm font-medium text-ink/85 leading-snug group-hover:text-rose">{s.title}</div>

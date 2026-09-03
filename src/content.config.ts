@@ -1,7 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
-const localeSchema = z.enum(['en', 'bg', 'de', 'fr', 'it', 'es']);
+const localeSchema = z.enum(['en', 'de', 'fr', 'it', 'es']);
 const evidenceSchema = z.enum(['strong', 'moderate', 'emerging', 'limited']);
 
 // Free-form editorial blocks (optional). Product pages are built from the

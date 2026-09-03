@@ -15,7 +15,7 @@ const isBuild = process.env.NODE_ENV === 'production';
 
 // Mirrors src/i18n/ui.ts (config files can't import project TS).
 const DEFAULT_LOCALE = 'en';
-const LOCALES = ['en', 'bg', 'de', 'fr', 'it', 'es'];
+const LOCALES = ['en', 'de', 'fr', 'it', 'es'];
 const localePath = (locale, path = '') =>
   locale === DEFAULT_LOCALE ? `/${path}` : `/${locale}${path ? `/${path}` : ''}`;
 
