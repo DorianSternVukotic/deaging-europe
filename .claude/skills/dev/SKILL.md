@@ -41,4 +41,4 @@ Read the PNG before sending it to the user — check layout, not just that the f
 
 ## Key routes
 
-- `/` home · `/collagen` the collagen guide (`/collagen-5` redirects to it) · `/products/collagen-max-pro` · `/{de,fr,it,es}` localized homepages (`/bg` was removed 2026-09-03) · `/404` (any unknown slug/locale renders it with a 404 status). `/jowls` and `/problems/*` were removed 2026-08-20.
+- `/` home · `/collagen` the collagen guide (`/collagen-5` redirects to it) · `/products/collagen-max-pro` · `/contact` · the guide routes from `src/data/guides.ts` (all locales other than English were removed 2026-09-03) · `/404` (any unknown slug/locale renders it with a 404 status). `/jowls` and `/problems/*` were removed 2026-08-20.

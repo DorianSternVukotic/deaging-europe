@@ -1,21 +1,13 @@
-export const LOCALES = ['en', 'de', 'fr', 'it', 'es'] as const;
+export const LOCALES = ['en'] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'en';
 
 export const LOCALE_NAMES: Record<Locale, string> = {
   en: 'English',
-  de: 'Deutsch',
-  fr: 'Français',
-  it: 'Italiano',
-  es: 'Español',
 };
 
 export const HREFLANG: Record<Locale, string> = {
   en: 'en',
-  de: 'de-DE',
-  fr: 'fr-FR',
-  it: 'it-IT',
-  es: 'es-ES',
 };
 
 type Dict = Record<string, string>;
@@ -27,7 +19,7 @@ export const ui: Record<Locale, Dict> = {
     'nav.about': 'About',
     'nav.contact': 'Contact',
     'home.hero.eyebrow': 'Anti-aging, evidence first',
-    'home.hero.title': 'Look and live younger — backed by science.',
+    'home.hero.title': 'Look and live younger, backed by science.',
     'home.hero.sub': 'A library of protocols, ingredients and devices that actually move the needle. Curated by clinicians. Updated as the evidence evolves.',
     'problem.bodyArea': 'Body area',
     'product.buy': 'Buy now',
@@ -66,69 +58,5 @@ export const ui: Record<Locale, Dict> = {
     'product.evidence.limited': 'Limited',
     'footer.tagline': 'The evidence-based anti-aging hub for Europe.',
     'footer.disclaimer': 'Information here is educational and not medical advice. Consult a qualified clinician.',
-  },
-  de: {
-    'nav.products': 'Produkte',
-    'nav.science': 'Wissenschaft',
-    'nav.about': 'Über uns',
-    'home.hero.eyebrow': 'Anti-Aging — wissenschaftlich fundiert',
-    'home.hero.title': 'Jünger aussehen und leben — wissenschaftlich belegt.',
-    'home.hero.sub': 'Eine Bibliothek bewährter Protokolle, Wirkstoffe und Geräte. Kuratiert von Klinikern.',
-    'problem.bodyArea': 'Körperregion',
-    'product.buy': 'Jetzt kaufen',
-    'product.affiliate': 'Diese Seite enthält Affiliate-Links. Wir erhalten möglicherweise eine Provision ohne Mehrkosten für Sie.',
-    'product.doctor.title': 'Geprüft von',
-    'product.studies.title': 'Die Wissenschaft',
-    'product.testimonials.title': 'Was die Leute sagen',
-    'footer.tagline': 'Das evidenzbasierte Anti-Aging-Zentrum für Europa.',
-    'footer.disclaimer': 'Informationen sind nur zu Bildungszwecken und kein medizinischer Rat.',
-  },
-  fr: {
-    'nav.products': 'Produits',
-    'nav.science': 'Science',
-    'nav.about': 'À propos',
-    'home.hero.eyebrow': "Anti-âge fondé sur la science",
-    'home.hero.title': 'Paraissez et vivez plus jeune — preuves à l\'appui.',
-    'home.hero.sub': 'Une bibliothèque de protocoles, ingrédients et dispositifs qui fonctionnent vraiment.',
-    'problem.bodyArea': 'Zone du corps',
-    'product.buy': 'Acheter',
-    'product.affiliate': 'Cette page contient des liens affiliés. Nous pouvons recevoir une commission sans coût supplémentaire.',
-    'product.doctor.title': 'Examiné par',
-    'product.studies.title': 'La science',
-    'product.testimonials.title': 'Ce que disent les gens',
-    'footer.tagline': "Le hub anti-âge fondé sur la preuve, pour l'Europe.",
-    'footer.disclaimer': "Information éducative — pas un avis médical.",
-  },
-  it: {
-    'nav.products': 'Prodotti',
-    'nav.science': 'Scienza',
-    'nav.about': 'Chi siamo',
-    'home.hero.eyebrow': 'Anti-aging basato sulla scienza',
-    'home.hero.title': 'Sembra e vivi più giovane — sostenuto dalla scienza.',
-    'home.hero.sub': 'Una libreria di protocolli, ingredienti e dispositivi che funzionano davvero.',
-    'problem.bodyArea': 'Zona del corpo',
-    'product.buy': 'Acquista ora',
-    'product.affiliate': 'Questa pagina contiene link affiliati. Possiamo ricevere una commissione senza costi aggiuntivi.',
-    'product.doctor.title': 'Revisionato da',
-    'product.studies.title': 'La scienza',
-    'product.testimonials.title': 'Cosa dicono le persone',
-    'footer.tagline': "Il centro anti-aging basato sull'evidenza per l'Europa.",
-    'footer.disclaimer': 'Le informazioni sono educative e non costituiscono consigli medici.',
-  },
-  es: {
-    'nav.products': 'Productos',
-    'nav.science': 'Ciencia',
-    'nav.about': 'Acerca de',
-    'home.hero.eyebrow': 'Anti-edad respaldado por la ciencia',
-    'home.hero.title': 'Verte y vivir más joven — con respaldo científico.',
-    'home.hero.sub': 'Una biblioteca de protocolos, ingredientes y dispositivos que realmente funcionan.',
-    'problem.bodyArea': 'Zona del cuerpo',
-    'product.buy': 'Comprar ahora',
-    'product.affiliate': 'Esta página contiene enlaces de afiliados. Podemos ganar una comisión sin coste extra para ti.',
-    'product.doctor.title': 'Revisado por',
-    'product.studies.title': 'La ciencia',
-    'product.testimonials.title': 'Lo que dice la gente',
-    'footer.tagline': 'El centro anti-edad basado en evidencia para Europa.',
-    'footer.disclaimer': 'La información es educativa y no constituye consejo médico.',
   },
 };
