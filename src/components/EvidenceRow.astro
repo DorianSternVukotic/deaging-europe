@@ -106,21 +106,11 @@ const hasRating = !!s.evidence;
         {tag}
       </span>
     )}
-    <span class="caret shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-ink/40 group-open:text-rose transition" aria-hidden="true">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+    <span class="caret shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
         <polyline points="6 9 12 15 18 9"></polyline>
       </svg>
     </span>
-    </div>
-
-    {/* Full-width "Read more" affordance — its own row so the expand action
-        reads clearly, not just as a chevron. Swaps to "Show less" when open. */}
-    <div class="read-more-row mt-2 flex items-center justify-start gap-1.5 text-xs uppercase tracking-widest font-semibold text-rose">
-      <span class="group-open:hidden">Read more</span>
-      <span class="hidden group-open:inline">Show less</span>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180" aria-hidden="true">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
     </div>
   </summary>
 

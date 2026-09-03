@@ -1,0 +1,452 @@
+---
+/**
+ * The laser & IPL guide (/laser-ipl) — collagen-guide layout: evidence
+ * strength as the primary visual signal, one interactive block (matcher).
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/laser-ipl';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Laser & IPL skin treatments — the evidence guide | DeAging Europe';
+const description =
+  'From gentle IPL to full CO₂ resurfacing — every laser and light treatment for aging skin graded by evidence, matched to skin tone and downtime budget.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-wrinkles': 'Ablative',
+  'faq-ipl-antiaging': 'Colour only',
+  'faq-dark-skin': '1064 + Fraxel-class',
+  'faq-downtime': 'Hours to weeks',
+  'faq-melasma': 'No',
+  'faq-isotretinoin': 'Mostly no wait',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Deep, etched wrinkles',
+    paths: [
+      { id: 'laser-full-ablative', title: 'Full-field ablative resurfacing', why: 'the only class that removes rather than softens — read the downtime first' },
+      { id: 'laser-fractional-ablative', title: 'Fractional ablative', why: 'most of the effect at a fraction of the recovery' },
+    ],
+  },
+  {
+    concern: 'Fine lines, rough texture, big pores',
+    paths: [
+      { id: 'laser-nafl', title: 'Non-ablative fractional (Fraxel-class)', why: '3–6 sessions, days of downtime, well-tested' },
+      { id: 'laser-lowenergy', title: 'Clear + Brilliant / Moxi', why: 'the gentle maintenance version' },
+    ],
+  },
+  {
+    concern: 'Sun spots & mottled tone',
+    paths: [
+      { id: 'pigment-lasers', title: 'Q-switched / picosecond lasers', why: '1–2 sessions clear most lentigines' },
+      { id: 'ipl-pigment', title: 'IPL photorejuvenation', why: 'the full-face colour reset, 3–6 sessions' },
+    ],
+  },
+  {
+    concern: 'Redness, flushing, visible vessels',
+    paths: [
+      { id: 'vascular-lasers', title: 'Pulsed-dye / KTP lasers', why: '75–85% vessel clearance in ~3 sessions' },
+      { id: 'ipl-pigment', title: 'IPL', why: 'comparable for diffuse rosacea redness in meta-analysis' },
+    ],
+  },
+  {
+    concern: 'Melasma',
+    paths: [
+      { id: 'melasma-lasers', title: 'Lasers for melasma', why: 'adjunct only — read the recurrence and toning-risk story first' },
+    ],
+  },
+  {
+    concern: 'Deeper skin tone (Fitzpatrick IV–VI)',
+    paths: [
+      { id: 'darker-skin', title: 'The safety map', why: 'which devices are safe, risky, and off the menu' },
+      { id: 'laser-nafl', title: 'Non-ablative fractional', why: 'the preferred class — ~4% transient PIH per session in careful series' },
+    ],
+  },
+  {
+    concern: 'Minimal downtime, please',
+    paths: [
+      { id: 'ipl-pigment', title: 'IPL', why: 'hours of redness, real colour results' },
+      { id: 'combos', title: 'Same-session combinations', why: 'colour + texture in one visit without added downtime' },
+    ],
+  },
+];
+
+// Downtime-ladder comparison cards.
+const ladderRows = [
+  {
+    id: 'ipl-pigment',
+    step: 'IPL & vascular',
+    downtime: 'Hours',
+    evidence: 'strong' as Evidence,
+    blurb: 'Colour correction — spots, redness, tone. No change to established wrinkles.',
+  },
+  {
+    id: 'laser-nafl',
+    step: 'Non-ablative fractional',
+    downtime: '1–3 days + flaking',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Texture and fine lines over a series — the maintenance workhorse.',
+  },
+  {
+    id: 'laser-fractional-ablative',
+    step: 'Fractional ablative',
+    downtime: '~1 week',
+    evidence: 'strong' as Evidence,
+    blurb: 'Real wrinkle and scar remodelling in 1–3 sessions.',
+  },
+  {
+    id: 'laser-full-ablative',
+    step: 'Full-field ablative',
+    downtime: '2 wks + months pink',
+    evidence: 'strong' as Evidence,
+    blurb: 'The deepest non-surgical result, lasting years — and the biggest risks.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="laser-ipl" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Lasers, in plain light<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            From gentle IPL to full resurfacing &mdash; matched to your skin tone, your concern, and
+            your downtime budget.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — treatment room" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Laser & IPL — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'resurfacing' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Inside a fractional session" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The downtime ladder" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'resurfacing' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The four treatments that earn their place in most plans.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'laser-fractional-ablative',
+                    kind: 'The workhorse',
+                    title: 'Fractional ablative CO₂',
+                    blurb: 'Real wrinkle and scar remodelling with a week of downtime, not a month.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'ipl-pigment',
+                    kind: 'The colour fix',
+                    title: 'IPL photorejuvenation',
+                    blurb: 'Spots, redness and tone in 3–6 easy sessions — the visible-age reset.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'laser-nafl',
+                    kind: 'The maintainer',
+                    title: 'Fraxel-class fractional',
+                    blurb: 'Texture and fine lines on a schedule your calendar tolerates.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'vascular-lasers',
+                    kind: 'For redness',
+                    title: 'Pulsed-dye / KTP',
+                    blurb: 'The rosacea and vessel specialists — decades of consistent results.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / LADDER / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Find your light</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points — each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ DOWNTIME LADDER ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The trade</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The downtime ladder</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Results scale with recovery — pick your rung deliberately.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {ladderRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Downtime: {r.downtime}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References & further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, systematic reviews, or consensus statements,
+            linked inline within each section. Primary sources: PubMed/PMC, Lasers in Surgery and
+            Medicine, JAMA Dermatology, ASDS consensus documents.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Device selection depends on your skin, history,
+          and goals — assess them with a qualified practitioner, and insist on a test spot when
+          skin tone or tan is in play.
+        </p>
+    </div>
+
+    <!-- ════════════ CLINICIAN CTA ════════════ -->
+    <div class="sticky bottom-4 z-30 max-w-6xl mx-auto px-6 pointer-events-none">
+      <div class="ml-auto max-w-md p-4 bg-ink text-bone rounded-2xl shadow-2xl flex items-center justify-between gap-3 pointer-events-auto hidden md:flex">
+        <p class="text-sm">Want personalized advice? <span class="text-bone/70">Speak with a clinician.</span></p>
+        <a href="#" class="text-xs px-3 py-1.5 rounded-full bg-rose text-bone font-medium hover:bg-rose/90 transition whitespace-nowrap">Book a call</a>
+      </div>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
+    .prose-anti :global(p:first-child) { margin-top: 0; }
+    .prose-anti :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
+    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
+    .prose-anti :global(ul) { list-style: disc; }
+    .prose-anti :global(ol) { list-style: decimal; }
+    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

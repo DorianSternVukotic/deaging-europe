@@ -1,26 +1,8 @@
 ---
 /**
- * The collagen guide (/collagen) — the "recommended hybrid" layout, chosen
- * from five explored variations. Why this design for this content:
- *
- *  1. Collagen has a HUGE evidence-quality variance (gold-standard retinoids vs.
- *     "maybe" microcurrent). Evidence should be the primary visual signal, not
- *     an afterthought — hence the evidence-strength overview chart up top.
- *
- *  2. Three legitimate user types: the skimmer, the problem-haver, the deep-
- *     diver. We don't pick one — the sticky filter bar, the evidence chart, and
- *     the always-in-DOM accordions serve all three without a landing gate.
- *
- *  3. Many therapies/products are essentially commercial offerings (Sculptra,
- *     Thermage, brand-name lasers). Comparison tables fit them better than
- *     accordions — comparison wants everything visible side by side.
- *
- *  4. Visual content matters disproportionately (before/after, procedure
- *     videos, anatomy diagrams). We reserve dedicated media slots.
- *
- *  5. Sticky TOC + scroll-spy as the spine (works for skimmers AND deep
- *     readers). All content lives in the DOM (native <details>) so it's
- *     skimmable, searchable, AI-indexable, printable.
+ * The anti-aging supplements guide (/supplements) — built on the collagen
+ * guide's "recommended hybrid" layout: evidence strength is the primary
+ * visual signal, all content lives in the DOM, one interactive block.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import MediaPlaceholder from '../components/MediaPlaceholder.astro';
@@ -34,12 +16,12 @@ import {
   allSections,
   readingMinutes as guideReadingMinutes,
   type Evidence,
-} from '../data/collagen';
+} from '../data/supplements';
 
 const locale = DEFAULT_LOCALE;
-const title = 'Collagen — the complete guide | DeAging Europe';
+const title = 'Anti-aging supplements — what works, what doesn’t | DeAging Europe';
 const description =
-  'Skim it in 3 minutes, dig into a specific concern, or read every page. Evidence-graded, with comparison tables for products and clinical treatments.';
+  'Every major anti-aging supplement graded by human evidence — creatine to NAD+ boosters, senolytics to collagen. What works, what is early, and what is marketing.';
 
 const readingMinutes = guideReadingMinutes();
 
@@ -54,89 +36,71 @@ const evidencePillClass = (e?: Evidence) =>
     ? 'bg-rose/15 text-rose'
     : 'bg-ink/10 text-ink/60';
 
-// Per-group ordering overrides (the data's evidence sort leaves unrated
-// sections in source order). In "Causes & signs", lead with the signs.
-const groupOrder: Record<string, string[]> = { loss: ['signs', 'causes', 'prevent'] };
-// Title overrides — signs lead this group now, so reflect that in the heading.
-const groupTitle: Record<string, string> = { loss: 'Signs & causes of collagen loss' };
-const titleFor = (g: (typeof groups)[number]) => groupTitle[g.id] ?? g.title;
-// Intro overrides — '' hides the group's intro line on this page.
-const groupIntro: Record<string, string> = { basics: '' };
-const introFor = (g: (typeof groups)[number]) => groupIntro[g.id] ?? g.intro;
-
-const orderedSections = (g: (typeof groups)[number]) => {
-  const sorted = g.sections
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
     .slice()
     .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
-  const order = groupOrder[g.id];
-  if (!order) return sorted;
-  const rank = (id: string) => (order.indexOf(id) < 0 ? 99 : order.indexOf(id));
-  return sorted.sort((a, b) => rank(a.id) - rank(b.id));
-};
 
-// Bottom-line answer shown in the collapsed FAQ card (the full answer is one
-// tap deeper). e.g. "Is it safe to take every day?" → "Yes".
+// Bottom-line answer shown in the collapsed FAQ card.
 const faqAnswer: Record<string, string> = {
-  'faq-how-long': '8–12 weeks',
-  'faq-daily': 'Yes',
-  'faq-kidneys': 'Usually, yes',
-  'faq-vegan': 'No',
-  'faq-form': 'Powder',
-  'faq-combine': 'Vitamin C',
-  'faq-vs-treatments': 'Both',
+  'faq-best-single': 'Creatine',
+  'faq-nad': 'Not yet',
+  'faq-test-vitd': 'Test first',
+  'faq-senolytics-shop': 'No',
+  'faq-rapamycin-doctor': 'Discuss it',
+  'faq-beauty': 'Modestly',
+  'faq-multivitamin': 'Lifespan, no',
 };
 
-// Groups rendered as plain info sections (no evidence bars, no accordion):
-// foundational background + the side-effects / FAQ tail.
-const topInfoIds = new Set(['basics', 'loss']);
+// Groups rendered as plain info sections (no evidence bars):
+// intro drawers up top + the safety / FAQ tail.
+const topInfoIds = new Set(['basics', 'context']);
 const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
 const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
 const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
-// The white "full breakdown" slab holds only the evidence-graded groups.
-// The safety / FAQ tail renders after it, back on the bone background, so
-// the plain white drawers float there (matching the basics/loss batch).
 const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
 const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+// Picks render after the last evidence-graded group.
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
 // Continuous "Part 0X" numbering across both, in mainGroups order.
 const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
 
-// Topical product comparison
-const topicalGroup = groups.find((g) => g.id === 'boost-topical');
-const topicalRows = topicalGroup?.sections
-  .filter((s) => s.note && s.note.toLowerCase().includes('top'))
+// Product-pick comparison cards — sections carrying a "Top pick:" note.
+const compareRows = allSections()
+  .filter((s) => s.note && /^Top pick:/i.test(s.note))
   .map((s) => ({
     id: s.id,
     title: s.title,
     tldr: s.tldr,
-    evidence: s.evidence!,
-    product: s.note?.replace(/^Top (picks?|device):\s*/i, '') ?? '',
-  })) ?? [];
+    evidence: s.evidence,
+    product: s.note!.replace(/^Top pick:\s*/i, ''),
+  }));
 ---
 
-<BaseLayout title={title} description={description} locale={locale} path="collagen" type="article">
+<BaseLayout title={title} description={description} locale={locale} path="supplements" type="article">
   <article class="bg-bone">
     <!-- ════════════ HERO ════════════ -->
     <header class="relative border-b border-ink/10 overflow-hidden">
       <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
         <div>
           <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
-            Collagen, end&#8209;to&#8209;end<span class="text-rose">.</span>
+            Supplements, graded<span class="text-rose">.</span>
           </h1>
           <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
-            What it is, what supplements actually do, and which clinical treatments stimulate new
-            collagen.
+            What works, what&rsquo;s early, and what&rsquo;s marketing &mdash; every major anti-aging
+            supplement ranked by human evidence.
           </p>
           <p class="mt-3 text-xs text-ink/50">
-            Updated 10 May 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
-        <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait" tone="rose" class="w-full lg:w-72" />
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero still-life" tone="rose" class="w-full lg:w-72" />
       </div>
       <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
 
 
-    <!-- ════════════ TOP-FOLD SUMMARY + STATS ════════════ -->
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
     <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
       <div>
         <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
@@ -150,18 +114,17 @@ const topicalRows = topicalGroup?.sections
           ))}
         </ol>
       </div>
+
       <div>
         <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
       </div>
 
-      {/* Foundational info: what collagen is, and how/why it declines.
-          ExpandableDrawer, title only — expand for the full explanation. */}
+      {/* Foundational info drawers — title only, expand for the full text. */}
       {topInfoGroups.map((g) => (
         <section id={g.id} class="scroll-mt-32 pt-2">
-          <h2 class="font-display text-3xl md:text-4xl">{titleFor(g)}</h2>
-          {introFor(g) && <p class="mt-3 text-ink/70 max-w-3xl">{introFor(g)}</p>}
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
           <div class="mt-6 grid gap-2">
-            {orderedSections(g).map((s) => (
+            {g.sections.map((s) => (
               <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
             ))}
           </div>
@@ -169,13 +132,13 @@ const topicalRows = topicalGroup?.sections
       ))}
     </section>
 
-    <!-- ════════════ MAIN CONTENT (benefits, boost-it, safety, FAQ) ════════════ -->
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
     <section class="bg-white border-y border-ink/5">
       <div class="max-w-6xl mx-auto px-6 py-12">
 
         <div class="mb-10 pt-4">
           <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
-          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Collagen — what the evidence says</h2>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Supplements — what the evidence says</h2>
         </div>
 
         <div id="guide-body" class="min-w-0">
@@ -183,14 +146,13 @@ const topicalRows = topicalGroup?.sections
           <>
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
             <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
-            <h2 class="font-display text-3xl md:text-4xl mt-2">{titleFor(g)}</h2>
-            {introFor(g) && <p class="mt-3 text-ink/70 max-w-2xl">{introFor(g)}</p>}
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
 
-            {/* Featured media for high-impact sections */}
-            {g.id === 'boost-clinical' && (
+            {g.id === 'longevity' && (
               <div class="mt-6 grid md:grid-cols-2 gap-4">
-                <MediaPlaceholder kind="video" ratio="16/9" label="Inside a fractional laser session" tone="rose" />
-                <MediaPlaceholder kind="image" ratio="16/9" label="Before / after grid" tone="bone" />
+                <MediaPlaceholder kind="video" ratio="16/9" label="The longevity aisle, decoded" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Trial-dose cheat sheet" tone="bone" />
               </div>
             )}
 
@@ -200,50 +162,47 @@ const topicalRows = topicalGroup?.sections
                     s={s}
                     variant="bar"
                     tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
-                    mediaTone={g.id === 'boost-clinical' ? 'rose' : g.id === 'boost-topical' ? 'gold' : undefined}
+                    mediaTone={g.id === 'longevity' ? 'rose' : undefined}
                   />
                 ))}
             </div>
           </section>
 
-          {/* Editorial picks — placed right after the clinical "Boost it"
-              section so users have just finished reading about treatments
-              and supplements. Affiliate slots per README brief. */}
-          {g.id === 'boost-clinical' && (
+          {g.id === lastChartGroupId && (
             <div id="picks" class="mb-16 scroll-mt-32">
               <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
               <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
-              <p class="mt-3 text-ink/70 max-w-2xl">Four interventions our team consistently recommends — one supplement, one topical, and two clinical treatments.</p>
+              <p class="mt-3 text-ink/70 max-w-2xl">Four evidence-first choices — two foundations, one frontier experiment, one beauty-from-within.</p>
 
               <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                   {
-                    id: 'supplement-collagen',
-                    kind: 'Supplement',
-                    title: 'Hydrolyzed collagen peptides',
-                    blurb: '10 g/day for 8–12 weeks — the most studied way to nudge skin, joints, and bone.',
+                    id: 'creatine',
+                    kind: 'Foundation',
+                    title: 'Creatine monohydrate',
+                    blurb: '3–5 g/day with resistance training — the best-evidenced supplement in this guide.',
                     tone: 'sage' as const,
                   },
                   {
-                    id: 'topical-peptides',
-                    kind: 'Topical',
-                    title: 'Peptide serum (Matrixyl / copper)',
-                    blurb: 'Signal peptides that tell skin to build more of its own collagen — pairs well with retinol.',
-                    tone: 'gold' as const,
+                    id: 'fiber',
+                    kind: 'Foundation',
+                    title: 'Psyllium fiber',
+                    blurb: 'The unglamorous mortality champion: 25–29 g/day of total fiber is the target.',
+                    tone: 'bone' as const,
                   },
                   {
-                    id: 'therapy-sculptra',
-                    kind: 'Treatment',
-                    title: 'Sculptra (poly-L-lactic acid)',
-                    blurb: 'Injectable biostimulator that rebuilds volume over months — results last ~2 years.',
+                    id: 'urolithin-a',
+                    kind: 'Frontier',
+                    title: 'Urolithin A (Mitopure)',
+                    blurb: 'The most credible longevity-aisle molecule — two real RCTs on muscle endurance.',
                     tone: 'rose' as const,
                   },
                   {
-                    id: 'therapy-microneedling-prp',
-                    kind: 'Treatment',
-                    title: 'Microneedling + PRP',
-                    blurb: 'Controlled micro-injury plus your own growth factors — for texture, tone and scars.',
-                    tone: 'bone' as const,
+                    id: 'collagen-peptides',
+                    kind: 'Skin',
+                    title: 'Collagen peptides',
+                    blurb: '10 g/day for 8–12 weeks — the deepest trial base of any oral skin supplement.',
+                    tone: 'gold' as const,
                   },
                 ].map((pick) => (
                   <a
@@ -274,37 +233,35 @@ const topicalRows = topicalGroup?.sections
       </div>
     </section>
 
-    <!-- ════════════ SAFETY / FAQ TAIL + ROUTINE / PICKS / REFERENCES ════════════ -->
+    <!-- ════════════ SAFETY / FAQ TAIL + STACK BUILDER / PICKS / REFERENCES ════════════ -->
     <div class="max-w-6xl mx-auto px-6 py-12">
 
-        {/* Side-effects & FAQ — back on the bone background so the plain
-            white ExpandableDrawers float, matching the basics/loss batch. */}
         {tailInfoGroups.map((g) => (
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
             <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
-            <h2 class="font-display text-3xl md:text-4xl mt-2">{titleFor(g)}</h2>
-            {introFor(g) && <p class="mt-3 text-ink/70 max-w-2xl">{introFor(g)}</p>}
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
             <div class="mt-8 grid gap-2">
-              {orderedSections(g).map((s) => (
+              {g.sections.map((s) => (
                 <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
               ))}
             </div>
           </section>
         ))}
 
-        <!-- ════════════ BUILD-A-ROUTINE ════════════ -->
+        <!-- ════════════ BUILD-A-STACK ════════════ -->
         <section id="routine" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
           <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">Build your collagen routine</h2>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Build your evidence-first stack</h2>
           <p class="mt-2 text-ink/70 max-w-2xl">Pick one option from each row. Your daily stack appears below. Saved to your browser only.</p>
 
           <div class="mt-8 space-y-6" id="routine-builder">
             {[
-              { key: 'sun', label: 'Morning · Sunscreen', evidence: 'strong', opts: ['Mineral SPF 50', 'Chemical SPF 30', 'Tinted physical', 'None — high regret'] },
-              { key: 'vitc', label: 'Morning · Vitamin C', evidence: 'strong', opts: ['L-ascorbic 15%', 'Ascorbyl glucoside', 'None'] },
-              { key: 'collagen', label: 'Anytime · Oral collagen', evidence: 'strong', opts: ['Bovine 10g', 'Marine 10g', 'Chicken (type II)', 'Skip — eat bone broth'] },
-              { key: 'retinoid', label: 'Night · Retinoid', evidence: 'strong', opts: ['Rx tretinoin 0.025%', 'OTC retinol 0.3–1%', 'Retinaldehyde', 'None — first 4 weeks'] },
-              { key: 'extra', label: 'Optional support', evidence: 'moderate', opts: ['Hyaluronic acid', 'Niacinamide 5%', 'LED red light', 'Peptide serum'] },
+              { key: 'anchor', label: 'Non-negotiable · Training anchor', evidence: 'strong', opts: ['Resistance 2–3×/wk', 'Zone 2 + weights', 'Already covered'] },
+              { key: 'foundation', label: 'Daily · Foundations', evidence: 'strong', opts: ['Creatine 5 g', 'Whey 25 g', 'Psyllium 10 g', 'All three'] },
+              { key: 'tested', label: 'Test-first · Correct what’s low', evidence: 'moderate', opts: ['Vitamin D 1–2k IU', 'Omega-3 1 g', 'Magnesium 300 mg', 'Nothing low'] },
+              { key: 'frontier', label: 'Optional · The frontier', evidence: 'emerging', opts: ['NR 300 mg', 'Urolithin A 500 mg', 'GlyNAC', 'Wait for data'] },
+              { key: 'skin', label: 'Optional · Beauty from within', evidence: 'emerging', opts: ['Collagen 10 g', 'Astaxanthin 4 mg', 'Oral HA 200 mg', 'Skip'] },
             ].map((row) => (
               <div class="routine-row" data-key={row.key}>
                 <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
@@ -322,22 +279,22 @@ const topicalRows = topicalGroup?.sections
 
           <div id="routine-summary" class="mt-10 p-6 bg-white rounded-xl border border-ink/10">
             <p class="text-xs uppercase tracking-[0.3em] text-sage">Your stack</p>
-            <p id="routine-empty" class="mt-3 text-ink/60 italic">Pick at least one option above to see your routine.</p>
+            <p id="routine-empty" class="mt-3 text-ink/60 italic">Pick at least one option above to see your stack.</p>
             <ul id="routine-list" class="mt-3 space-y-2 hidden text-[15px]"></ul>
           </div>
         </section>
 
-        <!-- ════════════ TOPICAL PRODUCT TABLE ════════════ -->
-        <section id="compare-topical" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">Daily-care picks</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">Topical products by evidence</h2>
-          <p class="mt-2 text-ink/65 max-w-2xl">Our editorial picks for each topical category. Not affiliate, not exhaustive — anchors for further reading.</p>
+        <!-- ════════════ PRODUCT PICKS TABLE ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Shopping shortlist</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Product picks by evidence</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">One third-party-tested product per category. Not affiliate, not exhaustive — anchors for further reading.</p>
 
           <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {topicalRows.map((r) => (
+            {compareRows.map((r) => (
               <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
                 <div class="flex items-center justify-between gap-2 mb-2">
-                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence ?? 'info'}</span>
                 </div>
                 <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.title}</h3>
                 <p class="mt-1 text-sm text-ink/65 leading-snug">{r.tldr}</p>
@@ -352,15 +309,15 @@ const topicalRows = topicalGroup?.sections
           <h2 class="font-display text-3xl">References & further reading</h2>
           <p class="mt-2 text-ink/70 text-sm">
             All claims cite peer-reviewed studies, major reviews, or clinical-society sources, linked
-            inline within each section. Primary sources: PubMed/NIH NCBI, PMC, AAD, Cleveland Clinic,
-            Mayo Clinic, peer-reviewed dermatology journals.
+            inline within each section. Primary sources: PubMed/NIH NCBI, PMC, NEJM, JAMA, The Lancet,
+            Science, Cochrane, NIH Office of Dietary Supplements.
           </p>
         </section>
 
         <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
           Educational content, not medical advice. Talk to a qualified clinician before starting
-          supplements or treatments, especially during pregnancy, breastfeeding, while on
-          medications, or with a chronic condition.
+          supplements, especially during pregnancy, breastfeeding, while on medications, or with a
+          chronic condition.
         </p>
     </div>
 
@@ -439,7 +396,7 @@ const topicalRows = topicalGroup?.sections
       window.addEventListener('hashchange', openHashTarget);
       openHashTarget();
 
-      // 3. Routine builder
+      // 3. Stack builder
       const builder = document.getElementById('routine-builder');
       const list = document.getElementById('routine-list');
       const empty = document.getElementById('routine-empty');

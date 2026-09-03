@@ -1,0 +1,450 @@
+---
+/**
+ * The HA-fillers guide (/fillers) — built on the collagen guide's layout:
+ * evidence strength as the primary visual signal, all content in the DOM,
+ * one interactive block (concern matcher).
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/fillers';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Hyaluronic-acid fillers — the complete guide | DeAging Europe';
+const description =
+  'Where HA fillers genuinely work, what they cost, how long they really last, and the risks nobody mentions — every area graded by clinical evidence.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-sag': 'No',
+  'faq-dissolve': 'Not fully',
+  'faq-undo': 'Yes',
+  'faq-pregnancy': 'Defer it',
+  'faq-vaccine': 'It happens',
+  'faq-insurance': 'Emergencies only',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Deep smile lines',
+    paths: [
+      { id: 'use-cheeks', title: 'Cheeks & midface', why: 'restoring the cheek above often softens the fold at the source' },
+      { id: 'use-nasolabial', title: 'Nasolabial folds', why: 'direct treatment — the most-trialled filler area of all' },
+    ],
+  },
+  {
+    concern: 'Flattened cheeks / tired midface',
+    paths: [{ id: 'use-cheeks', title: 'Cheeks & midface', why: 'the strongest evidence and the longest duration (up to 2 years)' }],
+  },
+  {
+    concern: 'Thin or fading lips',
+    paths: [{ id: 'use-lips', title: 'Lips & lip lines', why: 'two pivotal RCTs; keep volumes ≤1 ml per session' }],
+  },
+  {
+    concern: 'Under-eye hollows',
+    paths: [
+      { id: 'use-tear-trough', title: 'Tear troughs', why: 'works in expert hands — read the safety caveats first' },
+      { id: 'safety-nodules', title: 'Delayed complications', why: 'this area produces the most late swelling and nodules' },
+    ],
+  },
+  {
+    concern: 'Weak chin or soft jawline',
+    paths: [
+      { id: 'use-chin', title: 'Chin projection', why: 'dedicated pivotal RCT; changes profile harmony most per ml' },
+      { id: 'use-jawline', title: 'Jawline definition', why: 'newer approval — works on the line, not on jowls' },
+    ],
+  },
+  {
+    concern: 'Crepey, dull, dehydrated skin',
+    paths: [
+      { id: 'booster-skinboosters', title: 'Skin boosters', why: 'hydration from within — the honest expectation is glow, not lift' },
+      { id: 'booster-profhilo', title: 'Profhilo', why: 'read this before paying: its sham-controlled trial failed' },
+    ],
+  },
+  {
+    concern: 'Aging hands',
+    paths: [{ id: 'use-hands', title: 'Backs of the hands', why: 'randomized split-hand trial; pairs well with pigment lasers' }],
+  },
+  {
+    concern: 'A bump or droop on my nose',
+    paths: [{ id: 'use-nose', title: 'Non-surgical rhinoplasty', why: 'high satisfaction — and the highest serious-risk zone. Risk-first reading.' }],
+  },
+];
+
+// Brand-family comparison cards.
+const brandRows = [
+  {
+    id: 'use-cheeks',
+    brand: 'Juvéderm (Allergan)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Vycross line (Voluma, Volux, Volbella) — most-trialled family; slightly higher swelling rates in the network meta-analysis, slowest to dissolve.',
+    knownFor: 'Cheeks, chin, jawline, lips',
+  },
+  {
+    id: 'use-lips',
+    brand: 'Restylane (Galderma)',
+    evidence: 'strong' as Evidence,
+    blurb: 'NASHA + flexible OBT gels (Lyft, Kysse, Defyne) — first HA ever approved; Kysse matched Volbella with ~20% less product; dissolves fastest.',
+    knownFor: 'Lips, folds, the only HA approved for hands',
+  },
+  {
+    id: 'use-tear-trough',
+    brand: 'Belotero (Merz)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Cohesive matrix gels that tolerate superficial placement with low Tyndall risk — a frequent choice for delicate, thin-skin areas.',
+    knownFor: 'Fine lines, superficial planes',
+  },
+  {
+    id: 'use-perioral',
+    brand: 'Teosyal RHA (Teoxane)',
+    evidence: 'strong' as Evidence,
+    blurb: '"Resilient HA" engineered for movement — two US pivotal trials (434 subjects) in dynamic wrinkles; near-identical results needle vs cannula.',
+    knownFor: 'Mobile areas: perioral, marionette',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="fillers" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Fillers, without the filler<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            Where hyaluronic-acid fillers genuinely work, what they cost, how long they really last
+            &mdash; and the risks the consult skips.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">HA fillers — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Inside a midface treatment" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Facial danger-zone map" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">Where the evidence, longevity, and safety margins line up best.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'use-cheeks',
+                    kind: 'Best evidence',
+                    title: 'Midface volumization',
+                    blurb: 'The pivotal-trial champion — visible for up to 2 years and it lifts the lower face with it.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'use-lips',
+                    kind: 'Best studied',
+                    title: 'Conservative lip refresh',
+                    blurb: '≤1 ml with a flexible gel — two RCTs behind it and a year of effect.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'alt-hyaluronidase',
+                    kind: 'The exit',
+                    title: 'Hyaluronidase reversal',
+                    blurb: 'The reason to choose HA at all: mistakes and regrets are dissolvable.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'alt-biostimulators',
+                    kind: 'The alternative',
+                    title: 'Sculptra biostimulation',
+                    blurb: 'For diffuse volume loss when you want collagen, not gel — slower, longer, irreversible.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / BRANDS / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a treatment to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points — each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ BRAND FAMILIES ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The product landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Brand families compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">All four majors are effective and broadly interchangeable in trials — the differences are texture, longevity, and dissolvability.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {brandRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References & further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, pivotal-trial reports, or regulatory sources,
+            linked inline within each section. Primary sources: PubMed/PMC, FDA pivotal summaries,
+            Dermatologic Surgery, Aesthetic Surgery Journal, UK parliamentary briefings.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Filler is a medical procedure — consult a
+          qualified clinician, disclose your full medical history, and defer treatment during
+          pregnancy or breastfeeding.
+        </p>
+    </div>
+
+    <!-- ════════════ CLINICIAN CTA ════════════ -->
+    <div class="sticky bottom-4 z-30 max-w-6xl mx-auto px-6 pointer-events-none">
+      <div class="ml-auto max-w-md p-4 bg-ink text-bone rounded-2xl shadow-2xl flex items-center justify-between gap-3 pointer-events-auto hidden md:flex">
+        <p class="text-sm">Want personalized advice? <span class="text-bone/70">Speak with a clinician.</span></p>
+        <a href="#" class="text-xs px-3 py-1.5 rounded-full bg-rose text-bone font-medium hover:bg-rose/90 transition whitespace-nowrap">Book a call</a>
+      </div>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
+    .prose-anti :global(p:first-child) { margin-top: 0; }
+    .prose-anti :global(a) {
+      color: var(--color-rose);
+      text-decoration: underline;
+      text-decoration-color: rgba(184,130,109,0.4);
+      text-underline-offset: 2px;
+    }
+    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
+    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
+    .prose-anti :global(ul) { list-style: disc; }
+    .prose-anti :global(ol) { list-style: decimal; }
+    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
