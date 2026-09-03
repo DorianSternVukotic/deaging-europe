@@ -76,4 +76,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Superficial to phenol-deep — the oldest resurfacing tool, graded by depth.',
     kind: 'clinic',
   },
+  {
+    path: 'ceramides',
+    title: 'Ceramides',
+    tagline: 'The barrier lipids — creams, supplements, and boosters graded by what trials show.',
+    kind: 'foundation',
+  },
 ];
