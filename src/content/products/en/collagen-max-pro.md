@@ -12,10 +12,18 @@ gallery:
     alt: COLLAGEN MAX PRO White Raspberry, 390 g tub
   - src: https://static.wixstatic.com/media/51aaad_f0bc127c0c894446a4ed76ad7b6ef5d5~mv2.png/v1/fit/w_1000,h_1000,q_90/file.png
     alt: COLLAGEN MARIN MAX PRO C+, fresh lemon, 390 g tub
-  - src: https://static.wixstatic.com/media/51aaad_4b2a62c874194ffdac4d8000291a2d31~mv2.png/v1/fit/w_1000,h_1000,q_90/file.png
-    alt: Travel pack, 195 g in sachets
-  - src: https://static.wixstatic.com/media/51aaad_af1df62260914db2a1ea64d9405091f1~mv2.png/v1/fit/w_1000,h_1000,q_90/file.png
-    alt: A scoop of the powder going into a shaker
+  - src: /images/aeterna/pouch-neutral-1200.jpg
+    alt: The 195 g travel pack of COLLAGEN MAX PRO, neutral
+    fit: cover
+  - src: /images/aeterna/scoop-close-up-1200.jpg
+    alt: A level scoop of the powder held beside a woman's cheek
+    fit: cover
+  - src: /images/aeterna/model-tub-and-pouch-1200.jpg
+    alt: A woman holding the 390 g tub and the 195 g travel pack
+    fit: cover
+  - src: /images/aeterna/white-coat-portrait-1200.jpg
+    alt: A woman in a white coat holding a tub of COLLAGEN MAX PRO
+    fit: cover
 tagline: >-
   10 g of Peptan® collagen peptides a day, with a hyaluronic-acid matrix, ceramides and acerola vitamin C. Bulgarian brand, named European suppliers.
 whatItIs: >-
@@ -172,6 +180,10 @@ studies:
     url: https://doi.org/10.2903/j.efsa.2009.1226
     evidence: strong
 howTo:
+  video:
+    src: /video/how-to-mix-720.mp4
+    poster: /images/aeterna/how-to-mix-poster.jpg
+    alt: One scoop of COLLAGEN MAX PRO stirred into a glass of water
   steps:
     - One level scoop, 13 g, into 200 ml of cold water, juice or a smoothie. Stir or shake. The neutral version is nearly tasteless; the flavoured ones are naturally sweetened.
     - "Any time of day, with or without food. Daily is what matters: every trial dosed every day."

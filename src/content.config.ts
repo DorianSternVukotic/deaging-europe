@@ -34,8 +34,14 @@ const products = defineCollection({
     origin: z.string().optional(),
     /** Card image (homepage) and default og:image. */
     image: z.string(),
-    /** Product shots for the hero gallery; first is the default. */
-    gallery: z.array(z.object({ src: z.string(), alt: z.string() })).default([]),
+    /**
+     * Product shots for the hero gallery; first is the default. `fit: 'contain'`
+     * (the default) pads a cut-out on the mint ground; `'cover'` fills the frame
+     * with a photograph.
+     */
+    gallery: z
+      .array(z.object({ src: z.string(), alt: z.string(), fit: z.enum(['contain', 'cover']).default('contain') }))
+      .default([]),
     /** One-liner used on cards and as the meta description fallback. */
     tagline: z.string(),
     /** Two or three plain sentences under the title: what it is, who makes it, what one serving is. */
@@ -113,6 +119,8 @@ const products = defineCollection({
       .object({
         steps: z.array(z.string()),
         timeline: z.array(z.object({ when: z.string(), what: z.string() })),
+        /** Optional short clip shown beside the steps (muted, looping). */
+        video: z.object({ src: z.string(), poster: z.string(), alt: z.string() }).optional(),
       })
       .optional(),
     /** Buyer reviews quoted from the shop, with a note on provenance. */

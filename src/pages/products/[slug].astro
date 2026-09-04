@@ -47,13 +47,15 @@ const offers =
     ? { '@type': 'Offer', price: d.price, priceCurrency: d.currency, availability: 'https://schema.org/InStock', url: d.buyUrl }
     : undefined;
 
+// Gallery paths may be site-relative (public/images); schema.org wants absolute URLs.
+const absolute = (src: string) => new URL(src, Astro.site ?? 'https://www.deage.eu').toString();
 const productJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Product',
   name: d.title,
   brand: { '@type': 'Brand', name: d.brand },
   description: d.tagline,
-  image: d.gallery.length > 0 ? d.gallery.map((g) => g.src) : d.image,
+  image: d.gallery.length > 0 ? d.gallery.map((g) => absolute(g.src)) : absolute(d.image),
   ...(offers && { offers }),
 };
 ---

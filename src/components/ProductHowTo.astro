@@ -1,20 +1,30 @@
 ---
 /**
  * ProductHowTo — the three steps (a real sequence, so they are numbered) and
- * the timeline of what the trials measured, and when.
+ * the timeline of what the trials measured, and when. An optional portrait
+ * clip (muted, looping) sits beside the steps to show step one.
  */
 import { t } from '../i18n/utils';
 import type { Locale } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
-  howTo?: { steps: string[]; timeline: { when: string; what: string }[] };
+  howTo?: {
+    steps: string[];
+    timeline: { when: string; what: string }[];
+    video?: { src: string; poster: string; alt: string };
+  };
 }
 const { locale, howTo } = Astro.props;
 ---
 {howTo && (
   <section id="how-to" class="scroll-mt-32 bg-white border-y border-ink/5">
-    <div class="max-w-6xl mx-auto px-6 py-16 md:py-20 grid lg:grid-cols-2 gap-12 lg:gap-16">
+    <div
+      class:list={[
+        'max-w-6xl mx-auto px-6 py-16 md:py-20 grid gap-12 lg:gap-16',
+        howTo.video ? 'lg:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)]' : 'lg:grid-cols-2',
+      ]}
+    >
       <div>
         <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.howto.title')}</h2>
         <ol class="mt-6 space-y-5">
@@ -26,6 +36,23 @@ const { locale, howTo } = Astro.props;
           ))}
         </ol>
       </div>
+
+      {howTo.video && (
+        <figure class="lg:order-first w-48 sm:w-56 lg:w-60 shrink-0 mx-auto lg:mx-0">
+          <video
+            src={howTo.video.src}
+            poster={howTo.video.poster}
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            aria-label={howTo.video.alt}
+            class="w-full aspect-[9/16] object-cover rounded-2xl bg-bone shadow-md"
+          ></video>
+          <figcaption class="mt-2 text-xs text-ink/50 text-center lg:text-left">{howTo.video.alt}. No sound.</figcaption>
+        </figure>
+      )}
 
       {howTo.timeline.length > 0 && (
         <div>
@@ -44,3 +71,14 @@ const { locale, howTo } = Astro.props;
     </div>
   </section>
 )}
+
+<script>
+  // Respect reduced-motion: stop the loop and hand the viewer the controls.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll<HTMLVideoElement>('#how-to video').forEach((v) => {
+      v.removeAttribute('autoplay');
+      v.pause();
+      v.controls = true;
+    });
+  }
+</script>

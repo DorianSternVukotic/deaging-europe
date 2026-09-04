@@ -44,12 +44,18 @@ const readingMinutes = guideReadingMinutes();
 
 // Page-level photography. Section rows carry their own `image` in the data
 // module; these are the slots that belong to the page layout, not to a section.
+// The hero is Aeterna's own photography (public/images/aeterna); the rest are
+// stock (Pexels) or the brand's shop images.
 const pexels = (id: number, w: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
 const aeterna = (file: string, w: number, h: number) =>
   `https://static.wixstatic.com/media/51aaad_${file}/v1/fill/w_${w},h_${h},al_c,q_85/file.jpg`;
 const media = {
-  hero: { src: pexels(8626076, 900), alt: 'A mature woman in profile, neck and shoulder in soft light' },
+  hero: {
+    src: '/images/aeterna/scoop-close-up-1200.jpg',
+    srcset: '/images/aeterna/scoop-close-up-600.jpg 600w, /images/aeterna/scoop-close-up-1200.jpg 1200w',
+    alt: 'A woman holding a level scoop of collagen powder beside her cheek',
+  },
   explainer: { src: aeterna('bd29c290d4494161932ff0defcd744e2~mv2.png', 1600, 900), alt: 'A woman resting her head beside a tub of Aeterna COLLAGEN MAX PRO' },
   laser: { src: pexels(4586726, 1400), alt: 'Aesthetician performing a laser treatment on a patient wearing goggles' },
   assessment: { src: pexels(7446660, 1400), alt: 'Dermatologist examining a patient\'s skin with a dermatoscope' },
@@ -147,7 +153,7 @@ const topicalRows = topicalGroup?.sections
   })) ?? [];
 ---
 
-<BaseLayout title={title} description={description} locale={locale} path="collagen" type="article">
+<BaseLayout title={title} description={description} locale={locale} path="collagen" type="article" image={media.hero.src}>
   <article class="bg-bone">
     <!-- ════════════ HERO ════════════ -->
     <header class="relative border-b border-ink/10 overflow-hidden">
@@ -164,7 +170,14 @@ const topicalRows = topicalGroup?.sections
             Updated 10 May 2026 · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
-        <img src={media.hero.src} alt={media.hero.alt} class="w-full lg:w-72 aspect-[4/5] object-cover rounded-2xl shadow-lg" />
+        <img
+          src={media.hero.src}
+          srcset={media.hero.srcset}
+          sizes="(min-width: 1024px) 18rem, calc(100vw - 3rem)"
+          alt={media.hero.alt}
+          fetchpriority="high"
+          class="w-full lg:w-72 aspect-[4/5] object-cover rounded-2xl shadow-lg"
+        />
       </div>
       <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
