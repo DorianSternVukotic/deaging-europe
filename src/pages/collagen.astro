@@ -44,19 +44,27 @@ const readingMinutes = guideReadingMinutes();
 
 // Page-level photography. Section rows carry their own `image` in the data
 // module; these are the slots that belong to the page layout, not to a section.
-// The hero is Aeterna's own photography (public/images/aeterna); the rest are
-// stock (Pexels) or the brand's shop images.
+// The hero and the video slot are Aeterna's own media (public/images/aeterna);
+// the rest are stock (Pexels) or the brand's shop images.
 const pexels = (id: number, w: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
 const aeterna = (file: string, w: number, h: number) =>
   `https://static.wixstatic.com/media/51aaad_${file}/v1/fill/w_${w},h_${h},al_c,q_85/file.jpg`;
 const media = {
   hero: {
-    src: '/images/aeterna/scoop-close-up-1200.jpg',
-    srcset: '/images/aeterna/scoop-close-up-600.jpg 600w, /images/aeterna/scoop-close-up-1200.jpg 1200w',
-    alt: 'A woman holding a level scoop of collagen powder beside her cheek',
+    src: '/images/aeterna/white-coat-portrait-1200.jpg',
+    srcset: '/images/aeterna/white-coat-portrait-600.jpg 600w, /images/aeterna/white-coat-portrait-1200.jpg 1200w',
+    alt: 'A doctor in a white coat holding a tub of Aeterna COLLAGEN MAX PRO',
   },
-  explainer: { src: aeterna('bd29c290d4494161932ff0defcd744e2~mv2.png', 1600, 900), alt: 'A woman resting her head beside a tub of Aeterna COLLAGEN MAX PRO' },
+  // Aeterna's video thumbnail (the play button is part of the picture). The
+  // clip itself has not been supplied yet: with `src` empty the slot renders
+  // the thumbnail as a still; set it and the slot becomes a player.
+  video: {
+    src: '',
+    poster: '/images/aeterna/video-poster-1600.jpg',
+    posterSrcset: '/images/aeterna/video-poster-800.jpg 800w, /images/aeterna/video-poster-1600.jpg 1600w',
+    alt: 'Two women talking about collagen, from an Aeterna video',
+  },
   laser: { src: pexels(4586726, 1400), alt: 'Aesthetician performing a laser treatment on a patient wearing goggles' },
   assessment: { src: pexels(7446660, 1400), alt: 'Dermatologist examining a patient\'s skin with a dermatoscope' },
 };
@@ -197,7 +205,27 @@ const topicalRows = topicalGroup?.sections
         </div>
       </div>
       <div>
-        <img src={media.explainer.src} alt={media.explainer.alt} loading="lazy" class="w-full aspect-video object-cover rounded-2xl" />
+        {media.video.src ? (
+          <video
+            class="w-full aspect-video object-cover rounded-2xl bg-ink"
+            poster={media.video.poster}
+            preload="none"
+            controls
+            playsinline
+            aria-label={media.video.alt}
+          >
+            <source src={media.video.src} type="video/mp4" />
+          </video>
+        ) : (
+          <img
+            src={media.video.poster}
+            srcset={media.video.posterSrcset}
+            sizes="(min-width: 72rem) 69rem, calc(100vw - 3rem)"
+            alt={media.video.alt}
+            loading="lazy"
+            class="w-full aspect-video object-cover rounded-2xl"
+          />
+        )}
       </div>
     </section>
 
