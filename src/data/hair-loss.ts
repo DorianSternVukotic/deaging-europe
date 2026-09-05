@@ -46,6 +46,28 @@ export const keyTakeaways: string[] = [
   'Expect two to eight weeks of extra shedding on minoxidil, first change at three to four months, a fair verdict at twelve, and maintenance for as long as you want the result. Treatments stop loss far more reliably than they regrow it — the cost of waiting is the hair you keep.',
 ];
 
+/** The three drivers — rendered as cards at the top of "What's actually happening"; each links to the section that goes deeper. */
+export const drivers: { id: string; kind: string; title: string; blurb: string }[] = [
+  {
+    id: 'type-pattern',
+    kind: 'Hormones',
+    title: 'DHT, and the estrogen that used to buffer it',
+    blurb: 'DHT shortens the growth phase in genetically sensitive follicles. Men have more of it; in women the signal gets louder when estrogen falls — which is why thinning so often starts at 45–55.',
+  },
+  {
+    id: 'why-early',
+    kind: 'Time',
+    title: 'A growth phase that keeps getting shorter',
+    blurb: 'Anagen shortens with age even without DHT, and pattern loss is progressive by definition. Treatments stop it far more reliably than they rebuild it, so the value of starting is the hair you keep.',
+  },
+  {
+    id: 'type-shedding',
+    kind: 'Shocks',
+    title: 'Birth, fever, surgery, crash diets, GLP-1s, grief',
+    blurb: 'A shock pushes follicles into rest all at once, and two to three months later they shed together. Alarming — and self-limiting, once the trigger has passed.',
+  },
+];
+
 // ---------------------------------------------------------------------------
 // SECTIONS
 // ---------------------------------------------------------------------------
@@ -59,20 +81,6 @@ const concept: Section[] = [
     bodyHtml: `
       <p>Every follicle runs its own cycle: a growth phase (anagen) of two to eight years, a two-to-four-week shutdown (catagen), and a two-to-four-month rest (telogen) before the old hair is shed and a new one starts. On a healthy scalp about 85–90% of the roughly 100,000 follicles are growing at any moment and 50–100 hairs fall out a day — which is why a full brush is normal and a full drain is not, and why the cycles are deliberately out of sync (<a href="https://ishrs.org/hair-loss-and-the-hair-growth-cycle/" rel="noopener nofollow" target="_blank">ISHRS</a>; <a href="https://dermnetnz.org/topics/hair-shedding" rel="noopener nofollow" target="_blank">DermNet</a>).</p>
       <p>Two things go wrong, and telling them apart is the whole game. In <strong>pattern hair loss</strong> the follicle does not die; it miniaturises — each cycle the growth phase gets shorter and the hair it makes gets finer, until a terminal hair has become vellus fuzz. That is slow, mapped across the scalp, and reversible while the follicle is still cycling. In <strong>telogen effluvium</strong> the follicles are fine, but a shock pushes far more of them than usual into rest at once, and two to three months later they all shed together. That is sudden, diffuse, alarming — and self-limiting.</p>
-    `,
-  },
-  {
-    id: 'three-drivers',
-    category: 'concept',
-    title: 'The three drivers: hormones, time and shocks',
-    tldr: 'DHT in genetically sensitive follicles (unmasked in women when estrogen falls), a growth phase that shortens with age, and shocks that push follicles into rest en masse.',
-    bodyHtml: `
-      <p>Supplement brands frame midlife thinning as "hormones, ageing and metabolism". The clinical version is hormones, time and shocks.</p>
-      <ul class="list-disc pl-5 space-y-2">
-        <li><strong>Hormones.</strong> Dihydrotestosterone (DHT), made from testosterone by the enzyme 5-alpha-reductase, shortens the growth phase in follicles that are genetically sensitive to it. Men have more DHT; women have the same sensitivity in fewer follicles and, until menopause, estrogen that lengthens anagen and buffers the signal. When estrogen falls across the perimenopausal years the balance tips, which is why female pattern loss so often appears or accelerates between 45 and 55 (<a href="https://onlinelibrary.wiley.com/doi/10.1111/jdv.14624" rel="noopener nofollow" target="_blank">European S3 guideline</a>; <a href="https://www.sciencedirect.com/science/article/pii/S0378512225001860" rel="noopener nofollow" target="_blank">2025 review</a>).</li>
-        <li><strong>Time.</strong> Anagen shortens with age even without DHT, hair diameter peaks in the thirties, and follicle density slowly falls. Pattern loss is progressive by definition: untreated, the follicle count you have at 40 is the best you will have.</li>
-        <li><strong>Shocks.</strong> Childbirth, high fever, surgery, a crash diet, rapid weight loss on a GLP-1 drug (hair-loss reports cluster in people losing more than 20% of body weight), severe psychological stress and iron deficiency all trigger telogen effluvium. The mechanism is real down to the molecule: in mice, the stress hormone corticosterone holds hair-follicle stem cells in rest by suppressing a growth signal called GAS6 (<a href="https://www.nature.com/articles/s41586-021-03417-2" rel="noopener nofollow" target="_blank">Nature, 2021</a>; <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12530271/" rel="noopener nofollow" target="_blank">GLP-1 systematic review</a>).</li>
-      </ul>
     `,
   },
   {
@@ -841,7 +849,7 @@ export const groups: SectionGroup[] = [
   {
     id: 'basics',
     title: "What's actually happening",
-    intro: '',
+    intro: 'Three drivers explain almost every case — each with a different fix.',
     sections: concept,
   },
   {
