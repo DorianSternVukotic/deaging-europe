@@ -184,24 +184,24 @@ const planRows = [
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-14">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">The short version</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2 max-w-3xl leading-tight">Thinning hair isn't random &mdash; and it is rarely just one thing.</h2>
-          <p class="mt-4 max-w-3xl text-lg text-ink/75 leading-relaxed">
-            By 50, about 40% of women and half of men show pattern hair loss, and most start treating it years late.
-            Three drivers explain almost every case &mdash; each with a different fix. Below, every treatment is graded
-            by the trials behind it, then matched to your type of loss.
-          </p>
-          <div class="mt-8 grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-4">
-            <MediaPlaceholder kind="video" ratio="16/9" label="The three drivers, explained · 2 min" tone="sage" class="h-full [&>div]:h-full" />
-            <div class="grid gap-4">
-              {drivers.map((d) => (
-                <a href={`#${d.id}`} class="group flex flex-col justify-center p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
-                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
-                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
-                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
-                </a>
-              ))}
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The short version &middot; read it or watch it</p>
+          <div class="mt-4 grid lg:grid-cols-6 gap-4">
+            <div class="lg:col-span-3 flex flex-col justify-center lg:pr-6">
+              <h2 class="font-display text-3xl md:text-4xl leading-tight">Thinning hair isn't random &mdash; and it is rarely just one thing.</h2>
+              <p class="mt-4 text-lg text-ink/75 leading-relaxed">
+                By 50, about 40% of women and half of men show pattern hair loss, and most start treating it years late.
+                Three drivers explain almost every case &mdash; each with a different fix. Below, every treatment is graded
+                by the trials behind it, then matched to your type of loss.
+              </p>
             </div>
+            <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" class="lg:col-span-3" />
+            {drivers.map((d) => (
+              <a href={`#${d.id}`} class="lg:col-span-2 group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+              </a>
+            ))}
           </div>
         </div>
       </div>
