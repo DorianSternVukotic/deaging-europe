@@ -112,4 +112,16 @@ export const guides: GuideMeta[] = [
     tagline: 'Thinning, shedding or a widening part — every treatment graded, minoxidil to transplant, with a plan by type.',
     kind: 'problem',
   },
+  {
+    path: 'wrinkles',
+    title: 'Fine lines & wrinkles',
+    tagline: 'Surface lines, expression lines, folds and lip lines — four problems, every fix graded from sunscreen to a deep peel.',
+    kind: 'problem',
+  },
+  {
+    path: 'jowls',
+    title: 'Sagging jowls',
+    tagline: 'Bone, fat, ligament and skin — the pinch test that sorts them, every fix graded, and when only surgery answers.',
+    kind: 'problem',
+  },
 ];
