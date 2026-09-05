@@ -13,24 +13,20 @@ import wixHostingAdapter from '@wix/astro-wix-hosting-adapter';
 const site = process.env.SITE_URL ?? 'https://www.deage.eu';
 const isBuild = process.env.NODE_ENV === 'production';
 
-// Mirrors src/i18n/ui.ts (config files can't import project TS).
-const DEFAULT_LOCALE = 'en';
-const LOCALES = ['en', 'bg', 'de', 'fr', 'it', 'es'];
-const localePath = (locale, path = '') =>
-  locale === DEFAULT_LOCALE ? `/${path}` : `/${locale}${path ? `/${path}` : ''}`;
+// The site is English-only (locales were removed 2026-09-03); src/i18n keeps
+// the `t()`/`localePath()` plumbing so a locale can be added back later.
 
 // Pages are rendered on demand (see `output` below), so @astrojs/sitemap only
-// discovers the fixed routes (/, /collagen). Enumerate the dynamic ones —
-// localized homepages and every product page — from the content directory.
+// discovers the fixed routes (/, /collagen, /contact, the guides). Enumerate
+// the dynamic ones, every product page, from the content directory.
 function dynamicPages() {
-  const urls = LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((l) => new URL(localePath(l), site).href);
+  const urls = [];
   const root = 'src/content/products';
   for (const dir of readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory())) {
     for (const file of readdirSync(join(root, dir.name)).filter((f) => f.endsWith('.md'))) {
       const fm = readFileSync(join(root, dir.name, file), 'utf8');
       const slug = fm.match(/^slug:\s*['"]?([^'"\n]+?)['"]?\s*$/m)?.[1] ?? file.replace(/\.md$/, '');
-      const locale = fm.match(/^locale:\s*['"]?([a-z]{2})['"]?\s*$/m)?.[1] ?? dir.name;
-      urls.push(new URL(localePath(locale, `products/${slug}`), site).href);
+      urls.push(new URL(`/products/${slug}`, site).href);
     }
   }
   return urls;
@@ -44,7 +40,7 @@ export default defineConfig({
 
   // Hosting: Wix-managed headless (`wix release`). Wix's static file host serves
   // exact paths only — no directory-index or extensionless resolution — so a
-  // fully static build can't serve /collagen or /bg. Instead the Wix worker
+  // fully static build can't serve /collagen. Instead the Wix worker
   // renders every route on demand; pages resolve content from Astro.params at
   // request time. Nothing in the site calls the Wix SDK — the integration is
   // purely the hosting contract (auth middleware, page manifest, adapter).
@@ -56,29 +52,10 @@ export default defineConfig({
   security: { checkOrigin: false },
   image: { domains: ['static.wixstatic.com'] },
 
-  i18n: {
-    defaultLocale: DEFAULT_LOCALE,
-    locales: LOCALES,
-    routing: {
-      prefixDefaultLocale: false,
-      redirectToDefaultLocale: false,
-    },
-  },
   integrations: [
     sitemap({
       customPages: dynamicPages(),
       filter: (page) => !/\/404$/.test(page),
-      i18n: {
-        defaultLocale: DEFAULT_LOCALE,
-        locales: {
-          en: 'en-US',
-          bg: 'bg-BG',
-          de: 'de-DE',
-          fr: 'fr-FR',
-          it: 'it-IT',
-          es: 'es-ES',
-        },
-      },
     }),
     react(),
     wix(),

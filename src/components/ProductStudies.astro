@@ -1,0 +1,57 @@
+---
+/**
+ * ProductStudies — the papers and regulatory opinions behind the actives,
+ * each with its evidence tier. Replaces the old "reviewed by" doctor block:
+ * the citations are the authority here, not a portrait.
+ */
+import { evidenceColor, type Evidence } from '../data/evidence';
+import { t } from '../i18n/utils';
+import type { Locale } from '../i18n/ui';
+
+interface Study {
+  title: string;
+  journal: string;
+  year: number;
+  summary: string;
+  url?: string;
+  evidence: Evidence;
+  tag?: string;
+}
+interface Props { locale: Locale; studies: Study[]; guideHref: string }
+const { locale, studies, guideHref } = Astro.props;
+---
+{studies.length > 0 && (
+  <section id="evidence" class="scroll-mt-32 bg-ink text-bone">
+    <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
+      <p class="text-xs uppercase tracking-[0.3em] text-gold">{t(locale, 'product.studies.eyebrow')}</p>
+      <h2 class="font-display text-3xl md:text-4xl mt-2">{t(locale, 'product.studies.title')}</h2>
+
+      <div class="mt-10 grid md:grid-cols-2 gap-5">
+        {studies.map((s) => (
+          <article class="flex flex-col rounded-2xl border border-bone/10 bg-bone/5 p-6">
+            <div class="flex items-center justify-between gap-4">
+              <p class="text-[11px] uppercase tracking-widest text-bone/55">{s.journal} · {s.year}</p>
+              <span class="text-[10px] uppercase tracking-widest font-semibold whitespace-nowrap" style={`color:${evidenceColor[s.evidence]}`}>
+                {t(locale, `product.evidence.${s.evidence}`)}
+              </span>
+            </div>
+            {s.tag && <p class="mt-3 text-xs text-gold">{s.tag}</p>}
+            <h3 class="font-display text-xl leading-snug mt-1">{s.title}</h3>
+            <p class="mt-3 text-sm text-bone/75 leading-relaxed flex-1">{s.summary}</p>
+            {s.url && (
+              <a href={s.url} target="_blank" rel="noopener nofollow" class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-gold hover:gap-2 transition-all">
+                {t(locale, 'product.readStudy')}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+              </a>
+            )}
+          </article>
+        ))}
+      </div>
+
+      <a href={guideHref} class="mt-10 inline-flex items-center gap-2 rounded-full border border-bone/30 px-6 py-3 text-sm font-semibold hover:bg-bone hover:text-ink transition">
+        {t(locale, 'product.guide')}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+      </a>
+    </div>
+  </section>
+)}

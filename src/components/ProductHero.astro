@@ -1,34 +1,194 @@
 ---
-import BuyButton from './BuyButton.astro';
-import { type Locale } from '../i18n/ui';
+/**
+ * ProductHero — gallery on the left, buy box on the right.
+ *
+ * The buy box carries the page's signature: an evidence ledger that grades
+ * every active with the site's evidence tiers, placed *above* the price so the
+ * grade is read before the call to action. Once it scrolls away,
+ * ProductStickyBar keeps the price and button in view on every width.
+ */
+import { evidenceColor, type Evidence } from '../data/evidence';
+import { t } from '../i18n/utils';
+import type { Locale } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
-  title: string;
   brand: string;
-  tagline: string;
-  image: string;
-  buyUrl: string;
+  origin?: string;
+  title: string;
+  whatItIs?: string;
+  gallery: { src: string; alt: string; fit?: 'contain' | 'cover' }[];
+  actives: { name: string; evidence: Evidence }[];
+  variants: { short: string; price: string; url: string }[];
   price?: string;
-  currency?: string;
+  currency: string;
+  servings?: number;
+  priceNote?: string;
+  subscription?: { price: string; note: string };
+  buyUrl: string;
+  shopName?: string;
+  badges: string[];
 }
-const { locale, title, brand, tagline, image, buyUrl, price, currency } = Astro.props;
+const {
+  locale, brand, origin, title, whatItIs, gallery, actives, variants,
+  price, currency, servings, priceNote, subscription, buyUrl, shopName, badges,
+} = Astro.props;
+
+const barWidth: Record<Evidence, number> = { strong: 100, moderate: 66, emerging: 40, limited: 18 };
+const symbol = currency === 'EUR' ? '€' : `${currency} `;
+const perServing = price && servings ? (Number(price) / servings).toFixed(2) : undefined;
+const cta = shopName ? `${t(locale, 'product.buyAt')} ${shopName}` : t(locale, 'product.buy');
+const priceLine = [
+  servings ? `${servings} ${t(locale, 'product.servings')}` : null,
+  perServing ? `${symbol}${perServing} ${t(locale, 'product.perServing')}` : null,
+  t(locale, 'product.vat'),
+].filter(Boolean).join(' · ');
+const main = gallery[0];
 ---
-<section class="bg-gradient-to-br from-bone via-bone to-rose/10 border-b border-ink/5">
-  <div class="max-w-6xl mx-auto px-6 py-12 md:py-20 grid md:grid-cols-2 gap-10 items-center">
+<section class="product-hero border-b border-ink/5">
+  <div class="max-w-6xl mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-16 grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
+
+    <!-- Gallery: cut-outs sit padded on the pale mint of the tub's own label;
+         photographs (fit: cover) fill the same 4:5 frame edge to edge. -->
     <div class="reveal">
-      <p class="text-xs uppercase tracking-[0.3em] text-sage">{brand}</p>
-      <h1 class="font-display text-4xl md:text-6xl mt-3 leading-tight">{title}</h1>
-      <p class="mt-5 text-lg text-ink/75 leading-relaxed max-w-md">{tagline}</p>
-      <div class="mt-8 flex flex-wrap items-center gap-4">
-        <BuyButton href={buyUrl} locale={locale} size="lg" />
-        {price && <span class="text-ink/60 text-sm">{price} {currency}</span>}
+      <div class="gallery-ground rounded-3xl overflow-hidden">
+        {main && (
+          <img
+            id="product-main"
+            src={main.src}
+            alt={main.alt}
+            data-fit={main.fit ?? 'contain'}
+            class="w-full aspect-[4/5] data-[fit=contain]:object-contain data-[fit=contain]:p-8 md:data-[fit=contain]:p-12 data-[fit=cover]:object-cover"
+          />
+        )}
       </div>
+      {gallery.length > 1 && (
+        <div class="mt-3 grid grid-flow-col auto-cols-fr gap-2" role="list">
+          {gallery.map((g, i) => (
+            <button
+              type="button"
+              class="thumb aspect-square rounded-xl overflow-hidden border border-ink/10 bg-white hover:border-rose/60 transition"
+              data-src={g.src}
+              data-alt={g.alt}
+              data-fit={g.fit ?? 'contain'}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+              aria-label={g.alt}
+            >
+              <img
+                src={g.src}
+                alt=""
+                loading="lazy"
+                class:list={['w-full h-full', g.fit === 'cover' ? 'object-cover' : 'object-contain p-1.5']}
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
+
+    <!-- Buy box -->
     <div class="reveal">
-      <div class="aspect-square rounded-3xl overflow-hidden bg-white shadow-2xl">
-        <img src={image} alt={title} class="w-full h-full object-cover" />
-      </div>
+      <p class="text-xs uppercase tracking-[0.3em] text-sage">{brand}{origin && <span class="text-ink/40"> · {origin}</span>}</p>
+      <h1 class="font-display text-4xl md:text-5xl mt-2 leading-[1.05]">{title}</h1>
+      {whatItIs && <p class="mt-4 text-ink/75 leading-relaxed">{whatItIs}</p>}
+
+      {actives.length > 0 && (
+        <div class="mt-6 rounded-2xl border border-ink/10 bg-white p-5">
+          <p class="text-[10px] uppercase tracking-[0.25em] text-sage">{t(locale, 'product.ledger')}</p>
+          <ul class="mt-2 divide-y divide-ink/[0.06]">
+            {actives.map((a) => (
+              <li class="py-2 flex items-center gap-3">
+                <span class="flex-1 text-sm leading-snug">{a.name}</span>
+                <span class="w-16 sm:w-24 h-1.5 rounded-full bg-ink/10 overflow-hidden shrink-0" aria-hidden="true">
+                  <span class="block h-full rounded-full" style={`width:${barWidth[a.evidence]}%;background:${evidenceColor[a.evidence]}`}></span>
+                </span>
+                <span class="w-16 text-right text-[10px] uppercase tracking-widest font-semibold shrink-0" style={`color:${evidenceColor[a.evidence]}`}>
+                  {t(locale, `product.evidence.${a.evidence}`)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {variants.length > 0 && (
+        <div class="mt-6 flex flex-wrap gap-2">
+          {variants.map((v) => (
+            <a
+              href={v.url}
+              target="_blank"
+              rel="sponsored noopener"
+              class="rounded-full border border-ink/15 bg-white px-3.5 py-1.5 text-sm hover:border-rose hover:text-rose transition"
+            >
+              {v.short} <span class="text-ink/45">· {symbol}{v.price}</span>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {price && (
+        <div class="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span class="font-display text-4xl leading-none">{symbol}{price}</span>
+          <span class="text-sm text-ink/60">{priceLine}</span>
+        </div>
+      )}
+
+      <a
+        id="buy-cta"
+        href={buyUrl}
+        target="_blank"
+        rel="sponsored noopener"
+        class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-rose px-8 py-4 text-lg font-semibold text-bone transition hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose"
+      >
+        {cta}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 5l7 7-7 7" />
+        </svg>
+      </a>
+
+      {subscription && (
+        <p class="mt-3 text-sm text-ink/65">
+          <span class="font-semibold text-ink/80">{symbol}{subscription.price}</span> {subscription.note}
+        </p>
+      )}
+      {priceNote && <p class="mt-1 text-xs text-ink/45">{priceNote}</p>}
+
+      {badges.length > 0 && (
+        <ul class="mt-6 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] uppercase tracking-wider text-ink/55">
+          {badges.map((b) => (
+            <li class="flex items-center gap-1.5">
+              <span class="w-1 h-1 rounded-full bg-sage" aria-hidden="true"></span>{b}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   </div>
 </section>
+
+<script>
+  // Thumbnail → main image swap. No JS: the first shot stays, thumbs are inert.
+  const main = document.getElementById('product-main') as HTMLImageElement | null;
+  const thumbs = Array.from(document.querySelectorAll<HTMLButtonElement>('.product-hero .thumb'));
+  if (main) {
+    thumbs.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        main.src = btn.dataset.src ?? main.src;
+        main.alt = btn.dataset.alt ?? '';
+        main.dataset.fit = btn.dataset.fit ?? 'contain';
+        thumbs.forEach((b) => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+      });
+    });
+  }
+</script>
+
+<style>
+  /* The tub's own label mint, paled — a local token, not a brand colour. */
+  .gallery-ground {
+    background: linear-gradient(180deg, #e3f1ed 0%, #d3eae4 100%);
+  }
+  .thumb[aria-pressed='true'] {
+    border-color: var(--color-rose);
+    box-shadow: 0 0 0 1px var(--color-rose);
+  }
+</style>

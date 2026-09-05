@@ -114,7 +114,6 @@ const tierRows = [
       <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
 
-
     <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
     <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
       <div>
@@ -335,13 +334,6 @@ const tierRows = [
         </p>
     </div>
 
-    <!-- ════════════ CLINICIAN CTA ════════════ -->
-    <div class="sticky bottom-4 z-30 max-w-6xl mx-auto px-6 pointer-events-none">
-      <div class="ml-auto max-w-md p-4 bg-ink text-bone rounded-2xl shadow-2xl flex items-center justify-between gap-3 pointer-events-auto hidden md:flex">
-        <p class="text-sm">Want personalized advice? <span class="text-bone/70">Speak with a clinician.</span></p>
-        <a href="#" class="text-xs px-3 py-1.5 rounded-full bg-rose text-bone font-medium hover:bg-rose/90 transition whitespace-nowrap">Book a call</a>
-      </div>
-    </div>
   </article>
 
   <style>
@@ -361,20 +353,6 @@ const tierRows = [
       color: var(--color-bone);
       border-color: var(--color-rose);
     }
-
-    .prose-anti :global(p) { margin-block: 0.85em; line-height: 1.7; }
-    .prose-anti :global(p:first-child) { margin-top: 0; }
-    .prose-anti :global(a) {
-      color: var(--color-rose);
-      text-decoration: underline;
-      text-decoration-color: rgba(184,130,109,0.4);
-      text-underline-offset: 2px;
-    }
-    .prose-anti :global(h4) { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
-    .prose-anti :global(ul), .prose-anti :global(ol) { margin-block: 0.85em; padding-left: 1.5em; }
-    .prose-anti :global(ul) { list-style: disc; }
-    .prose-anti :global(ol) { list-style: decimal; }
-    .prose-anti :global(li) { margin-block: 0.35em; line-height: 1.65; }
 
     section[id], details[id] {
       scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
