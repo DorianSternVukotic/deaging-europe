@@ -191,26 +191,25 @@ const planRows = [
             Three drivers explain almost every case &mdash; each with a different fix. Below, every treatment is graded
             by the trials behind it, then matched to your type of loss.
           </p>
-          <div class="mt-8 grid md:grid-cols-3 gap-4">
-            {drivers.map((d) => (
-              <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
-                <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
-                <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
-                <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
-              </a>
-            ))}
+          <div class="mt-8 grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-4">
+            <MediaPlaceholder kind="video" ratio="16/9" label="The three drivers, explained · 2 min" tone="sage" class="h-full [&>div]:h-full" />
+            <div class="grid gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group flex flex-col justify-center p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
       <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
 
-    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
-    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
-      <div>
-        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
-      </div>
-
+    <!-- ════════════ TOP INFO DRAWERS ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
       {topInfoGroups.map((g) => (
         <section id={g.id} class="scroll-mt-32 pt-2">
           <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
