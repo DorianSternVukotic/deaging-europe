@@ -11,7 +11,6 @@ import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
 import {
-  keyTakeaways,
   groups,
   focusLabels,
   allSections,
@@ -208,19 +207,6 @@ const planRows = [
 
     <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
     <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
-      <div>
-        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
-        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
-        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
-          {keyTakeaways.map((k, i) => (
-            <li class="flex gap-3">
-              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
-              <span>{k}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-
       <div>
         <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
       </div>
