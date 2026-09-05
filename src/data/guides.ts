@@ -12,7 +12,7 @@ export interface GuideMeta {
   /** One-line card blurb. */
   tagline: string;
   /** Card grouping on the homepage. */
-  kind: 'foundation' | 'clinic' | 'lifestyle' | 'decade';
+  kind: 'foundation' | 'clinic' | 'lifestyle' | 'decade' | 'problem';
 }
 
 export const guides: GuideMeta[] = [
@@ -105,5 +105,11 @@ export const guides: GuideMeta[] = [
     title: 'Anti-aging in your 50s',
     tagline: 'The estrogen cliff, HRT and skin, resurfacing, and when surgery beats repeated devices.',
     kind: 'decade',
+  },
+  {
+    path: 'hair-loss',
+    title: 'Hair loss',
+    tagline: 'Thinning, shedding or a widening part — every treatment graded, minoxidil to transplant, with a plan by type.',
+    kind: 'problem',
   },
 ];
