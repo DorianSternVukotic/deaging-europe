@@ -1,0 +1,433 @@
+---
+/**
+ * The dark spots / hyperpigmentation guide (/dark-spots) — problem-template
+ * variant of the collagen-guide layout: title, description, a full-width
+ * explainer video, the three drivers as cards, evidence strength as the
+ * primary visual signal, one interactive block (situation matcher) and a
+ * month-by-month action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/dark-spots';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Dark spots, sun spots & hyperpigmentation — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Sun spots, melasma and post-inflammatory marks are three different problems. Which one you have, every brightener, prescription and laser graded by trial evidence, the hydroquinone rules in Europe, and the spot that needs a biopsy before a laser.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-comeback': 'Melasma yes; sun spots no',
+  'faq-remove-at-home': 'Fade yes, remove no',
+  'faq-dangerous': 'Usually not — check',
+  'faq-melasma-vs-sunspots': 'Symmetry and season',
+  'faq-hydroquinone-legal': 'Rx only',
+  'faq-sunscreen-melasma': 'Tinted, iron oxide, SPF 50',
+  'faq-timeline': '8–12 weeks; lasers days',
+  'faq-laser-or-ipl': 'Laser for few, IPL for many',
+  'faq-acne-marks': 'Azelaic + time',
+  'faq-vitamin-c': 'A little',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Flat brown spots on my cheeks, hands or chest after years of sun',
+    paths: [
+      { id: 'type-lentigo', title: 'Sun spots', why: 'fixed prints — creams fade them, devices remove them' },
+      { id: 'home-retinoid', title: 'A retinoid and daily sunscreen first', why: 'fades by about half over six months and prevents the next ones' },
+      { id: 'clinic-pigment-lasers', title: 'A pigment laser for the ones that bother you', why: '68–93% clearance in one to three sessions — after a dermatologist has looked' },
+    ],
+  },
+  {
+    concern: 'Symmetrical patches on my cheeks, forehead or upper lip since a pregnancy, the pill or a hot summer',
+    paths: [
+      { id: 'type-melasma', title: 'Melasma', why: 'hormones, heat and light — controlled, not cured' },
+      { id: 'home-sunscreen', title: 'A tinted iron-oxide SPF 50, every day', why: 'the visible-light block halved relapses in a randomised trial' },
+      { id: 'rx-triple', title: 'The triple cream, in courses', why: 'the Cochrane reference treatment' },
+      { id: 'rx-tranexamic-oral', title: 'Oral tranexamic acid if it relapses', why: '49% vs 18% score reduction against placebo' },
+    ],
+  },
+  {
+    concern: 'Dark marks where acne or a rash used to be',
+    paths: [
+      { id: 'type-pih', title: 'Post-inflammatory marks', why: 'the skin overreacting — fades with time, darkens with aggression' },
+      { id: 'home-azelaic', title: 'Azelaic acid (or a retinoid) and sunscreen', why: 'placebo-controlled for acne marks; safe in pregnancy' },
+      { id: 'faq-acne-marks', title: 'Why lasers come last', why: 'full clearance in 18%, worse in 2.6%' },
+    ],
+  },
+  {
+    concern: 'One spot that is new, growing, irregular or looks different from the others',
+    paths: [
+      { id: 'type-red-flags', title: 'The spot that is not a spot', why: 'lentigo maligna mimics a sun spot' },
+      { id: 'safety-biopsy-first', title: 'Dermatoscope and biopsy before anything', why: 'a laser hides a melanoma; it does not treat it' },
+    ],
+  },
+  {
+    concern: "I'm pregnant or breastfeeding",
+    paths: [
+      { id: 'safety-pregnancy', title: 'What is off the table, and what is not', why: 'hydroquinone, retinoids and tranexamic tablets wait' },
+      { id: 'home-azelaic', title: 'Azelaic acid', why: 'the one brightener with pregnancy data and real trials' },
+      { id: 'home-sunscreen', title: 'Tinted SPF 50 and a hat', why: 'most pregnancy melasma fades within a year of delivery' },
+    ],
+  },
+  {
+    concern: 'My melasma came back after a laser, or keeps coming back',
+    paths: [
+      { id: 'clinic-laser-melasma', title: 'Why lasers relapse melasma', why: 'short-lived gains and the risk of permanent white spots' },
+      { id: 'rx-tranexamic-oral', title: 'Oral tranexamic acid', why: 'the biggest lever for the relapsing case' },
+      { id: 'faq-comeback', title: 'The maintenance plan', why: 'tinted sunscreen daily, brighteners in courses, courses repeated' },
+    ],
+  },
+  {
+    concern: 'Darker skin, and I am afraid of making it worse',
+    paths: [
+      { id: 'safety-lasers-darker-skin', title: 'What lasers and peels do in reactive skin', why: 'test spots, 1064 nm, priming, conservative settings' },
+      { id: 'home-azelaic', title: 'Azelaic acid, niacinamide, cysteamine', why: 'the gentle brighteners with trials in skin of colour' },
+      { id: 'clinic-microneedling-txa', title: 'Microneedling with tranexamic acid', why: 'no heat — the clinic option with the best record in darker skin' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: sort the spot and photograph it',
+    when: 'Before buying anything',
+    blurb: 'Sun spot, melasma or post-inflammatory mark — and a dermatoscope for anything new, irregular or changing.',
+  },
+  {
+    id: 'home-sunscreen',
+    step: 'Weeks 0–12: tinted sunscreen plus one brightener',
+    when: 'Judge at 12 weeks, not 4',
+    blurb: 'An iron-oxide SPF 50 every morning, and azelaic acid, a retinoid, cysteamine or thiamidol at night. Photograph monthly.',
+  },
+  {
+    id: 'rx-triple',
+    step: 'Month 3: escalate by type',
+    when: 'With a dermatologist',
+    blurb: 'Melasma: the triple cream, then oral tranexamic acid. Sun spots: a pigment laser or IPL. Marks: patience and the gentle tier.',
+  },
+  {
+    id: 'faq-comeback',
+    step: 'Month 6 onward: maintain',
+    when: 'For as long as the sun shines',
+    blurb: 'Sunscreen for life, brighteners in courses, no year-round hydroquinone, and a fan in the hot kitchen.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="dark-spots" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Dark spots, sun spots &amp; hyperpigmentation</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Dark spots, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Sun spots, melasma and the marks acne leaves are three different problems, and the treatment that clears
+          one relapses another. Below, which you have, every brightener, prescription and laser graded by the
+          trials behind it, the hydroquinone rules in Europe, and the spot that needs a biopsy before a laser.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 6 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Dark spots — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'rx' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Sun spot, melasma or mark — the three-minute sort" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The three spots, mapped on a face and a hand" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per spot type — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-sunscreen',
+                    kind: 'The base',
+                    title: 'Tinted iron-oxide SPF 50',
+                    blurb: 'For melasma, the tint is the treatment: it halved relapses in a randomised trial. For everything else, the habit that stops the next spot.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'rx-tranexamic-oral',
+                    kind: 'For melasma',
+                    title: 'Oral tranexamic acid',
+                    blurb: 'Placebo-controlled: 49% vs 18% score reduction at three months, and cohort data with no excess of clots. Prescription, screened.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'clinic-pigment-lasers',
+                    kind: 'For sun spots',
+                    title: 'A picosecond or Q-switched laser',
+                    blurb: '68–93% clearance in one to three sessions in the 41-trial review — after a dermatologist has looked at the spot.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'home-azelaic',
+                    kind: 'For marks, and pregnancy',
+                    title: 'Azelaic acid 15–20%',
+                    blurb: 'Matches hydroquinone in randomised trials, placebo-controlled for acne marks, and the one brightener safe in pregnancy.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your spots</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Pigment leaves at the pace the skin turns over; nothing here is judged at week four.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, systematic reviews or regulatory documents, linked inline
+            within each section. Primary sources: the Cochrane Library, PubMed/PMC, the Journal of the American
+            Academy of Dermatology, the British Journal of Dermatology, JAMA Dermatology, the Journal of Cosmetic
+            Dermatology, EUR-Lex, the FDA and DermNet.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. A new, changing or irregular dark spot needs a dermatologist
+          before any treatment; hydroquinone and oral tranexamic acid are prescription medicines with specific
+          contraindications; lasers and peels in darker skin need an operator who treats it every week.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

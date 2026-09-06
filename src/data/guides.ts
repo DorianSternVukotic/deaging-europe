@@ -130,4 +130,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Fat, fluid or shadow — three tests that tell you which, every fix graded, and the under-eye filler risks in numbers.',
     kind: 'problem',
   },
+  {
+    path: 'dark-spots',
+    title: 'Dark spots & hyperpigmentation',
+    tagline: 'Sun spots, melasma and acne marks are three problems — every brightener, prescription and laser graded, and the spot that needs a biopsy first.',
+    kind: 'problem',
+  },
 ];
