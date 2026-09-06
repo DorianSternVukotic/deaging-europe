@@ -148,4 +148,10 @@ export const guides: GuideMeta[] = [
     tagline: 'A pursing muscle, thin sun-exposed skin and a deflating lip — the pucker test, toxin to the phenol peel graded, and the mouth’s risks in numbers.',
     kind: 'problem',
   },
+  {
+    path: 'nasolabial-folds',
+    title: 'Nasolabial folds (smile lines)',
+    tagline: 'A seam, not a wrinkle — the recline test, the best-evidenced filler site in aesthetics, and why threads, devices and even facelifts lift it less than they promise.',
+    kind: 'problem',
+  },
 ];
