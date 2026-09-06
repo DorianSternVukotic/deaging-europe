@@ -136,4 +136,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Sun spots, melasma and acne marks are three problems — every brightener, prescription and laser graded, and the spot that needs a biopsy first.',
     kind: 'problem',
   },
+  {
+    path: 'crows-feet',
+    title: "Crow's feet",
+    tagline: 'Dynamic, static or crepe — the smile test that sorts them, toxin to lasers graded by trial, and the risks near the eye in numbers.',
+    kind: 'problem',
+  },
 ];
