@@ -142,4 +142,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Dynamic, static or crepe — the smile test that sorts them, toxin to lasers graded by trial, and the risks near the eye in numbers.',
     kind: 'problem',
   },
+  {
+    path: 'lip-lines',
+    title: 'Lip lines (barcode lines)',
+    tagline: 'A pursing muscle, thin sun-exposed skin and a deflating lip — the pucker test, toxin to the phenol peel graded, and the mouth’s risks in numbers.',
+    kind: 'problem',
+  },
 ];
