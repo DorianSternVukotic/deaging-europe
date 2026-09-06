@@ -124,4 +124,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Bone, fat, ligament and skin — the pinch test that sorts them, every fix graded, and when only surgery answers.',
     kind: 'problem',
   },
+  {
+    path: 'eye-bags',
+    title: 'Under-eye bags & puffy eyes',
+    tagline: 'Fat, fluid or shadow — three tests that tell you which, every fix graded, and the under-eye filler risks in numbers.',
+    kind: 'problem',
+  },
 ];
