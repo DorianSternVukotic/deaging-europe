@@ -166,4 +166,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Folded by the only muscle that lifts your brows — the eyelid test that tells you whether it is also holding your eyes open, toxin to the brow lift graded, and the dropped brow in numbers.',
     kind: 'problem',
   },
+  {
+    path: 'sagging-skin',
+    title: 'Sagging skin (skin laxity)',
+    tagline: 'Skin that lost its recoil, or a frame that shrank beneath it — the pinch and recline tests, sunscreen to hormone therapy to every tightening device and the facelift graded, and what "lift" means in millimetres.',
+    kind: 'problem',
+  },
 ];
