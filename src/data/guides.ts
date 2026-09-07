@@ -190,4 +190,10 @@ export const guides: GuideMeta[] = [
     tagline: 'The face deflates before it sags — the recline test, the temple and midface trials, the stimulator that beat hyaluronic acid, fat grafting’s real survival rate, and the temple’s arteries in numbers.',
     kind: 'problem',
   },
+  {
+    path: 'dull-skin',
+    title: 'Dull, uneven skin',
+    tagline: 'Glow is physics — the self-checks, sunscreen to retinoids to peels, boosters and lasers graded, the habits with next-morning experiments, and the stripped barrier that causes most product-bought dullness.',
+    kind: 'problem',
+  },
 ];
