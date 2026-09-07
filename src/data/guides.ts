@@ -214,4 +214,10 @@ export const guides: GuideMeta[] = [
     tagline: 'The chest ages like the face with less to age with — the blanch, the pinch and the morning photograph that sort mottling from crepe from cleavage lines, sunscreen to light to lasers to the one chest treatment with a randomised trial, and the settings that scar this skin.',
     kind: 'problem',
   },
+  {
+    path: 'upper-arms',
+    title: 'Loose upper-arm skin',
+    tagline: 'Skin, fat or muscle — the ruler-and-pinch grid that sorts the hanging arm, training and retinoids to collagen stimulators, ultrasound and cryolipolysis, energy-assisted liposuction and the arm lift graded by their trials, with the honest percentages, the scar and the weight-stable clock.',
+    kind: 'problem',
+  },
 ];
