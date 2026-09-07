@@ -481,7 +481,7 @@ const clinic: Section[] = [
     id: 'surg-liposuction',
     category: 'clinic',
     title: 'Jowl and submental liposuction',
-    tldr: 'A 135-patient and a 175-patient seven-year series describe reliable fat removal in one session with few complications; skin must be elastic enough to retract.',
+    tldr: 'A 132-patient series reports improvement in every patient, with midline fullness predicting success and crepe-paper skin predicting failure; results after 64 were less satisfactory. Skin must be elastic enough to retract.',
     evidence: 'moderate',
     focus: 'fat',
     note: 'Best for: a fat jowl and double chin in elastic skin — the surgical version of deoxycholic acid, in one go',
@@ -489,7 +489,7 @@ const clinic: Section[] = [
     downtime: '1 week of swelling; compression garment',
     cost: '€2,000–4,000',
     bodyHtml: `
-      <p>A cannula through a tiny incision under the chin removes the fat of the jowl and submental area in one session. Two large series — 135 patients, and 175 patients followed for seven years — report consistent contour improvement with low complication rates, provided the skin has the elasticity to shrink back (<a href="https://pubmed.ncbi.nlm.nih.gov/10971554/" rel="noopener nofollow" target="_blank">135-patient series</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/18177401/" rel="noopener nofollow" target="_blank">seven-year series</a>). In a fat jowl with good skin it beats several rounds of injections on cost and certainty; in loose skin it leaves a deflated fold, which is why surgeons pair it with a lift after 50. The marginal mandibular nerve is the structure at risk, as with every treatment in this zone.</p>
+      <p>A cannula through a tiny incision under the chin removes the fat of the jowl and submental area in one session. The reference series followed 132 patients treated with submental liposuction alone for more than a year: every patient improved, localised midline fullness was the best predictor of a good result, a crepe-paper appearance of the skin was the best predictor of failure, and results in patients over 64 were less satisfactory (<a href="https://pubmed.ncbi.nlm.nih.gov/14504526/" rel="noopener nofollow" target="_blank">132-patient series</a>); complications are rare and, when reported, serious — contour depressions, scar contracture, transient nerve weakness and haematoma (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9054168/" rel="noopener nofollow" target="_blank">scoping review</a>). In a fat jowl with good skin it beats several rounds of injections on cost and certainty; in loose skin it leaves a deflated fold, which is why surgeons pair it with a lift after 50. The marginal mandibular nerve is the structure at risk, as with every treatment in this zone.</p>
     `,
   },
   {
