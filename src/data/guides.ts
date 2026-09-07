@@ -154,4 +154,10 @@ export const guides: GuideMeta[] = [
     tagline: 'A seam, not a wrinkle — the recline test, the best-evidenced filler site in aesthetics, and why threads, devices and even facelifts lift it less than they promise.',
     kind: 'problem',
   },
+  {
+    path: 'marionette-lines',
+    title: 'Marionette lines',
+    tagline: 'A muscle pulling the corner down, a ligament pinning the jaw, a jowl in between — the "e" test, the one injectable that lifts the corner, and what the 962-patient review says about the rest.',
+    kind: 'problem',
+  },
 ];
