@@ -202,4 +202,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Lipids or water — the pinch and the scratch that sort them, urea to ceramides to petrolatum, supplements, hormones and skin boosters graded, the washing and heating habits with numbers, and the red flags that mean a blood test, not a third cream.',
     kind: 'problem',
   },
+  {
+    path: 'thin-lips',
+    title: 'Thinning lips & lost definition',
+    tagline: 'The lip lengthens more than it shrinks — the ruler-and-profile self-check, lip colour to hyaluronic gel to the lip lift graded by sixteen trials and seven series, the toxin flip, fat, implants and the dentist, and the overfilled lip treated as its own problem.',
+    kind: 'problem',
+  },
 ];
