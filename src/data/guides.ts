@@ -178,4 +178,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Four problems on one cancer field — the arm test, sunscreen to retinoids to light, lasers and the field therapies graded, and the cancer numbers stated plainly.',
     kind: 'problem',
   },
+  {
+    path: 'double-chin',
+    title: 'Double chin',
+    tagline: 'Fat above the muscle, fat below it, a loose neck or a short chin — the four tests, the one injection with placebo-controlled trials, and why devices first can make the neck lift harder.',
+    kind: 'problem',
+  },
 ];
