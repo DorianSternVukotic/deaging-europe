@@ -1,0 +1,442 @@
+---
+/**
+ * The décolletage guide (/decolletage) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video,
+ * the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/decolletage';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Crepey chest and décolletage lines — every treatment graded by evidence | DeAging Europe';
+const description =
+  'The chest ages like the face with less to age with: a thinner, gland-poor dermis, decades of sun on the V that sunscreen forgets, and a fold pressed into it every night. The self-checks that sort red-brown mottling from crepe from cleavage lines, and sunscreen, retinoids, light, lasers, ultrasound and the collagen stimulators graded by trial evidence — including the one chest treatment with a randomised trial and the settings that scar.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-sleep-lines': 'Morning ones yes; etched ones no',
+  'faq-face-products': 'Yes — lower and slower',
+  'faq-red-brown': 'Poikiloderma: light, not cream',
+  'faq-best-single': 'Three problems, three tools',
+  'faq-laser-safe': 'Non-ablative yes; ablative last',
+  'faq-pads': 'Untested; cheap; plausible',
+  'faq-menopause': 'Oestrogen left; the sun stayed',
+  'faq-timeline': 'Three to nine months',
+  'faq-cost-ladder': 'Free to €2,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Vertical lines between my breasts every morning',
+    paths: [
+      { id: 'type-sleep', title: 'Compression lines', why: 'photograph on waking and at bedtime — the difference is the diagnosis' },
+      { id: 'home-sleep-pads', title: 'The position, a pillow, a pad', why: 'the cause is repeated nightly; nothing else on the page removes it' },
+      { id: 'inj-caha', title: 'Hyperdilute calcium hydroxylapatite', why: '71% responders against 6% untreated at 24 weeks in the randomised trial' },
+      { id: 'clinic-thulium-nafl', title: 'A thulium laser course', why: 'the chest\'s only laser trial improved wrinkles and mottling' },
+    ],
+  },
+  {
+    concern: 'Red-brown mottling on the sides of my neck and the V',
+    paths: [
+      { id: 'type-sun', title: 'Poikiloderma of Civatte', why: 'the blanch test; spared under the chin; sun, oestrogen and perfume' },
+      { id: 'home-sunscreen', title: 'Sunscreen on the V, fragrance off it', why: 'the two habits that decide whether the light lasts' },
+      { id: 'clinic-ipl', title: 'Intense pulsed light', why: 'more than 75–80% cleared in series of 135 and 175' },
+      { id: 'safety-pigment', title: 'The fluence that depigments', why: 'six of eight after pulsed-dye at facial fluence; low, tested, untanned' },
+    ],
+  },
+  {
+    concern: 'Papery, crepey, thin skin across the whole chest',
+    paths: [
+      { id: 'type-thin', title: 'Crepe and laxity', why: 'the pinch and the press; collagen synthesis down 56% in sun-damaged skin' },
+      { id: 'home-retinoid', title: 'A retinoid at body strength', why: 'fine wrinkles down on the arms of 36 people averaging 87, with more collagen on biopsy' },
+      { id: 'inj-caha', title: 'Hyperdilute calcium hydroxylapatite', why: 'new collagen I and elastin on biopsy at four and seven months' },
+      { id: 'clinic-mfu', title: 'Microfocused ultrasound', why: 'two-thirds improved at 180 days on blinded photographs, no wound' },
+    ],
+  },
+  {
+    concern: 'Brown spots and rough patches',
+    paths: [
+      { id: 'type-spots', title: 'Lentigines and keratoses', why: 'twelve photodamaged chests carried 184 precancers' },
+      { id: 'safety-precancer', title: 'A dermatoscope before anything cosmetic', why: 'light can hide the lesion that needed a biopsy' },
+      { id: 'clinic-pdt', title: 'Photodynamic therapy', why: 'treats the precancer field and smooths the chest as a side benefit' },
+      { id: 'clinic-thulium-nafl', title: 'The 1927 nm thulium laser', why: 'lentigines rated 3.3 of 4 improved in the pilot, no pigment change' },
+    ],
+  },
+  {
+    concern: 'I want one bigger treatment, not a routine',
+    paths: [
+      { id: 'inj-caha', title: 'The stimulator with the randomised trial', why: 'one or two sessions, judged at six months' },
+      { id: 'clinic-mfu', title: 'A single ultrasound session', why: 'no surface injury on skin that scars' },
+      { id: 'clinic-thulium-nafl', title: 'A three-session laser course', why: 'the safe resurfacing for this skin' },
+      { id: 'safety-scars', title: 'Why not the CO2', why: 'facial settings scarred five necks; ablation is last and low' },
+    ],
+  },
+  {
+    concern: 'Darker skin, or skin that has scarred thickly before',
+    paths: [
+      { id: 'safety-scars', title: 'Adnexa, fluence and the sternum', why: 'a keloid history rules out the surface-removing rows' },
+      { id: 'safety-pigment', title: 'Light in skin types IV–VI', why: 'burns and months of darkening; needles instead of light' },
+      { id: 'home-retinoid', title: 'The retinoid and the acids', why: 'no pigment risk, body-skin trials' },
+      { id: 'inj-caha', title: 'Hyperdilute calcium hydroxylapatite', why: 'no light, no surface wound, the trial' },
+    ],
+  },
+  {
+    concern: 'It changed fast at menopause',
+    paths: [
+      { id: 'type-thin', title: 'Thin, oestrogen-sensitive skin', why: 'the sun before menopause is paid for after it' },
+      { id: 'home-sunscreen', title: 'Sunscreen and no fragrance on the V', why: 'poikiloderma is a disease of sun, oestrogen and perfume' },
+      { id: 'inj-hrt', title: 'Hormone therapy — as a menopause decision', why: '7–15% thicker skin in 98 women; nothing measured on a chest' },
+      { id: 'inj-caha', title: 'The stimulator for what has changed', why: 'collagen I and elastin on biopsy' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: the blanch, the pinch, the press and two photographs',
+    when: 'Before anything',
+    blurb: 'Colour, lines, crepe or spots; a morning and a bedtime photograph in the low neckline; a fingertip over the chest for rough patches and a dermatoscope if it finds any; the sleeping side and the perfume noted.',
+  },
+  {
+    id: 'home-sunscreen',
+    step: 'Day 1 onward: the V protected, the retinoid started, the pillow placed',
+    when: 'Whatever else you do',
+    blurb: 'Sunscreen to the collarbones every morning, fragrance moved to the wrists, a retinoid twice a week building to nightly, a lactic or urea lotion on the other nights, a pillow between the breasts or a pad for the side-sleeper.',
+  },
+  {
+    id: 'clinic-ipl',
+    step: 'Months 2–4: light for the colour, laser for the crepe',
+    when: 'Winter, untanned, after the dermatoscope',
+    blurb: 'Three sessions of intense pulsed light or a vascular laser at chest settings for the red-brown net, or three sessions of the 1927 nm thulium laser for crepe with mottling — a test patch first, the retinoid paused a week before each.',
+  },
+  {
+    id: 'inj-caha',
+    step: 'Months 4–9: the stimulator for the lines and laxity, judged at six months',
+    when: 'Once the colour is treated',
+    blurb: 'Hyperdilute calcium hydroxylapatite in one or two sessions for the cleavage lines and crepe, or a course of poly-L-lactic acid for diffuse laxity, or a single ultrasound session; ablation only last, low and tested; everything compared against the morning photograph.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="decolletage" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Crepey chest &amp; décolletage lines</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          The crepey chest, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          The chest ages like the face with less to age with &mdash; a thinner, gland-poor dermis, decades of sun on
+          the V that sunscreen forgets, and a fold pressed into it every night. Below, the self-checks that sort the
+          red-brown mottling from the crepe from the cleavage lines, every treatment from sunscreen to ultrasound graded
+          by the trials behind it, and the settings that scar this skin where they would not scar a face.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">The crepey chest — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'clinic' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Why the chest scars where the face does not — follicles, glands and the fluence that is too high" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The same décolletage before and three months after intense pulsed light — the net gone, the shade under the chin unchanged" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-sunscreen',
+                    kind: 'The base',
+                    title: 'Sunscreen to the collarbones',
+                    blurb: 'Daily sunscreen slowed visible ageing 24% in a four-year trial; the mottling is a disease of sun and perfume on the V. The one treatment that prevents, and the one that decides whether the light lasts.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'inj-caha',
+                    kind: 'For lines and crepe',
+                    title: 'Hyperdilute calcium hydroxylapatite',
+                    blurb: 'The one chest treatment with a randomised trial: 71% responders against 6% untreated at 24 weeks in 152 people, new collagen I and elastin on biopsy, bruising the commonest side effect.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'clinic-ipl',
+                    kind: 'For the red-brown net',
+                    title: 'Intense pulsed light',
+                    blurb: 'More than 75–80% of the vessels and pigment cleared in series of 135 and 175 poikiloderma patients with about 5% side effects; denser collagen and more even melanin on biopsy.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'clinic-thulium-nafl',
+                    kind: 'For crepe with mottling',
+                    title: 'The 1927 nm thulium laser',
+                    blurb: 'The chest\'s only laser trial: a single treatment improved photodamage, mottling and wrinkles against control on twelve décolletés, with no scarring or pigment change in the pilot.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your chest</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Sort the three problems, protect the V, use the products with body-skin trials, treat colour with light at chest settings, and treat lines and crepe with the stimulator that has a trial.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, randomised trials, clinical series, registered trial results or
+            reference texts, linked inline within each section. Primary sources: PubMed/PMC, Dermatologic Surgery,
+            Lasers in Surgery and Medicine, the Journal of the American Academy of Dermatology, Archives of
+            Dermatology, the New England Journal of Medicine, the Journal of Drugs in Dermatology, the Aesthetic
+            Surgery Journal, ClinicalTrials.gov and DermNet.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. A rough, scaling, bleeding or changing patch on the chest is
+          examined with a dermatoscope before any cosmetic treatment; light devices are for untanned, fair-to-olive
+          skin at chest settings with a test patch; and ablative resurfacing on the chest is a last resort at low
+          settings from someone who treats chests, never from someone who treats faces.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

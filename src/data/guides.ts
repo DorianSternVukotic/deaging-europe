@@ -208,4 +208,10 @@ export const guides: GuideMeta[] = [
     tagline: 'The lip lengthens more than it shrinks — the ruler-and-profile self-check, lip colour to hyaluronic gel to the lip lift graded by sixteen trials and seven series, the toxin flip, fat, implants and the dentist, and the overfilled lip treated as its own problem.',
     kind: 'problem',
   },
+  {
+    path: 'decolletage',
+    title: 'Crepey chest & décolletage lines',
+    tagline: 'The chest ages like the face with less to age with — the blanch, the pinch and the morning photograph that sort mottling from crepe from cleavage lines, sunscreen to light to lasers to the one chest treatment with a randomised trial, and the settings that scar this skin.',
+    kind: 'problem',
+  },
 ];
