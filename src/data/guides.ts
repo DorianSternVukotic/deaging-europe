@@ -226,4 +226,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Three problems in one word — the finger-and-photograph test that sorts lid skin from a fallen brow from a slipped margin, and eye drops, the toxin brow lift, ultrasound, blepharoplasty, ptosis repair, browpexy and the brow lift graded by their trials, in the millimetres each actually moves.',
     kind: 'problem',
   },
+  {
+    path: 'facial-redness',
+    title: 'Facial redness, rosacea & broken capillaries',
+    tagline: 'Four features sharing one disease — the self-check that sorts flushing from capillaries from bumps from the nose, and sunscreen, barrier repair, azelaic acid, ivermectin, doxycycline, the redness switches, pulsed-dye laser, IPL and the off-label shelf graded by 152 randomised trials, with the steroid cream and the rebound gel that make it worse.',
+    kind: 'problem',
+  },
 ];
