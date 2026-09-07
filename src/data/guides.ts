@@ -172,4 +172,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Skin that lost its recoil, or a frame that shrank beneath it — the pinch and recline tests, sunscreen to hormone therapy to every tightening device and the facelift graded, and what "lift" means in millimetres.',
     kind: 'problem',
   },
+  {
+    path: 'sun-damage',
+    title: 'Sun damage (photoaging)',
+    tagline: 'Four problems on one cancer field — the arm test, sunscreen to retinoids to light, lasers and the field therapies graded, and the cancer numbers stated plainly.',
+    kind: 'problem',
+  },
 ];
