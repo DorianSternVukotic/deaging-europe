@@ -220,4 +220,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Skin, fat or muscle — the ruler-and-pinch grid that sorts the hanging arm, training and retinoids to collagen stimulators, ultrasound and cryolipolysis, energy-assisted liposuction and the arm lift graded by their trials, with the honest percentages, the scar and the weight-stable clock.',
     kind: 'problem',
   },
+  {
+    path: 'hooded-eyes',
+    title: 'Hooded eyelids & drooping brows',
+    tagline: 'Three problems in one word — the finger-and-photograph test that sorts lid skin from a fallen brow from a slipped margin, and eye drops, the toxin brow lift, ultrasound, blepharoplasty, ptosis repair, browpexy and the brow lift graded by their trials, in the millimetres each actually moves.',
+    kind: 'problem',
+  },
 ];
