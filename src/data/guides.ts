@@ -184,4 +184,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Fat above the muscle, fat below it, a loose neck or a short chin — the four tests, the one injection with placebo-controlled trials, and why devices first can make the neck lift harder.',
     kind: 'problem',
   },
+  {
+    path: 'facial-volume-loss',
+    title: 'Hollow temples & cheeks (volume loss)',
+    tagline: 'The face deflates before it sags — the recline test, the temple and midface trials, the stimulator that beat hyaluronic acid, fat grafting’s real survival rate, and the temple’s arteries in numbers.',
+    kind: 'problem',
+  },
 ];
