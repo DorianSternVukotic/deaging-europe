@@ -160,4 +160,10 @@ export const guides: GuideMeta[] = [
     tagline: 'A muscle pulling the corner down, a ligament pinning the jaw, a jowl in between — the "e" test, the one injectable that lifts the corner, and what the 962-patient review says about the rest.',
     kind: 'problem',
   },
+  {
+    path: 'forehead-lines',
+    title: 'Forehead lines',
+    tagline: 'Folded by the only muscle that lifts your brows — the eyelid test that tells you whether it is also holding your eyes open, toxin to the brow lift graded, and the dropped brow in numbers.',
+    kind: 'problem',
+  },
 ];
