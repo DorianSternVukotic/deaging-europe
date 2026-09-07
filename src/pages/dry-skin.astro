@@ -1,0 +1,440 @@
+---
+/**
+ * The dry-skin guide (/dry-skin) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video,
+ * the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/dry-skin';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Dry, dehydrated skin — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Dry skin is a barrier problem in two currencies — the lipid mortar between the outer cells and the water they hold — and age, menopause, hot water, soap, heated air and over-exfoliation take both. The self-checks that sort dry from dehydrated from medical, urea to ceramides to petrolatum, supplements, hormones and skin boosters graded by trial evidence, and the red flags that mean a blood test, not a third cream.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-dry-vs-dehydrated': 'Pinch, then scratch the shin',
+  'faq-drinking-water': 'A little, if you drink little',
+  'faq-how-often': 'Twice a day, on damp skin',
+  'faq-ha-dry-air': 'Seal it, and stop worrying',
+  'faq-dependence': 'No — but not all creams help',
+  'faq-menopause': 'Sebum yes, hydration mixed',
+  'faq-supplements': 'A few probe units each',
+  'faq-oily-and-tight': 'Dehydrated and over-cleansed',
+  'faq-timeline': 'Hours to eight weeks',
+  'faq-cost-ladder': 'Free to €600',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Tight after washing, shiny by noon',
+    paths: [
+      { id: 'type-dehydrated', title: 'Dehydrated, not dry', why: 'the pinch shows crinkles; the oil is sebum, the tightness is water' },
+      { id: 'home-cleansing', title: 'Lukewarm water and a cleanser that does not foam', why: 'hot water doubled water loss in 50 volunteers' },
+      { id: 'home-glycerin-ha', title: 'A humectant on damp skin, under a light cream', why: 'glycerin matched urea in 197 people; hyaluronan beat vehicle in 36' },
+      { id: 'safety-over-treatment', title: 'One active at a time', why: 'the acid and the retinoid together are stripping the water out' },
+    ],
+  },
+  {
+    concern: 'Flaky, itchy shins and forearms every winter',
+    paths: [
+      { id: 'type-dry', title: 'The lipid half', why: 'a white line under the fingernail is scale on a barrier short of lipid' },
+      { id: 'home-urea-lactate', title: '5–10% urea or 12% lactate', why: 'the strongest randomised evidence on the page, twice a day' },
+      { id: 'home-cleansing', title: 'Shorter, cooler, syndet', why: 'an alkaline soap left the barrier leaking three days later' },
+      { id: 'home-humidity', title: 'Humidity in the bedroom', why: 'six hours under 20% humidity raised water loss 27%' },
+    ],
+  },
+  {
+    concern: 'It changed fast around menopause',
+    paths: [
+      { id: 'type-menopause', title: 'The menopause version', why: 'sebum, hyaluronic acid and collagen fall together' },
+      { id: 'home-ceramides-lipids', title: 'A ceramide-and-cholesterol cream', why: 'the lipid half, twice a day, legs included' },
+      { id: 'inj-omega', title: 'Flaxseed or evening primrose oil', why: 'moisture up 12.9% and roughness down 21.7% in 12 weeks' },
+      { id: 'inj-hrt', title: 'Hormone therapy — as a menopause decision', why: 'sebum yes, hydration mixed, taken with a menopause clinician' },
+    ],
+  },
+  {
+    concern: 'I started a retinoid or acids and now I flake and sting',
+    paths: [
+      { id: 'safety-over-treatment', title: 'The stripped barrier', why: '83–86% of people starting tretinoin get irritation; subtraction first' },
+      { id: 'home-ceramides-lipids', title: 'Ceramide cream, twice a day, for a month', why: 'the buffering creams cut tretinoin irritation in the split-face trial' },
+      { id: 'home-petrolatum', title: 'Petrolatum at night', why: 'speeds barrier recovery; the seal over the humectant' },
+      { id: 'faq-timeline', title: 'When to reintroduce', why: 'two to four weeks off, then the retinoid alone in a sandwich' },
+    ],
+  },
+  {
+    concern: 'Cracked, red, weeping patches that itch at night',
+    paths: [
+      { id: 'safety-red-flags', title: 'Eczema craquelé and the red flags', why: 'inflamed dry skin is not dry skin; cream alone loses' },
+      { id: 'clinic-asteatotic-rx', title: 'Soak, smear and a short course of steroid ointment', why: 'cleared over 90% in four to fourteen days in the series' },
+      { id: 'clinic-medical-workup', title: 'A blood test and a medication review', why: 'thyroid, kidneys, diabetes, statins, diuretics' },
+    ],
+  },
+  {
+    concern: 'I want plump, glassy skin for an event',
+    paths: [
+      { id: 'inj-microdroplet-ha', title: 'Microdroplet hyaluronic injections', why: 'hydration up on the probe against untreated in 202 people; book a month ahead' },
+      { id: 'home-glycerin-ha', title: 'A humectant under a cream, every day until then', why: 'the water half in a fortnight' },
+      { id: 'clinic-hydradermabrasion', title: 'A hydrating facial the day before — if nothing stings', why: 'an afternoon of plump on an intact barrier' },
+    ],
+  },
+  {
+    concern: 'I take pills for cholesterol or blood pressure and I am dry all over',
+    paths: [
+      { id: 'type-medical', title: 'When dry skin is a symptom', why: 'statins and diuretics were tied to whole-body dryness in 5,547 people' },
+      { id: 'clinic-medical-workup', title: 'Ask the prescriber, test the thyroid', why: 'never stop the drug yourself; ask about dose, drug and timing' },
+      { id: 'home-moisturiser-regular', title: 'A cream twice a day meanwhile', why: 'the habit is the treatment — and it halved skin tears' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: the pinch, the scratch, the cabinet — and a photograph',
+    when: 'Before anything',
+    blurb: 'Dehydrated, dry, environmental or medical; where it lives and when it started; every active and every pill written down; the worst patch photographed in daylight; a blood test if it is everywhere, new or itching at night.',
+  },
+  {
+    id: 'home-moisturiser-regular',
+    step: 'Day 1 onward: the cream habit and the four washing changes',
+    when: 'Whatever else you do',
+    blurb: 'A plain cream twice a day on damp skin, legs included; lukewarm, short, a syndet, a cream within three minutes; the bedroom humidified; the scrub, the brush and the second acid in the bin; eight hours.',
+  },
+  {
+    id: 'home-urea-lactate',
+    step: 'Weeks 2–8: the active for your half, and a supplement if you like',
+    when: 'Judged at two weeks each',
+    blurb: 'Urea or lactate for scale, a ceramide cream at pH 4 for the lipid half, glycerin or hyaluronan under a cream for the water half, petrolatum at night on the worst; flaxseed, collagen or hyaluronan for twelve weeks if you want a pill.',
+  },
+  {
+    id: 'inj-microdroplet-ha',
+    step: 'Month 3 onward: the clinic for what the cream cannot reach',
+    when: 'Once the routine has had eight weeks',
+    blurb: 'Microdroplet hyaluronic injections for the dehydrated cheek, judged at a month and repeated at six to nine; the prescription for a cracked shin; the hormone conversation as a menopause decision; everything compared against the photograph.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="dry-skin" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Dry &amp; dehydrated skin</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Dry, dehydrated skin, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Dry skin is a barrier problem in two currencies &mdash; the lipid mortar between the outer cells and the water
+          they hold &mdash; and age, menopause, hot water, soap, heated air and over-exfoliation take both. Below, the
+          self-checks that sort dry from dehydrated from medical, every treatment from urea to skin boosters graded by
+          the trials behind it, and the red flags that mean a blood test rather than a third cream.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Dry skin — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'home' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Bricks and mortar — how the lipid layers hold water in, and what hot water and soap do to them" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The same shin under raking light — before, and after two weeks of urea twice a day" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-moisturiser-regular',
+                    kind: 'The base',
+                    title: 'A plain cream, twice a day',
+                    blurb: 'Every moisturiser worked in the 80-patient double-blind trial and regular use was what mattered; twice-daily cream halved skin tears across 984 residents. Legs included.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'home-urea-lactate',
+                    kind: 'For scale and rough shins',
+                    title: '5–10% urea or 12% lactate',
+                    blurb: 'Double-blind trials since the 1980s: lactate beat petrolatum and lactic acid, urea cut a dryness index 89% in 40 diabetics and cleared scale in two weeks in 20 elderly patients.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'inj-microdroplet-ha',
+                    kind: 'For the face the cream cannot reach',
+                    title: 'Microdroplet hyaluronic injections',
+                    blurb: 'The one clinic treatment with a controlled hydration trial: cheek hydration up on the probe against untreated controls in 202 people, smoothness holding six months.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'home-cleansing',
+                    kind: 'For the habit that undoes it',
+                    title: 'Lukewarm, short, syndet',
+                    blurb: 'Hot water more than doubled water loss across the skin of 50 volunteers and an alkaline soap left the barrier leaking three days later. Free, and worth more than any serum.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your skin</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Rule out the cause, fix the habits, build the cream habit, choose the active for your half, and buy the clinic rung only for the face the cream cannot reach.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, randomised trials, meta-analyses, clinical series or position papers,
+            linked inline within each section. Primary sources: PubMed/PMC, the Journal of the American Academy of
+            Dermatology, the Journal of the European Academy of Dermatology and Venereology, the British Journal of
+            Dermatology, Dermatologic Therapy, Skin Research and Technology, Nutrients, the Cochrane Library and the
+            German Dermatological Society's position paper on xerosis cutis.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Cracked, red or weeping patches, itch that wakes you, and dryness
+          that spread over the whole body in weeks or arrived with a prescription are doctor problems before they are
+          cream problems; never stop a statin or a diuretic on your own; and a stinging, tight, flaking face needs a
+          month of subtraction, not another active.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

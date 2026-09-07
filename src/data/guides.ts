@@ -196,4 +196,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Glow is physics — the self-checks, sunscreen to retinoids to peels, boosters and lasers graded, the habits with next-morning experiments, and the stripped barrier that causes most product-bought dullness.',
     kind: 'problem',
   },
+  {
+    path: 'dry-skin',
+    title: 'Dry, dehydrated skin',
+    tagline: 'Lipids or water — the pinch and the scratch that sort them, urea to ceramides to petrolatum, supplements, hormones and skin boosters graded, the washing and heating habits with numbers, and the red flags that mean a blood test, not a third cream.',
+    kind: 'problem',
+  },
 ];
