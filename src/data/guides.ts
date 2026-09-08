@@ -232,4 +232,5 @@ export const guides: GuideMeta[] = [
     tagline: 'Four features sharing one disease — the self-check that sorts flushing from capillaries from bumps from the nose, and sunscreen, barrier repair, azelaic acid, ivermectin, doxycycline, the redness switches, pulsed-dye laser, IPL and the off-label shelf graded by 152 randomised trials, with the steroid cream and the rebound gel that make it worse.',
     kind: 'problem',
   },
+  { path: 'aging-hands', title: 'Aging hands: veins, tendons, spots & crepe', tagline: 'Two problems in one hand — the fat that thins until veins and tendons show, and the sun that spots, thins and bruises the skin — sorted by a self-check and graded on the hand trials: daily sunscreen measured on the back of the hand itself, the retinoid, the Q-switched laser that beat liquid nitrogen, IPL, cryotherapy, peels, fractional lasers, the two fillers with a regulatory hand indication, skin boosters, fat grafting and the biostimulators, with the vein removal a careful clinician talks you out of.', kind: 'problem' },
 ];

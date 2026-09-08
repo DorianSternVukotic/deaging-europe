@@ -1,0 +1,443 @@
+---
+/**
+ * The aging-hands guide (/aging-hands) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video,
+ * the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/aging-hands';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Aging hands — every treatment graded by evidence | DeAging Europe';
+const description =
+  'An old-looking hand is two problems: the fat that thins until veins, tendons and knuckles show, and a lifetime of sun that leaves spots, crepe and bruises from nothing. The self-check that sorts them, and daily sunscreen (measured on the back of the hand), the retinoid, the lighteners, the Q-switched laser that beat liquid nitrogen, IPL, cryotherapy, peels, fractional lasers, the two fillers with a regulatory hand indication, skin boosters, fat grafting, the biostimulators and the vein treatments graded by the hand trials — with the vein removal a careful clinician talks you out of, the steroid cream that thins the skin, and the biotin that fools a blood test.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-why-hands-first': 'Thinner, less padded, unprotected',
+  'faq-fillers-how-long': '1.5–2 mL a hand; 6–12 months',
+  'faq-face-products': 'Yes — nightly, and after every wash',
+  'faq-spots-danger': 'No; a changing one gets checked',
+  'faq-veins-remove': 'Hide them first; keep the veins',
+  'faq-laser-or-cryo': 'Laser best; cryotherapy cheapest',
+  'faq-fat-or-filler': 'Filler first; fat if you want it once',
+  'faq-nails': 'Gloves and cream; the supplements are thin',
+  'faq-cost-ladder': 'Free to €5,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'My veins and tendons show and my hands look bony',
+    paths: [
+      { id: 'type-volume', title: 'Grade the volume loss', why: 'the 0–4 scale every filler trial was scored on — grades 2 and up are what they treated' },
+      { id: 'inj-ha', title: 'Hyaluronic acid filler first', why: 'a grade better in 85.9% of hands against 21.2% untreated, and dissolvable if you regret it' },
+      { id: 'inj-caha', title: 'Calcium hydroxylapatite for duration', why: '75% improved against 3% of controls, 68% still a grade better at a year' },
+      { id: 'surg-fat', title: 'Fat for the person who wants it once', why: '97.6% satisfied across 320 patients — and half the graft may melt' },
+    ],
+  },
+  {
+    concern: 'Brown spots on the backs of my hands',
+    paths: [
+      { id: 'type-spots', title: 'Sort lentigo from keratosis from the spot that needs a biopsy', why: 'flat and brown is benign; rough, changing or multicoloured is a dermatologist' },
+      { id: 'home-sunscreen', title: 'Sunscreen after every wash', why: '24% less measured hand aging in 903 people — and no new spots' },
+      { id: 'home-retinoid', title: 'A nightly retinoid', why: '83% lightened against 29% on vehicle, and the cleared spots stayed cleared' },
+      { id: 'dev-qs-laser', title: 'The Q-switched laser', why: '89% of hand lentigines lightened against 68% with liquid nitrogen; 93% preferred it' },
+      { id: 'dev-cryo', title: 'Cryotherapy for a few spots on a fair hand', why: 'two thirds cleared for the price of a consultation — with a pale ghost' },
+    ],
+  },
+  {
+    concern: 'Crepey, thin skin that bruises from nothing',
+    paths: [
+      { id: 'type-crepe', title: 'Actinic purpura and dermatoporosis', why: 'thinned dermis plus sun — benign, lifelong, and worsened by steroid creams' },
+      { id: 'home-sunscreen', title: 'Sun protection as the only prevention', why: 'the fragility is photodamage on a thinned dermis' },
+      { id: 'inj-skinbooster', title: 'A hyaluronic acid skin booster', why: 'hydration, elasticity and roughness better than the saline hand, held to 12 months' },
+      { id: 'home-purpura', title: 'The bioflavonoid trial', why: '50% fewer purpura lesions against 9% more on placebo in six weeks' },
+      { id: 'safety-steroids-biotin', title: 'Check the tube', why: 'a potent steroid used for months makes exactly this' },
+    ],
+  },
+  {
+    concern: 'Big blue veins on otherwise fine hands',
+    paths: [
+      { id: 'type-veins', title: 'Normal anatomy made visible', why: 'the veins that read as age in every rating study — and your future drip lines' },
+      { id: 'inj-ha', title: 'Pad over them with filler', why: 'cleared the veins from view on blinded photographs without touching a vessel' },
+      { id: 'safety-veins', title: 'Before anyone strips them', why: 'a closed vein does not reopen; one fingertip has been lost' },
+      { id: 'vein-treatments', title: 'If you still want them gone', why: '95% success with 3% polidocanol, side effects in 90%, matting in 14.5%' },
+    ],
+  },
+  {
+    concern: 'Red, cracked, sore hands from washing',
+    paths: [
+      { id: 'type-eczema', title: 'Hand eczema, not age', why: 'a one-year prevalence near 10%; 90% of pandemic healthcare workers had the symptoms' },
+      { id: 'home-barrier', title: 'Gloves, the rub, and a urea cream after every wash', why: 'median relapse pushed from 2 days to 20; alcohol rub irritates less than soap' },
+      { id: 'safety-steroids-biotin', title: 'A short steroid course, not a long one', why: 'beyond six weeks only under supervision' },
+    ],
+  },
+  {
+    concern: 'My knuckles are getting bigger and ache',
+    paths: [
+      { id: 'type-joints', title: 'Osteoarthritis, not skin', why: 'symptomatic in 26% of women over 70; nothing cosmetic changes a joint' },
+      { id: 'workup', title: 'The self-check', why: 'warm, red or morning-stiff joints go to a doctor before any clinic' },
+    ],
+  },
+  {
+    concern: 'A spot that is changing, rough or bleeding',
+    paths: [
+      { id: 'safety-spot-rule', title: 'A dermatologist before any treatment', why: 'lentigo maligna hides among lentigines; a laser on it delays the diagnosis' },
+      { id: 'type-spots', title: 'Keratosis or cancer, not a cosmetic spot', why: 'up to 65% of squamous-cell carcinomas arise from actinic keratoses' },
+      { id: 'dev-pdt', title: 'Field treatment for the keratoses', why: '54.5% of hands cleared against 3% — and a younger-looking hand as the side effect' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: the photograph, the grade, the pinch, the two-hand comparison and the spot rule',
+    when: 'Before anything',
+    blurb: 'Both hands photographed flat by the same window; volume graded 0–4; the pinch for thinning and the bruise count; the window-side hand compared with the other; the wash count written down; every spot that is changing, rough or multicoloured booked with a dermatologist; any cracked, red hand to a doctor first.',
+  },
+  {
+    id: 'home-sunscreen',
+    step: 'Day 1 onward: sunscreen after every wash, gloves for wet work, a cream by every sink',
+    when: 'Every day, for good',
+    blurb: 'Broad-spectrum sunscreen on the backs of the hands each morning, after each wash and before the car; the rub instead of the soap; a urea or glycerol cream after washing; gloves for water, chemicals and the garden; no steroid cream beyond a short prescribed course.',
+  },
+  {
+    id: 'home-retinoid',
+    step: 'Months 1–4: the retinoid, and a lightener where available',
+    when: 'Judged at 16 weeks on the photograph',
+    blurb: 'Tretinoin or adapalene on the backs of the hands at night, alternate nights for a month then nightly, over moisturiser; a mequinol-tretinoin or other lightener from a dermatologist for many small spots; the bioflavonoid trial for the bruising if it bothers you.',
+  },
+  {
+    id: 'dev-qs-laser',
+    step: 'Month 4 onward: light or cold for the spots, then filler for the volume',
+    when: 'Once the skin is quiet and there is no tan',
+    blurb: 'A Q-switched laser (or cryotherapy for a few spots on a fair hand, IPL for a freckled one) after a dermatologist has looked at every spot; then a hyaluronic acid filler for the veins and tendons, calcium hydroxylapatite for duration, fat for the person who wants it once — and the veins kept.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="aging-hands" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Aging hands: veins, tendons, spots &amp; crepe</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Aging hands, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          An old-looking hand is two problems that need two toolkits &mdash; the fat that thins until veins, tendons
+          and knuckles show, and a lifetime of sun on the one patch of skin that is never covered, which spots it, thins
+          it and bruises it from nothing. Below, the self-check that sorts them, every treatment from the sunscreen with
+          a randomised trial on the back of the hand to the two fillers with a regulatory hand indication, graded by the
+          hand trials, and the three things a careful clinician talks you out of: stripping the veins, the steroid cream,
+          and the cream that promises what the filler does.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Aging hands — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'volume' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="A hand filler session: the cannula from the wrist, the structure-free top layer, the massage between the tendons" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The same grade-3 hand before, one week after (swollen), and three months after filler" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'spots' || g.id === 'volume' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'inj-caha',
+                    kind: 'For the volume',
+                    title: 'Calcium hydroxylapatite or hyaluronic acid filler',
+                    blurb: 'The best evidence on the page: a grade better in 75% against 3% of untreated controls (114 people) and in 86% against 21% of untreated other hands (90 people), both graded blind. A week of swelling, nodules in one in sixteen, hand function unchanged, and hyaluronic acid dissolvable for the first-timer.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'dev-qs-laser',
+                    kind: 'For the spots',
+                    title: 'The Q-switched laser',
+                    blurb: 'Randomised on the backs of the hands against liquid nitrogen and two other lasers: 89% of lentigines lightened against 68%, 93% of patients preferred it, textural change in 2%. One to three sessions, a week of crusts, and a dermatologist\'s eye on every spot first.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'home-sunscreen',
+                    kind: 'The foundation',
+                    title: 'Daily sunscreen, reapplied after washing',
+                    blurb: 'The one anti-aging measure with a randomised trial measured on the back of the hand: no detectable increase in skin aging over 4.5 years, 24% less than discretionary users, plus 39% fewer squamous-cell carcinomas and 73% fewer invasive melanomas. Only counts if it is on — after every wash, and before the car.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'home-barrier',
+                    kind: 'For the washing',
+                    title: 'Gloves, the rub and the urea cream',
+                    blurb: 'The commonest old hand is a washed one. A 5% urea barrier cream stretched the median time to relapse from 2 days to 20; alcohol rub irritates less than soap; gloves for wet work by guideline. Free, visible in a fortnight, and the precondition for everything a clinic sells.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your hands</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Sort the hand into its parts, protect and repair the skin every day, lighten the spots with the retinoid and then the light, and put the volume back last, keeping the veins.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, randomised trials, systematic reviews, cohort studies, posted trial
+            results, regulatory communications or reference texts, linked inline within each section. Primary sources:
+            PubMed/PMC, ClinicalTrials.gov results registers, Annals of Internal Medicine, Dermatologic Surgery, Plastic
+            and Reconstructive Surgery, the Journal of the American Academy of Dermatology, the British Journal of
+            Dermatology, the New England Journal of Medicine, the Journal of Cosmetic Dermatology, JPRAS Open, Aesthetic
+            Plastic Surgery, Contact Dermatitis, the Journal of Hand Surgery, the FDA, and DermNet.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. A spot that is changing, rough, raised, multicoloured or bleeding, a
+          hand that is red, cracked or swollen, and joints that are warm or stiff in the morning need a doctor before a
+          cosmetic plan; every injection on this page is a medical procedure with its own risks; and the dorsal hand
+          veins are the intravenous access of the rest of your life.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
