@@ -1,0 +1,449 @@
+---
+/**
+ * The collagen-loss / loss-of-firmness guide (/collagen-loss) — problem-
+ * template variant of the collagen-guide layout: title, description, a
+ * full-width explainer video, the three drivers as cards, evidence strength
+ * as the primary visual signal, one interactive block (situation matcher)
+ * and a month-by-month action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/collagen-loss';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Collagen loss and loss of firmness — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Firmness is the dermis: collagen under tension, elastin that recoils, water and the cells that hold it taut — lost at 1% a year, 1–2% a year more after menopause, faster under sun and smoke. The self-check that sorts time from sun from estrogen, and sunscreen, tretinoin, vitamin C, the acids, oral collagen, hormone therapy, the lasers, microneedling, radiofrequency, ultrasound, red light, PLLA, calcium hydroxylapatite, skin boosters and the rest graded on what actually measures firmness — collagen on a biopsy, recoil on a cutometer, thickness on ultrasound — with the collagen jar, the exosome vial and the "collagen bank" that measure nothing.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-rebuild-or-slow': 'Both — protect daily, rebuild slowly',
+  'faq-creams': 'No cream adds collagen; retinoids do',
+  'faq-drink-collagen': 'A little, on a cutometer',
+  'faq-hrt-skin': 'Preserves collagen; face trials negative',
+  'faq-sugar': 'Real chemistry, thin trials',
+  'faq-how-long': 'Months to a year',
+  'faq-which-device': 'Ablative laser most; needling best value',
+  'faq-bone-broth': 'Gelatin + vitamin C; no skin trial',
+  'faq-cost-ladder': 'Free to €4,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'My skin has lost its bounce everywhere — thin, crepey, slow to recoil',
+    paths: [
+      { id: 'workup', title: 'The pinch on two sites', why: 'the inner arm as slack as the cheek means time, not sun — the whole toolkit applies' },
+      { id: 'home-sunscreen', title: 'Sunscreen, daily', why: 'keeps what is left: 24% less measured aging in 4.5 years' },
+      { id: 'home-tretinoin', title: 'A nightly retinoid', why: 'collagen formation +80% on biopsy in a year; retinol works at 87' },
+      { id: 'clinic-microneedling', title: 'A microneedling course', why: 'collagen I, III and VII up on biopsy after six sessions, for the least money' },
+      { id: 'inj-skinbooster', title: 'A skin booster for the surface', why: 'elasticity and roughness better than the saline side, for six to twelve months' },
+    ],
+  },
+  {
+    concern: 'It changed fast around menopause',
+    paths: [
+      { id: 'type-menopause', title: 'The menopausal cliff', why: '1–2% a year on top of the clock, tracking years since the last period' },
+      { id: 'hrt-systemic', title: 'Hormone therapy, if you are a candidate', why: '+6.5% collagen against placebo on biopsy — and no change in the face trials' },
+      { id: 'hrt-topical', title: 'Topical estrogen, with a specialist', why: 'thicker skin on ultrasound in one 54-woman trial; compounded and off-label' },
+      { id: 'home-tretinoin', title: 'Tretinoin regardless', why: 'works on menopausal skin exactly as on anyone\'s' },
+    ],
+  },
+  {
+    concern: 'Sun-damaged: leathery, mottled, deeply creased',
+    paths: [
+      { id: 'type-photo', title: 'Photoaged loss', why: 'collagen formation 56% lower on the exposed forearm than the protected buttock' },
+      { id: 'home-sunscreen', title: 'Protection before any builder', why: 'the destruction outpaces synthesis until it stops' },
+      { id: 'home-tretinoin', title: 'Tretinoin for a year', why: 'the biopsy trial was done on photodamaged skin' },
+      { id: 'clinic-ablative', title: 'Resurfacing for the rebuild', why: 'procollagen 7.5–8.9× baseline for six months — the largest response measured' },
+      { id: 'clinic-nafl', title: 'Fractional, off the face', why: 'collagen density up on biopsy with days, not weeks, of downtime' },
+    ],
+  },
+  {
+    concern: 'I want the most collagen for the money',
+    paths: [
+      { id: 'home-lifestyle', title: 'Stop the accelerants', why: 'free, and the largest effect sizes on the page' },
+      { id: 'home-tretinoin', title: 'Tretinoin at €15 a month', why: 'the only topical with collagen on biopsy in controlled trials' },
+      { id: 'clinic-microneedling', title: 'Needling courses', why: 'a documented histology response at €150–400 a session' },
+      { id: 'clinic-led', title: 'Red light at clinic dose', why: 'collagen density on ultrasound in the largest controlled trial here' },
+    ],
+  },
+  {
+    concern: 'I would rather have no downtime',
+    paths: [
+      { id: 'home-tretinoin', title: 'The retinoid, slowly', why: 'two months of dryness, then years of collagen' },
+      { id: 'clinic-led', title: 'LED', why: 'thirty sessions, zero risk, measured on ultrasound and biopsy' },
+      { id: 'clinic-rf-mono', title: 'Monopolar radiofrequency', why: 'collagen I and III up on biopsy; subtle, one session' },
+      { id: 'clinic-hifu', title: 'Focused ultrasound', why: 'a thicker dermis on biopsy in eleven; unpredictable' },
+      { id: 'inj-plla', title: 'Poly-L-lactic acid', why: 'elasticity up against saline at a year, built over months' },
+    ],
+  },
+  {
+    concern: 'I am in my twenties or thirties and want to prevent it',
+    paths: [
+      { id: 'type-intrinsic', title: 'What is actually happening', why: '1% a year from the mid-twenties, slow and linear until menopause' },
+      { id: 'home-sunscreen', title: 'Sunscreen', why: 'the one prevention with a randomised trial' },
+      { id: 'home-lifestyle', title: 'No cigarettes, less sugar, sleep, lift', why: 'the changes that compound over decades' },
+      { id: 'inj-banking', title: 'Not the "collagen bank"', why: 'no trial in unaged skin, and nothing dissolves it when the face changes' },
+    ],
+  },
+  {
+    concern: 'Do supplements and creams do anything at all?',
+    paths: [
+      { id: 'home-oral-collagen', title: 'Oral collagen', why: 'hydration and elasticity in 26 trials; never a biopsy' },
+      { id: 'home-supplements-other', title: 'Hyaluronic acid, silicon, vitamin C', why: 'one small trial each' },
+      { id: 'home-creams-collagen', title: 'The collagen jar', why: '300,000 daltons on a barrier that stops 500' },
+      { id: 'safety-claims', title: 'How to read the claim', why: 'measured how, against what, by whom, for how long' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: the pinch on two sites, the timeline, the accelerants and the photograph',
+    when: 'Before anything',
+    blurb: 'Cheek against inner arm to sort time from sun; the change dated against the last period or a weight loss; cigarettes, sugar, sleep and training written down honestly; face, neck and hands photographed in the same light; a cutometer baseline if a clinic can take one.',
+  },
+  {
+    id: 'home-sunscreen',
+    step: 'Day 1 onward: sunscreen, the accelerants removed, vitamin C in the morning',
+    when: 'Every day, for good',
+    blurb: 'Broad-spectrum sunscreen on face, neck, chest and hands; the cigarettes gone, the sugar down, seven hours of sleep and two resistance sessions a week; a vitamin C serum under the sunscreen; a moisturiser that is a moisturiser.',
+  },
+  {
+    id: 'home-tretinoin',
+    step: 'Months 1–6: the retinoid built up to nightly, an acid on the off nights, the powder if you want it',
+    when: 'Judged at 6 months on the photograph',
+    blurb: 'Tretinoin from twice a week to nightly over two months, retinol for skin that will not tolerate it, an alpha-hydroxy acid on alternate nights for photodamaged sites, 10 g of hydrolysed collagen daily if the budget allows; the menopause conversation with a clinician if the timeline says so.',
+  },
+  {
+    id: 'clinic-microneedling',
+    step: 'Month 6 onward: a collagen-inducing procedure course, and the stimulators for thinned sites',
+    when: 'Once the skin is quiet and there is no tan',
+    blurb: 'A microneedling or fractional laser course of three to six sessions, repeated yearly; red light at clinic dose for the patient; PLLA or diluted calcium hydroxylapatite for the face, neck, arms or hands that have thinned, from an injector who dilutes and massages; ablative resurfacing once for the photodamage that has outrun everything else.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="collagen-loss" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Collagen loss &amp; loss of firmness</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Loss of firmness, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Firmness is the dermis &mdash; collagen under tension, elastin that recoils, water, and the cells that hold
+          it all taut &mdash; and it goes three ways at once: about 1% a year from the mid-twenties, 1&ndash;2% a year
+          more after menopause, and whatever the sun and cigarettes add. Below, the self-check that sorts time from sun
+          from estrogen, and every treatment graded on what actually measures firmness &mdash; collagen on a biopsy,
+          recoil on a cutometer, thickness on ultrasound &mdash; from the sunscreen that keeps it to the laser that
+          rebuilds it, with the jar, the vial and the &ldquo;collagen bank&rdquo; that measure nothing.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Loss of firmness — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'clinic' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="What a collagen-inducing session looks like: fractional laser against microneedling, and the week after each" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="A biopsy stained for new collagen before treatment and three months after" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' || g.id === 'inj' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-tretinoin',
+                    kind: 'The collagen-builder',
+                    title: 'Tretinoin, nightly, for years',
+                    blurb: 'The only topical with collagen synthesis shown on human biopsy in a controlled trial: formation up 80% after a year of 0.1% against a 14% fall on vehicle, and retinol raised procollagen in people with a mean age of 87. Two months of peeling, then decades of use, for €15 a month.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'home-sunscreen',
+                    kind: 'The protector',
+                    title: 'Daily broad-spectrum sunscreen',
+                    blurb: 'The one prevention with a randomised trial: 903 adults, 4.5 years, no detectable increase in skin aging on the daily arm and 24% less than discretionary users. It interrupts the collagenases that a single exposure switches on, and it is the base every builder on the page depends on.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'clinic-ablative',
+                    kind: 'For the rebuild',
+                    title: 'Fractional or full ablative resurfacing',
+                    blurb: 'The largest collagen response ever measured: procollagen I and III at 7.5 and 8.9 times baseline for six months after CO2 resurfacing in 28 people. Fractional delivery buys most of the safety for part of the effect; once, later, on the face, for the photodamage that has outrun everything topical.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'hrt-systemic',
+                    kind: 'For the menopausal cliff',
+                    title: 'Hormone therapy — for the right woman',
+                    blurb: 'Collagen preserved on biopsy: +6.5% at six months against placebo, 48% more in long-term users than untreated women, and a meta-analysis of 1,589 women agreeing — while the two trials that graded the face found nothing. Decided on symptoms, bone and timing with a menopause clinician; the dermis is the bonus.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your skin</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Sort the loss, stop the destruction every day, build with the topicals that have biopsies for six months, and spend on procedures only once the daily work is in place.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, randomised trials, meta-analyses, cohort studies, position statements
+            or regulatory communications, linked inline within each section. Primary sources: PubMed/PMC, the New England
+            Journal of Medicine, the British Medical Journal, Annals of Internal Medicine, the Journal of Investigative
+            Dermatology, the American Journal of Pathology, JAMA Dermatology and Archives of Dermatology, the Journal of
+            the American Academy of Dermatology, Dermatologic Surgery, Maturitas, Fertility and Sterility, Scientific
+            Reports, Aging Cell, the American Journal of Clinical Nutrition, Nutrients, Photomedicine and Laser Surgery,
+            the Menopause Society, and the FDA.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Menopausal hormone therapy is a decision about symptoms, bone and
+          cardiovascular risk made with a clinician, never a skin treatment; topical retinoids are avoided in pregnancy;
+          every injectable and energy device on this page is a medical procedure with its own risks; and no exosome
+          product is approved for injection anywhere.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
