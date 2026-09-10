@@ -1,0 +1,103 @@
+---
+/**
+ * LabEvidenceRow — rating-first evidence row. Closed: a fat quarter-marked
+ * band with the tier word and a small "n / 4", then the title, then "+".
+ * Open: the one-paragraph summary as a lead, the body text, the key/value
+ * fields, and a 4:5 figure (placeholder or real image).
+ *
+ * `lang` switches the UI strings (tier words, field keys); content comes
+ * from the data module in whatever language it is written.
+ */
+import LabMedia from './LabMedia.astro';
+import type { Evidence } from '../../data/evidence';
+
+interface EvidenceItem {
+  id: string;
+  title: string;
+  tldr: string;
+  evidence?: Evidence;
+  bodyHtml: string;
+  note?: string;
+  sessions?: string;
+  downtime?: string;
+  cost?: string;
+  image?: { src: string; alt: string };
+}
+
+interface Props {
+  s: EvidenceItem;
+  /** Figure number for the expanded 4:5 field, e.g. "FIG. 04". */
+  figure?: string;
+  open?: boolean;
+  lang?: 'en' | 'bg';
+}
+const { s, figure, open = false, lang = 'en' } = Astro.props;
+
+const ui = {
+  en: {
+    word: { strong: 'Strong evidence', moderate: 'Moderate evidence', emerging: 'Emerging evidence', limited: 'Limited evidence' } as Record<Evidence, string>,
+    info: 'Information',
+    bestFor: 'Best for',
+    sessions: 'Sessions',
+    downtime: 'Downtime',
+    cost: 'Cost',
+  },
+  bg: {
+    // Short forms: the column header already says "Доказателства · 0–4", and the full phrases wrap in the 200px column.
+    word: { strong: 'Силни', moderate: 'Умерени', emerging: 'Начални', limited: 'Ограничени' } as Record<Evidence, string>,
+    info: 'Информация',
+    bestFor: 'Подходящо за',
+    sessions: 'Сесии',
+    downtime: 'Възстановяване',
+    cost: 'Цена',
+  },
+}[lang];
+
+const level: Record<Evidence, number> = { strong: 4, moderate: 3, emerging: 2, limited: 1 };
+const tier = s.evidence;
+const n = tier ? level[tier] : 0;
+const fields: { k: string; v: string }[] = [];
+if (s.note) fields.push({ k: ui.bestFor, v: s.note.replace(/^(best for|подходящо за):\s*/i, '') });
+if (s.sessions) fields.push({ k: ui.sessions, v: s.sessions });
+if (s.downtime) fields.push({ k: ui.downtime, v: s.downtime });
+if (s.cost) fields.push({ k: ui.cost, v: s.cost });
+const subject = s.title.split(/[:(—]/)[0].trim().toLowerCase();
+---
+<details id={s.id} class="lab-row scroll-mt-24" data-evidence={tier ?? 'none'} open={open}>
+  <summary class="lab-row__sum">
+    <div class="lab-reading" aria-label={tier ? `${ui.word[tier]}, ${n} / 4` : ui.info}>
+      <div class="lab-scale" aria-hidden="true">
+        {tier && <span class:list={['lab-scale__band', `lab-bg-${tier}`]} style={`width:${n * 25}%`}></span>}
+        <span class="lab-scale__tick" style="left:25%"></span>
+        <span class="lab-scale__tick" style="left:50%"></span>
+        <span class="lab-scale__tick" style="left:75%"></span>
+      </div>
+      <div class="lab-reading__line">
+        <span class="lab-label">{tier ? ui.word[tier] : ui.info}</span>
+        <span class="lab-reading__n">{tier ? <><b>{n}</b> / 4</> : '– / 4'}</span>
+      </div>
+    </div>
+    <div class="lab-row__title lab-title-24">{s.title}</div>
+    <span class="lab-toggle" aria-hidden="true"></span>
+  </summary>
+
+  <div class="lab-row__body">
+    <div>
+      <p class="lab-lead">{s.tldr}</p>
+      <div class="prose-anti" set:html={s.bodyHtml}></div>
+      {fields.length > 0 && (
+        <div class="lab-fields">
+          {fields.map((f) => (
+            <div class="lab-field">
+              <span class="lab-field__k">{f.k}</span>
+              <span>{f.v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+    <div class="lab-row__photo">
+      <LabMedia ratio="4/5" kind="photo" figure={figure} subject={subject} image={s.image} lang={lang} />
+    </div>
+  </div>
+</details>

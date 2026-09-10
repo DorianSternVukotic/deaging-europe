@@ -1,0 +1,53 @@
+---
+/**
+ * LabLayout — a parallel layout for the local design test pages (/lab/*),
+ * carrying the "Modern laboratory" tokens and components. Nothing here is
+ * used by production pages; BaseLayout is untouched.
+ */
+import '../styles/global.css';
+import '../styles/lab.css';
+import SEO from '../components/SEO.astro';
+import LabHeader from '../components/lab/LabHeader.astro';
+import LabFooter from '../components/lab/LabFooter.astro';
+import type { Locale } from '../i18n/ui';
+
+interface Props {
+  title: string;
+  description: string;
+  locale: Locale;
+  path?: string;
+  type?: 'website' | 'article' | 'product';
+  /** "round" switches every box-shaped element to rounded corners (lab test variant). */
+  variant?: 'square' | 'round';
+  /** Document language for the html tag and the chrome strings; the i18n helpers stay on `locale`. */
+  lang?: 'en' | 'bg';
+}
+
+const { title, description, locale, path, type, variant = 'square', lang = 'en' } = Astro.props;
+
+// Archivo carries no Cyrillic; Bulgarian pages swap the display face for Golos Text (same grotesk feel, Cyrillic-native).
+const fontsHref =
+  lang === 'bg'
+    ? 'https://fonts.googleapis.com/css2?family=Golos+Text:wght@500;600&family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;500&display=swap'
+    : 'https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;500&display=swap';
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href={fontsHref} />
+    <SEO title={title} description={description} locale={locale} path={path} type={type} />
+  </head>
+  <body class:list={['lab min-h-screen flex flex-col', variant === 'round' && 'lab--round', lang === 'bg' && 'lab--bg']}>
+    <LabHeader locale={locale} lang={lang} />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <LabFooter locale={locale} lang={lang} />
+  </body>
+</html>

@@ -1,0 +1,50 @@
+---
+/**
+ * LabFooter — the site footer on the lab tokens: a carbon hairline, three
+ * columns on the ground colour, links in deep sky. `lang` switches strings.
+ */
+import type { Locale } from '../../i18n/ui';
+import { t } from '../../i18n/utils';
+
+interface Props { locale: Locale; lang?: 'en' | 'bg' }
+const { locale, lang = 'en' } = Astro.props;
+const year = new Date().getFullYear();
+
+const ui = lang === 'bg'
+  ? {
+      tagline: 'Доказателствено базираният хъб за анти-ейджинг в Европа.',
+      disclaimerLabel: 'Отказ от отговорност',
+      disclaimer: 'Информацията тук е образователна и не е медицински съвет. Консултирайте се с квалифициран лекар.',
+      contact: 'Контакт',
+      list: 'Регистрирайте продукта си в Европа',
+      listTail: '. Ние поемаме всичко.',
+      copy: `© ${year} DEAGING EUROPE · ЛАБОРАТОРЕН ПРЕГЛЕД · САМО ЗА ТЕСТ`,
+    }
+  : {
+      tagline: t(locale, 'footer.tagline'),
+      disclaimerLabel: 'Disclaimer',
+      disclaimer: t(locale, 'footer.disclaimer'),
+      contact: t(locale, 'nav.contact'),
+      list: 'List your product in Europe',
+      listTail: '. We handle everything.',
+      copy: `© ${year} DEAGING EUROPE · LAB PREVIEW · LOCAL ONLY`,
+    };
+---
+<footer class="lab-footer">
+  <div class="lab-container lab-footer__in">
+    <div>
+      <div class="lab-wordmark" style="color: var(--ink);">DeAging Europe</div>
+      <p style="margin-top: 10px;">{ui.tagline}</p>
+    </div>
+    <div>
+      <p class="lab-eyebrow">{ui.disclaimerLabel}</p>
+      <p>{ui.disclaimer}</p>
+    </div>
+    <div>
+      <p class="lab-eyebrow">{ui.contact}</p>
+      <p><a href="mailto:dorian.sternvukotic@gmail.com">dorian.sternvukotic@gmail.com</a></p>
+      <p style="margin-top: 8px;"><a href="/contact">{ui.list}</a>{ui.listTail}</p>
+      <p class="lab-mono" style="margin-top: 16px;">{ui.copy}</p>
+    </div>
+  </div>
+</footer>

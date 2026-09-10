@@ -1,0 +1,362 @@
+---
+/**
+ * /lab/hair-loss — LOCAL DESIGN TEST ONLY.
+ *
+ * A separate copy of the hair-loss guide rendered in the "Modern laboratory"
+ * direction from design_handoff_modern_laboratory (2a), round 2: title and
+ * rating only before opening, no intros or tags on first sight. It reads the
+ * same data module as /hair-loss and touches nothing the production page
+ * uses: its own layout (LabLayout), stylesheet (lab.css) and components
+ * (src/components/lab/*). noindex; not registered in guides.ts.
+ */
+import LabLayout from '../../layouts/LabLayout.astro';
+import LabMedia from '../../components/lab/LabMedia.astro';
+import LabDrawer from '../../components/lab/LabDrawer.astro';
+import LabEvidenceRow from '../../components/lab/LabEvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../../i18n/ui';
+import {
+  groups,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../../data/hair-loss';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Hair loss — every treatment graded by evidence | DeAging Europe (lab preview)';
+const description =
+  'Thinning, shedding, a widening part or receding temples — why it happens, every treatment from minoxidil to transplant graded by trial evidence, and a plan matched to your type of hair loss.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-regrow': 'Partly, if early.',
+  'faq-timeline': '3–6 months.',
+  'faq-forever': 'Yes, for pattern loss.',
+  'faq-minoxidil-women': 'Yes; some fuzz.',
+  'faq-stress': 'Yes, temporarily.',
+  'faq-vitamins': 'Only if deficient.',
+  'faq-hrt': 'Not reliably.',
+  'faq-camouflage': 'Fibers, SMP, a cut.',
+  'faq-transplant-permanent': 'The grafts, yes.',
+  'faq-postpartum': 'Usually wait.',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const basicsGroup = groups.find((g) => g.id === 'basics')!;
+const contextGroup = groups.find((g) => g.id === 'context')!;
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Figure numbering: FIG. 01 is the hero field, FIG. 02 the mapped image, then one per evidence row.
+const figNo: Record<string, string> = {};
+let fig = 3;
+for (const g of evidenceGroups) for (const s of orderedSections(g)) figNo[s.id] = `FIG. ${String(fig++).padStart(2, '0')}`;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'A widening part or a thinner ponytail (woman, before menopause)',
+    paths: [
+      { id: 'home-minoxidil', title: '5% minoxidil foam, once a day', why: 'the base — strong evidence in women, twice the regrowth rate of placebo' },
+      { id: 'rx-spironolactone', title: 'Add spironolactone', why: 'the workhorse anti-androgen; two in three improve when it is combined with minoxidil' },
+      { id: 'clinic-microneedling', title: 'Microneedling on top', why: 'roughly doubles what minoxidil does alone in a dozen trials' },
+    ],
+  },
+  {
+    concern: 'Thinning that appeared or accelerated around perimenopause',
+    paths: [
+      { id: 'menopause', title: 'Read this first', why: 'what estrogen actually does to the follicle, and why HRT is not the fix' },
+      { id: 'home-minoxidil', title: '5% minoxidil foam', why: 'first-line at any age' },
+      { id: 'rx-oral-minoxidil', title: 'Low-dose oral minoxidil', why: 'if the foam is unworkable — 1 mg matched topical in women' },
+      { id: 'safety-red-flags', title: 'Rule out a scarring hairline', why: 'frontal fibrosing alopecia clusters in exactly these years' },
+    ],
+  },
+  {
+    concern: 'Receding temples or a thinning crown (man)',
+    paths: [
+      { id: 'rx-finasteride-men', title: 'Finasteride 1 mg', why: '93% lower odds of further visible loss over five years' },
+      { id: 'home-minoxidil', title: 'Plus 5% minoxidil', why: 'the combination beats either alone' },
+      { id: 'clinic-transplant', title: 'A transplant once the loss is controlled', why: 'permanent grafts — but only after the medicine has stabilised the rest' },
+    ],
+  },
+  {
+    concern: 'Handfuls of hair 2–3 months after illness, birth, surgery, a diet or a GLP-1',
+    paths: [
+      { id: 'type-shedding', title: 'Telogen effluvium', why: 'the follicles are intact and it resolves in 3–6 months' },
+      { id: 'home-iron-vitd', title: 'Test ferritin, thyroid, vitamin D', why: 'the deficiencies that prolong a shed' },
+      { id: 'faq-postpartum', title: 'Should I treat at all?', why: 'usually wait — and what to do if it drags past six months' },
+    ],
+  },
+  {
+    concern: 'Round bald patches, or eyebrow / beard loss',
+    paths: [
+      { id: 'type-areata', title: 'Alopecia areata', why: 'autoimmune — minoxidil and finasteride are the wrong tools' },
+      { id: 'rx-jak', title: 'JAK inhibitors', why: 'the first drugs with phase 3 evidence, EU-approved for severe disease' },
+    ],
+  },
+  {
+    concern: 'A hairline creeping back with itch, redness, shiny skin or thinning eyebrows',
+    paths: [
+      { id: 'type-scarring', title: 'Scarring alopecia', why: 'hair lost is lost for good — the aim is to stop the fire' },
+      { id: 'safety-red-flags', title: 'See a dermatologist within weeks', why: 'a six-month wait costs hair you cannot get back' },
+    ],
+  },
+  {
+    concern: 'Thinning at the edges from tight styles, braids or extensions',
+    paths: [
+      { id: 'type-traction', title: 'Traction alopecia', why: 'fully reversible early, scarred after years — loosen everything now' },
+      { id: 'home-minoxidil', title: 'Minoxidil for the recoverable phase', why: 'helps follicles that are still alive' },
+    ],
+  },
+  {
+    concern: 'I want coverage now, not in six months',
+    paths: [
+      { id: 'faq-camouflage', title: 'Fibers, sprays, a blunter cut, a topper, SMP', why: 'instant, invisible, and none interferes with treatment' },
+      { id: 'clinic-transplant', title: 'A transplant, if the loss is stable', why: 'the only permanent restoration — twelve months to the final result' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: diagnose and photograph',
+    when: 'Before buying anything',
+    blurb: 'Pull test, part or crown photo in the same light, and — if you are shedding — ferritin, TSH, vitamin D.',
+  },
+  {
+    id: 'safety-minoxidil',
+    step: 'Weeks 2–8: the shed',
+    when: 'Minoxidil, oral or topical',
+    blurb: 'Old resting hairs leave early. It means the drug is working, not failing — the commonest reason people quit.',
+  },
+  {
+    id: 'faq-timeline',
+    step: 'Months 3–6: first change',
+    when: 'Compare photos, not mirrors',
+    blurb: 'Less shedding first, then fine regrowth at the part; density you can photograph by month six.',
+  },
+  {
+    id: 'faq-forever',
+    step: 'Month 12: judge, then maintain',
+    when: 'Decide with your dermatologist',
+    blurb: 'Keep what works, add the next tier if not. Stopping returns you to baseline within 3–6 months.',
+  },
+];
+
+// Editor's picks — one per problem.
+const picks = [
+  { id: 'home-minoxidil', kind: 'The base', title: '5% minoxidil, every day' },
+  { id: 'rx-spironolactone', kind: 'For women', title: 'Spironolactone — or oral minoxidil' },
+  { id: 'rx-finasteride-men', kind: 'For men', title: 'Finasteride (or dutasteride)' },
+  { id: 'clinic-microneedling', kind: 'The upgrade', title: 'Microneedling on top of minoxidil' },
+];
+---
+
+<LabLayout title={title} description={description} locale={locale} path="lab/hair-loss" type="article">
+  <article>
+    <div class="lab-container">
+
+      <!-- ════════════ GUIDE TOP: eyebrow, h1, the two-minute video, description, meta ════════════ -->
+      <section id="intro" class="lab-hero scroll-mt-24">
+        <p class="lab-eyebrow">Problem · Hair loss</p>
+        <h1 class="lab-h1">Hair loss, honestly.</h1>
+        <LabMedia class="lab-hero__video" ratio="16/9" kind="video" caption="The whole guide in two minutes" />
+        <p class="lab-body-18 lab-hero__intro">
+          Thinning hair isn't random &mdash; and it is rarely just one thing. By 50, about 40% of women and half of
+          men show pattern hair loss, and most start treating it years late. Below, every treatment is graded by the
+          trials behind it, then matched to your type of loss.
+        </p>
+        <div class="lab-meta">
+          <span>Updated 5 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections</span>
+          <a href="#guide-body">Scan the chart ↓</a>
+        </div>
+      </section>
+
+      <!-- ════════════ WHAT'S ACTUALLY HAPPENING (drawers) ════════════ -->
+      <section id="basics" class="lab-section scroll-mt-24">
+        <div class="lab-section__head">
+          <p class="lab-eyebrow">Overview</p>
+          <h2 class="lab-h2" id="overview">{basicsGroup.title}</h2>
+        </div>
+        {basicsGroup.sections.map((s, i) => (
+          <LabDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} last={i === basicsGroup.sections.length - 1} />
+        ))}
+      </section>
+
+      <!-- ════════════ WHICH TYPE (drawers) ════════════ -->
+      <section id="context" class="lab-section scroll-mt-24">
+        <div class="lab-section__head">
+          <p class="lab-eyebrow">Before treating</p>
+          <h2 class="lab-h2">{contextGroup.title}</h2>
+        </div>
+        {contextGroup.sections.map((s, i) => (
+          <LabDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} last={i === contextGroup.sections.length - 1} />
+        ))}
+      </section>
+
+      <!-- ════════════ THE SOLUTIONS (the graded chart) ════════════ -->
+      <div id="guide-body" class="scroll-mt-24">
+        <div class="lab-chart-head">
+          <p class="lab-eyebrow">The solutions</p>
+          <h2 class="lab-h2 lab-h2--xl">Every treatment, graded by the evidence</h2>
+          <p class="lab-body-16 lab-muted">Solutions in {evidenceGroups.length} parts, strongest evidence first.</p>
+        </div>
+        {evidenceGroups.map((g) => (
+          <section id={g.id} class="lab-part scroll-mt-24" data-group={g.id}>
+            <div class="lab-part__head">
+              <p class="lab-eyebrow">Solutions · Part {String(partNo(g)).padStart(2, '0')} of {String(evidenceGroups.length).padStart(2, '0')}</p>
+              <h2 class="lab-h2">{g.title}</h2>
+            </div>
+
+            {g.id === 'rx' && (
+              <div class="lab-pair">
+                <LabMedia ratio="16/9" kind="video" duration="3:30" caption="Minoxidil, finasteride, spironolactone — how each works" />
+                <LabMedia ratio="16/9" figure="FIG. 02" subject="the four types of hair loss, mapped" caption="The four types of hair loss, mapped" />
+              </div>
+            )}
+
+            <div class="lab-cols" aria-hidden="true">
+              <span>Evidence · 0–4</span><span>Treatment</span><span></span>
+            </div>
+            {orderedSections(g).map((s) => (
+              <LabEvidenceRow s={s} figure={figNo[s.id]} />
+            ))}
+          </section>
+        ))}
+
+      </div>
+    </div>
+
+    <!-- ════════════ OUR PICKS (full-bleed dark band) ════════════ -->
+    <section id="picks" class="lab-dark scroll-mt-24">
+      <div class="lab-container">
+        <div class="lab-section__head">
+          <p class="lab-eyebrow">Editor's choice</p>
+          <h2 class="lab-h2">Our picks</h2>
+        </div>
+        <div class="lab-tiles">
+          {picks.map((p) => (
+            <a href={`#${p.id}`} class="lab-tile">
+              <span class="lab-eyebrow">{p.kind}</span>
+              <span class="lab-title-20 lab-tile__grow">{p.title}</span>
+              <span class="lab-cta">View details</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <div class="lab-container">
+
+      <!-- ════════════ SAFETY · FAQ (drawers) ════════════ -->
+      {tailInfoGroups.map((g) => (
+        <section id={g.id} class="lab-section scroll-mt-24" data-group={g.id}>
+          <div class="lab-section__head">
+            <p class="lab-eyebrow">{g.id === 'safety' ? 'Before you start' : 'Questions'}</p>
+            <h2 class="lab-h2">{g.title}</h2>
+          </div>
+          {g.sections.map((s, i) => (
+            <LabDrawer
+              id={s.id}
+              title={s.title}
+              lead={faqAnswer[s.id]}
+              bodyHtml={s.bodyHtml}
+              last={i === g.sections.length - 1}
+            />
+          ))}
+        </section>
+      ))}
+
+      <!-- ════════════ SITUATION MATCHER ════════════ -->
+      <section id="matcher" class="lab-section scroll-mt-24">
+        <div class="lab-section__head">
+          <p class="lab-eyebrow">Interactive</p>
+          <h2 class="lab-h2">Match a plan to your situation</h2>
+        </div>
+        {matcher.map((m, i) => (
+          <details class:list={['lab-drawer', i === matcher.length - 1 && 'lab-drawer--last']}>
+            <summary class="lab-drawer__sum">
+              <span class="lab-drawer__title lab-title-24">{m.concern}</span>
+              <span class="lab-toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="lab-drawer__body">
+              <div class="lab-paths">
+                {m.paths.map((p, j) => (
+                  <a href={`#${p.id}`} class="lab-path">
+                    <span class="lab-path__n">{String(j + 1).padStart(2, '0')}</span>
+                    <span>
+                      <span class="lab-path__title" style="display:block;">{p.title}</span>
+                      <span class="lab-path__why" style="display:block;">{p.why}</span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </details>
+        ))}
+      </section>
+
+      <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+      <section id="plan" class="lab-section scroll-mt-24">
+        <div class="lab-section__head">
+          <p class="lab-eyebrow">The action plan</p>
+          <h2 class="lab-h2">The plan, month by month</h2>
+        </div>
+        <div class="lab-tiles">
+          {planRows.map((r, i) => (
+            <a href={`#${r.id}`} class="lab-tile">
+              <span class="lab-tile__num">{String(i + 1).padStart(2, '0')}</span>
+              <span class="lab-tile__when">{r.when}</span>
+              <span class="lab-title-20">{r.step}</span>
+              <span class="lab-body-14 lab-muted lab-tile__grow">{r.blurb}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <!-- ════════════ REFERENCES ════════════ -->
+      <section id="references" class="lab-refs scroll-mt-24">
+        <p class="lab-eyebrow">References &amp; further reading</p>
+        <div>
+          <p class="lab-body-15 lab-muted">
+            All claims cite peer-reviewed studies, guideline documents or regulatory notices, linked
+            inline within each section. Primary sources: PubMed/PMC, the Cochrane Library, the European
+            S3 guideline on androgenetic alopecia, JAMA Dermatology, the Journal of the American Academy
+            of Dermatology, JEADV, and EMA and FDA documents.
+          </p>
+          <p class="lab-disclaimer">
+            Educational content, not medical advice. Finasteride, dutasteride and the oral anti-androgens
+            must not be used in pregnancy; oral minoxidil needs a prescriber who checks blood pressure;
+            and a receding hairline with itch, redness or eyebrow loss should be seen by a dermatologist
+            within weeks, not months.
+          </p>
+        </div>
+      </section>
+
+    </div>
+  </article>
+
+  <script is:inline>
+    (function () {
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el && el.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</LabLayout>

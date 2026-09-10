@@ -1,0 +1,29 @@
+---
+/**
+ * LabDrawer — native details/summary on carbon hairlines. Closed: a big
+ * title and a "+" only. Open: an optional one-line lead (e.g. the FAQ's short
+ * answer) above the body text.
+ */
+interface Props {
+  id?: string;
+  title: string;
+  /** One-line answer shown at the top of the opened body. */
+  lead?: string;
+  bodyHtml?: string;
+  open?: boolean;
+  /** Draw the closing hairline (for the last drawer in a run). */
+  last?: boolean;
+  class?: string;
+}
+const { id, title, lead, bodyHtml, open = false, last = false, class: klass = '' } = Astro.props;
+---
+<details id={id} class:list={['lab-drawer scroll-mt-24', last && 'lab-drawer--last', klass]} open={open}>
+  <summary class="lab-drawer__sum">
+    <span class="lab-drawer__title lab-title-24">{title}</span>
+    <span class="lab-toggle" aria-hidden="true"></span>
+  </summary>
+  <div class="lab-drawer__body">
+    {lead && <p class="lab-lead">{lead}</p>}
+    {bodyHtml ? <div class="prose-anti" set:html={bodyHtml}></div> : <div class="prose-anti"><slot /></div>}
+  </div>
+</details>

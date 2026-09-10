@@ -1,0 +1,49 @@
+---
+/**
+ * LabMedia — the flat bench-grey figure field with a mono caption top-left.
+ *
+ *   photo:  "FIG. 01 · the pinch test, two sites" / "4:5 · to be supplied"
+ *   video:  centred play square, caption "VIDEO · 16:9 · 2:00"
+ *
+ * When a real image is supplied it fills the same box with no caption chrome.
+ * `caption` renders below the frame in Archivo 500 (used for the video).
+ * `lang` switches the placeholder chrome strings.
+ */
+interface Props {
+  ratio?: '16/9' | '4/5' | '4/3';
+  kind?: 'photo' | 'video';
+  /** e.g. "FIG. 01" — omitted for untitled fields. */
+  figure?: string;
+  /** What the picture will show, in the caption's first line. */
+  subject?: string;
+  /** Video length shown in the caption, e.g. "2:00". */
+  duration?: string;
+  /** Text under the frame. */
+  caption?: string;
+  image?: { src: string; alt: string };
+  class?: string;
+  style?: string;
+  lang?: 'en' | 'bg';
+}
+
+const { ratio = '16/9', kind = 'photo', figure, subject, duration = '2:00', caption, image, class: klass = '', style, lang = 'en' } = Astro.props;
+const ui = { en: { video: 'VIDEO', pending: 'to be supplied', videoAria: 'Video placeholder', imageAria: 'Image placeholder' }, bg: { video: 'ВИДЕО', pending: 'предстои', videoAria: 'Място за видео', imageAria: 'Място за изображение' } }[lang];
+const ratioClass = { '16/9': 'lab-fig--16-9', '4/5': 'lab-fig--4-5', '4/3': 'lab-fig--4-3' }[ratio];
+const ratioLabel = ratio.replace('/', ':');
+const line1 = kind === 'video' ? `${ui.video} · ${ratioLabel} · ${duration}` : [figure, subject].filter(Boolean).join(' · ');
+const line2 = kind === 'video' ? '' : `${ratioLabel} · ${ui.pending}`;
+const aria = image ? image.alt : kind === 'video' ? `${ui.videoAria}, ${caption ?? subject ?? ''}` : `${ui.imageAria}, ${subject ?? ''}`;
+---
+<figure class={klass} style={style}>
+  <div class={`lab-fig ${ratioClass}`} role={image ? undefined : 'img'} aria-label={image ? undefined : aria}>
+    {image ? (
+      <img src={image.src} alt={image.alt} loading="lazy" />
+    ) : (
+      <>
+        <div class="lab-fig__cap">{line1}{line2 && <><br />{line2}</>}</div>
+        {kind === 'video' && <div class="lab-fig__play" aria-hidden="true">▶</div>}
+      </>
+    )}
+  </div>
+  {caption && <figcaption class="lab-caption">{caption}</figcaption>}
+</figure>

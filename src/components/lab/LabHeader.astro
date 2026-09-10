@@ -1,0 +1,49 @@
+---
+/**
+ * LabHeader — 64px bar (56px mobile) on a carbon hairline: uppercase
+ * wordmark left, tracked-uppercase nav right. Mobile nav collapses to a
+ * "Menu" disclosure (the handoff did not design the menu behaviour; this is
+ * the minimal usable version). `lang` switches the labels.
+ */
+import type { Locale } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+  /** Path of the active nav item, e.g. "/#guides". */
+  active?: string;
+  lang?: 'en' | 'bg';
+}
+const { active = '/#guides', lang = 'en' } = Astro.props;
+
+const items = {
+  en: [
+    { href: '/#guides', label: 'Guides' },
+    { href: '/collagen', label: 'Collagen guide' },
+    { href: '/contact', label: 'Contact' },
+  ],
+  bg: [
+    { href: '/#guides', label: 'Ръководства' },
+    { href: '/collagen', label: 'Колаген' },
+    { href: '/contact', label: 'Контакт' },
+  ],
+}[lang];
+const menuLabel = lang === 'bg' ? 'Меню' : 'Menu';
+---
+<header class="lab-header" style="position: relative;">
+  <div class="lab-container lab-header__in">
+    <a href="/" class="lab-wordmark">DeAging Europe</a>
+    <nav class="lab-nav" aria-label="Primary">
+      {items.map((it) => (
+        <a href={it.href} aria-current={it.href === active ? 'page' : undefined}>{it.label}</a>
+      ))}
+    </nav>
+    <details class="lab-menu">
+      <summary>{menuLabel}</summary>
+      <div class="lab-menu__list">
+        {items.map((it) => (
+          <a href={it.href}>{it.label}</a>
+        ))}
+      </div>
+    </details>
+  </div>
+</header>
