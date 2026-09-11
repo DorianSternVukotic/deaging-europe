@@ -85,7 +85,6 @@ const variantRows = groups
         </div>
         <MediaPlaceholder kind="image" ratio="4/5" label="Hero — lakeside sauna" tone="rose" class="w-full lg:w-72" />
       </div>
-      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
 
     <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
@@ -194,7 +193,7 @@ const variantRows = groups
                 ].map((pick) => (
                   <a
                     href={`#${pick.id}`}
-                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                    class="pick-card group flex flex-col bg-white border border-ink/10 overflow-hidden hover:border-rose transition"
                   >
                     <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
                     <div class="p-5 flex flex-col flex-1">
@@ -237,7 +236,7 @@ const variantRows = groups
         ))}
 
         <!-- ════════════ BUILD-A-PROTOCOL ════════════ -->
-        <section id="routine" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+        <section id="routine" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 p-6 md:p-10 border border-ink/5">
           <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
           <h2 class="font-display text-3xl md:text-4xl mt-2">Build your sauna protocol</h2>
           <p class="mt-2 text-ink/70 max-w-2xl">Pick one option per row — your protocol appears below. Saved to your browser only.</p>
@@ -253,18 +252,18 @@ const variantRows = groups
               <div class="routine-row" data-key={row.key}>
                 <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
                   <p class="font-display text-lg">{row.label}</p>
-                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(row.evidence as Evidence)}`}>{row.evidence}</span>
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 ${evidencePillClass(row.evidence as Evidence)}`}>{row.evidence}</span>
                 </div>
                 <div class="flex flex-wrap gap-2">
                   {row.opts.map((opt) => (
-                    <button type="button" data-opt={opt} class="routine-opt text-sm px-3 py-1.5 rounded-full border border-ink/15 bg-white hover:border-rose transition">{opt}</button>
+                    <button type="button" data-opt={opt} class="routine-opt text-sm px-3 py-1.5 border border-ink/15 bg-white hover:border-rose transition">{opt}</button>
                   ))}
                 </div>
               </div>
             ))}
           </div>
 
-          <div id="routine-summary" class="mt-10 p-6 bg-white rounded-xl border border-ink/10">
+          <div id="routine-summary" class="mt-10 p-6 bg-white border border-ink/10">
             <p class="text-xs uppercase tracking-[0.3em] text-sage">Your protocol</p>
             <p id="routine-empty" class="mt-3 text-ink/60 italic">Pick at least one option above to see your protocol.</p>
             <ul id="routine-list" class="mt-3 space-y-2 hidden text-[15px]"></ul>
@@ -273,16 +272,16 @@ const variantRows = groups
         </section>
 
         <!-- ════════════ VARIANT COMPARISON ════════════ -->
-        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white border border-ink/5 p-6 md:p-8 overflow-hidden">
           <p class="text-xs uppercase tracking-[0.3em] text-sage">Which sauna?</p>
           <h2 class="font-display text-3xl md:text-4xl mt-2">Sauna types by evidence</h2>
           <p class="mt-2 text-ink/65 max-w-2xl">Each type graded on its own published data — not on borrowed Finnish cohort numbers.</p>
 
           <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {variantRows.map((r) => (
-              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 border border-ink/5 hover:border-rose/40 transition group">
                 <div class="flex items-center justify-between gap-2 mb-2">
-                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence ?? 'info'}</span>
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 ${evidencePillClass(r.evidence)}`}>{r.evidence ?? 'info'}</span>
                 </div>
                 <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.title}</h3>
                 <p class="mt-1 text-sm text-ink/65 leading-snug">{r.tldr}</p>
@@ -293,7 +292,7 @@ const variantRows = groups
         </section>
 
         <!-- ════════════ REFERENCES ════════════ -->
-        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+        <section id="references" class="scroll-mt-32 bg-white p-8 border border-ink/5">
           <h2 class="font-display text-3xl">References & further reading</h2>
           <p class="mt-2 text-ink/70 text-sm">
             All claims cite peer-reviewed studies, cohort reports, or clinical reviews, linked inline
@@ -317,7 +316,6 @@ const variantRows = groups
     details > summary:focus-visible {
       outline: 2px solid var(--color-rose);
       outline-offset: -2px;
-      border-radius: 1rem;
     }
 
     .card[open] > summary { background: rgba(184,130,109,0.04); }

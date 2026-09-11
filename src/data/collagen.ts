@@ -343,7 +343,7 @@ const collagenSupplements: Section[] = [
         <li>Take with a source of vitamin C for collagen synthesis cofactor support.</li>
         <li>Timing doesn't matter much; consistency does.</li>
       </ul>
-      <div class="product-pick mt-6 rounded-xl border border-rose/30 bg-rose/5 p-4">
+      <div class="product-pick mt-6 border border-rose/30 bg-rose/5 p-4">
         <p class="text-[10px] uppercase tracking-[0.25em] text-rose">Our pick</p>
         <p class="mt-1"><strong>Aeterna COLLAGEN MAX PRO</strong> — 10 g of Peptan® collagen peptides per 13 g scoop, the dose the placebo-controlled skin trials used, with a hyaluronic-acid matrix, plant ceramides and acerola vitamin C. Bovine, or fish in the Marin C+ version.</p>
         <p class="mt-4"><a href="${PRODUCT_PATH}" class="product-btn">See the product<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a><span class="block sm:inline mt-3 sm:mt-0 sm:ml-3 text-sm text-ink/60">Label facts, prices, the evidence graded.</span></p>

@@ -30,7 +30,7 @@ const barWidth: Record<Evidence, number> = { strong: 100, moderate: 66, emerging
 
     <div class="mt-10 grid md:grid-cols-2 gap-5">
       {actives.map((a) => (
-        <article class="flex flex-col rounded-2xl border border-ink/10 bg-bone/60 p-6">
+        <article class="flex flex-col border border-ink/10 bg-bone/60 p-6">
           <p class="text-[11px] uppercase tracking-widest text-ink/50">{a.supplier} · {a.country}</p>
           <h3 class="font-display text-2xl leading-tight mt-1">{a.name}</h3>
           {a.brand && <p class="text-sm text-ink/55">{a.brand}</p>}
@@ -43,8 +43,8 @@ const barWidth: Record<Evidence, number> = { strong: 100, moderate: 66, emerging
           <p class="mt-4 text-sm text-ink/80 leading-relaxed">{a.role}</p>
 
           <div class="mt-4 flex items-center gap-3">
-            <span class="w-24 h-1.5 rounded-full bg-ink/10 overflow-hidden" aria-hidden="true">
-              <span class="block h-full rounded-full" style={`width:${barWidth[a.evidence]}%;background:${evidenceColor[a.evidence]}`}></span>
+            <span class="w-24 h-1.5 bg-ink/10 overflow-hidden" aria-hidden="true">
+              <span class="block h-full" style={`width:${barWidth[a.evidence]}%;background:${evidenceColor[a.evidence]}`}></span>
             </span>
             <span class="text-[10px] uppercase tracking-widest font-semibold" style={`color:${evidenceColor[a.evidence]}`}>
               {t(locale, `product.evidence.${a.evidence}`)}

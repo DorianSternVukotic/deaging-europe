@@ -48,7 +48,7 @@ const { locale, howTo } = Astro.props;
             playsinline
             preload="metadata"
             aria-label={howTo.video.alt}
-            class="w-full aspect-[9/16] object-cover rounded-2xl bg-bone shadow-md"
+            class="w-full aspect-[9/16] object-cover bg-bone"
           ></video>
           <figcaption class="mt-2 text-xs text-ink/50 text-center lg:text-left">{howTo.video.alt}. No sound.</figcaption>
         </figure>
@@ -60,7 +60,7 @@ const { locale, howTo } = Astro.props;
           <ol class="timeline mt-6 relative border-l border-ink/15 pl-6 space-y-6">
             {howTo.timeline.map((tl) => (
               <li class="relative">
-                <span class="absolute -left-[31px] top-1.5 w-2.5 h-2.5 rounded-full bg-sage ring-4 ring-white" aria-hidden="true"></span>
+                <span class="absolute -left-[31px] top-1.5 w-2.5 h-2.5 bg-sage ring-4 ring-white" aria-hidden="true"></span>
                 <p class="text-[11px] uppercase tracking-widest text-sage font-semibold">{tl.when}</p>
                 <p class="mt-1 text-sm text-ink/80 leading-relaxed">{tl.what}</p>
               </li>

@@ -44,13 +44,12 @@ h1, h2, h3, h4 {
 .prose-anti ol { list-style: decimal; }
 .prose-anti li { margin-block: 0.35em; line-height: 1.65; }
 
-/* "Our pick" button inside a body — the same pill as the site's buy buttons. */
+/* "Our pick" button inside a body — the same block button as the site's buy buttons. */
 .prose-anti a.product-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  border-radius: 9999px;
   background: var(--color-rose);
   color: var(--color-bone);
   font-weight: 600;

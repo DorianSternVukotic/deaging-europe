@@ -172,7 +172,6 @@ const planRows = [
           <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
         </div>
       </div>
-      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
 
     <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
@@ -184,7 +183,7 @@ const planRows = [
           {g.id === 'basics' && (
             <div class="mt-6 grid md:grid-cols-3 gap-4">
               {drivers.map((d) => (
-                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                <a href={`#${d.id}`} class="group block p-5 bg-white border border-ink/10 hover:border-rose/40 transition">
                   <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
                   <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
                   <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
@@ -276,7 +275,7 @@ const planRows = [
                 ].map((pick) => (
                   <a
                     href={`#${pick.id}`}
-                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                    class="pick-card group flex flex-col bg-white border border-ink/10 overflow-hidden hover:border-rose transition"
                   >
                     <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
                     <div class="p-5 flex flex-col flex-1">
@@ -319,17 +318,17 @@ const planRows = [
         ))}
 
         <!-- ════════════ SITUATION MATCHER ════════════ -->
-        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 p-6 md:p-10 border border-ink/5">
           <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
           <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your skin</h2>
           <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
 
           <div class="mt-8 grid gap-2">
             {matcher.map((m) => (
-              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+              <details class="matcher-item group border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
                 <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
                   <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
-                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                  <span class="shrink-0 w-8 h-8 flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
@@ -337,7 +336,7 @@ const planRows = [
                 </summary>
                 <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
                   {m.paths.map((p, i) => (
-                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
                       <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
                       <span>
                         <span class="font-medium text-ink/90">{p.title}</span>
@@ -352,17 +351,17 @@ const planRows = [
         </section>
 
         <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
-        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white border border-ink/5 p-6 md:p-8 overflow-hidden">
           <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
           <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
           <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Rule out the cause, fix the habits, build the cream habit, choose the active for your half, and buy the clinic rung only for the face the cream cannot reach.</p>
 
           <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {planRows.map((r, i) => (
-              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 border border-ink/5 hover:border-rose/40 transition group">
                 <div class="flex items-center justify-between gap-2 mb-2">
                   <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
-                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 bg-sage/15 text-sage">{r.when}</span>
                 </div>
                 <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
                 <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
@@ -372,7 +371,7 @@ const planRows = [
         </section>
 
         <!-- ════════════ REFERENCES ════════════ -->
-        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+        <section id="references" class="scroll-mt-32 bg-white p-8 border border-ink/5">
           <h2 class="font-display text-3xl">References &amp; further reading</h2>
           <p class="mt-2 text-ink/70 text-sm">
             All claims cite peer-reviewed studies, randomised trials, meta-analyses, clinical series or position papers,
@@ -399,7 +398,6 @@ const planRows = [
     details > summary:focus-visible {
       outline: 2px solid var(--color-rose);
       outline-offset: -2px;
-      border-radius: 1rem;
     }
 
     .card[open] > summary { background: rgba(184,130,109,0.04); }

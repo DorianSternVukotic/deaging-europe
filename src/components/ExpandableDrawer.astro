@@ -26,7 +26,7 @@ const { id, title, short, bodyHtml, class: className = '' } = Astro.props;
 <details
   id={id}
   class:list={[
-    'exp-drawer group scroll-mt-32 rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 hover:shadow-sm open:border-rose/40 open:shadow-sm',
+    'exp-drawer group scroll-mt-32 border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40',
     className,
   ]}
 >
@@ -38,7 +38,7 @@ const { id, title, short, bodyHtml, class: className = '' } = Astro.props;
       {short && <p class="mt-1 text-ink/70 text-base leading-snug">{short}</p>}
     </div>
     <span
-      class="caret shrink-0 mt-1 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition"
+      class="caret shrink-0 mt-1 w-8 h-8 flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition"
       aria-hidden="true"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">

@@ -28,7 +28,7 @@ const { locale, studies, guideHref } = Astro.props;
 
       <div class="mt-10 grid md:grid-cols-2 gap-5">
         {studies.map((s) => (
-          <article class="flex flex-col rounded-2xl border border-bone/10 bg-bone/5 p-6">
+          <article class="flex flex-col border border-bone/10 bg-bone/5 p-6">
             <div class="flex items-center justify-between gap-4">
               <p class="text-[11px] uppercase tracking-widest text-bone/55">{s.journal} · {s.year}</p>
               <span class="text-[10px] uppercase tracking-widest font-semibold whitespace-nowrap" style={`color:${evidenceColor[s.evidence]}`}>
@@ -48,7 +48,7 @@ const { locale, studies, guideHref } = Astro.props;
         ))}
       </div>
 
-      <a href={guideHref} class="mt-10 inline-flex items-center gap-2 rounded-full border border-bone/30 px-6 py-3 text-sm font-semibold hover:bg-bone hover:text-ink transition">
+      <a href={guideHref} class="mt-10 inline-flex items-center gap-2 border border-bone/30 px-6 py-3 text-sm font-semibold hover:bg-bone hover:text-ink transition">
         {t(locale, 'product.guide')}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
       </a>

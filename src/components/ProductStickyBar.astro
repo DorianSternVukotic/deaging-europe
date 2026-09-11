@@ -2,7 +2,7 @@
 /**
  * ProductStickyBar — bottom bar with the price and the buy button, on every
  * width. Slides in once the hero's own button has scrolled out of view; on
- * desktop it also carries the variant pills so a reader can switch packs
+ * desktop it also carries the variant chips so a reader can switch packs
  * without scrolling back up.
  */
 interface Props {
@@ -30,13 +30,13 @@ const symbol = currency === 'EUR' ? '€' : `${currency} `;
     {variants.length > 0 && (
       <div class="hidden lg:flex flex-wrap justify-end gap-2 max-w-md">
         {variants.map((v) => (
-          <a href={v.url} target="_blank" rel="sponsored noopener" class="rounded-full border border-ink/15 px-3 py-1 text-xs hover:border-rose hover:text-rose transition whitespace-nowrap">
+          <a href={v.url} target="_blank" rel="sponsored noopener" class="border border-ink/15 px-3 py-1 text-xs hover:border-rose hover:text-rose transition whitespace-nowrap">
             {v.short} <span class="text-ink/45">· {symbol}{v.price}</span>
           </a>
         ))}
       </div>
     )}
-    <a href={buyUrl} target="_blank" rel="sponsored noopener" class="inline-flex items-center gap-2 rounded-full bg-rose px-5 md:px-7 py-3 text-sm md:text-base font-semibold text-bone hover:bg-ink transition whitespace-nowrap">
+    <a href={buyUrl} target="_blank" rel="sponsored noopener" class="inline-flex items-center gap-2 bg-rose px-5 md:px-7 py-3 text-sm md:text-base font-semibold text-bone hover:bg-ink transition whitespace-nowrap">
       {cta}
       <svg class="hidden md:block" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
     </a>
