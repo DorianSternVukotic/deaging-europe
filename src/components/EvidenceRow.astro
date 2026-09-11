@@ -55,8 +55,9 @@ const hasRating = !!s.evidence;
 
     {/* ── Evidence indicator ──
          Mobile: a fixed-width block, so weaker ratings don't trail a long
-         empty track. Desktop (md+): the capped strength bar on a ruled scale, where length
-         still reads as longer = stronger across the sorted list. */}
+         empty track. Desktop (md+): a four-segment ruled bar with the tier word
+         beside it, so length still reads as longer = stronger down the sorted list
+         and every row shows all four segments. */}
     {variant === 'bar' ? (
       <>
         {hasRating ? (
@@ -67,20 +68,21 @@ const hasRating = !!s.evidence;
         ) : (
           <span class="md:hidden shrink-0 w-24 inline-flex items-center justify-center py-1 text-xs uppercase tracking-widest font-semibold bg-ink/10 text-ink/50">info</span>
         )}
-        {hasRating ? (
-          <div class="scale-track hidden md:block shrink-0 md:w-48 h-6 bg-ink/[0.07] relative">
-            <div
-              class="absolute inset-y-0 left-0 flex items-center px-3 min-w-max"
-              style={`width: ${evidenceWidth[evidence]}%; background: ${evidenceColor[evidence]};`}
-            >
-              <span class="text-[10px] uppercase tracking-widest font-semibold text-white">{evidence}</span>
-            </div>
+        <div class="hidden md:flex shrink-0 items-center gap-2.5">
+          <div class:list={['relative w-36 h-4 bg-ink/[0.07]', hasRating && 'scale-track']} aria-hidden="true">
+            {hasRating && (
+              <div
+                class="absolute inset-y-0 left-0"
+                style={`width: ${evidenceWidth[evidence]}%; background: ${evidenceColor[evidence]};`}
+              ></div>
+            )}
           </div>
-        ) : (
-          <div class="hidden md:flex shrink-0 md:w-48 h-6 bg-ink/[0.07] items-center px-3">
-            <span class="text-[10px] uppercase tracking-widest font-semibold text-ink/45">info</span>
-          </div>
-        )}
+          {hasRating ? (
+            <span class="w-16 text-[10px] uppercase tracking-widest font-semibold whitespace-nowrap" style={`color: ${evidenceColor[evidence]};`}>{evidence}</span>
+          ) : (
+            <span class="w-16 text-[10px] uppercase tracking-widest font-semibold text-ink/45">info</span>
+          )}
+        </div>
       </>
     ) : (
       <div class="shrink-0 md:w-48 flex items-center gap-2">
@@ -159,16 +161,22 @@ const hasRating = !!s.evidence;
 </details>
 
 <style>
-  /* The bar sits on a ruled scale: a hairline tick at each of the four tiers
-     (limited 25 · emerging 50 · moderate 75 · strong 100), so a shorter fill
-     shows how many tiers remain rather than just being a shorter shape. */
-  .scale-track {
+  /* The bar is a ruled scale: a hairline tick at each of the four tiers
+     (limited 25 · emerging 50 · moderate 75 · strong 100), drawn over the
+     whole track including the fill, so every rating shows all four segments
+     and how many are filled. The tier word sits beside the bar, never under
+     a tick. Unrated rows get the plain track without the scale. */
+  .scale-track::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
     background-image: repeating-linear-gradient(
       to right,
       transparent 0,
       transparent calc(25% - 1px),
-      rgba(26, 20, 16, 0.18) calc(25% - 1px),
-      rgba(26, 20, 16, 0.18) 25%
+      rgba(26, 20, 16, 0.25) calc(25% - 1px),
+      rgba(26, 20, 16, 0.25) 25%
     );
   }
 </style>
