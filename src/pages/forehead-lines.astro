@@ -1,0 +1,440 @@
+---
+/**
+ * The forehead-lines guide (/forehead-lines) — problem-template variant of
+ * the collagen-guide layout: title, description, a full-width explainer
+ * video, the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/forehead-lines';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Forehead lines — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Forehead lines are folded by the only muscle that lifts your brows — and in many foreheads that muscle is holding heavy lids up. The eyelid test that tells you which forehead you have, toxin, filler, ultrasound, eyelid surgery and the brow lift graded by trial evidence, and the dropped brow in numbers.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-botox-heavy': 'If your forehead is working',
+  'faq-static': 'Not on day one',
+  'faq-glabella': 'Tug of war',
+  'faq-one-side': 'The droopier lid',
+  'faq-filler-safe': 'Highest-risk site',
+  'faq-brow-lift-or-botox': 'Depends on the lids',
+  'faq-how-long': '3–4 months',
+  'faq-prevent': 'SPF, glasses, light toxin',
+  'faq-timeline': 'A week to six months',
+  'faq-cost-ladder': '€20 / month to €8,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Lines only when I raise my brows',
+    paths: [
+      { id: 'type-dynamic', title: 'Dynamic lines', why: 'the muscle alone — the stage where toxin works cleanly' },
+      { id: 'workup', title: 'The eyelid test first', why: 'a dynamic-looking forehead can still be a working one' },
+      { id: 'inj-toxin-frontalis', title: 'Toxin with the frown lines', why: 'two phase 3 trials, light and high' },
+      { id: 'home-spf', title: 'Sunscreen and a hat', why: 'keeps the fold from printing' },
+    ],
+  },
+  {
+    concern: 'Lines that stay even when my forehead is relaxed',
+    paths: [
+      { id: 'type-static', title: 'Etched lines', why: 'the fold has printed — toxin stops it, skin work removes it' },
+      { id: 'inj-toxin-frontalis', title: 'Toxin across cycles', why: 'etched lines shallow as the folding stops' },
+      { id: 'home-retinoid', title: 'A retinoid underneath', why: 'rebuilds the crease the muscle no longer folds' },
+      { id: 'inj-ha-static', title: 'A superficial filler for what remains', why: '83% improved at 12 weeks — with the arterial caveat' },
+    ],
+  },
+  {
+    concern: 'My lids feel heavy, or I raise my brows to see',
+    paths: [
+      { id: 'type-compensatory', title: 'The working forehead', why: 'the frontalis is holding your eyes open' },
+      { id: 'inj-toxin-glabella-first', title: 'Frown lines only, first', why: 'forehead lines fell from grade 3 to 1 without touching the frontalis' },
+      { id: 'clinic-blepharoplasty', title: 'Eyelid surgery if the lids are the cause', why: 'frontalis activity halved at a year in the randomised trial' },
+      { id: 'clinic-hifu-brow', title: 'Or an ultrasound brow lift', why: 'about 2 mm for a year, no surgery' },
+    ],
+  },
+  {
+    concern: 'Toxin made my brows drop last time',
+    paths: [
+      { id: 'safety-toxin-brow', title: 'What happened', why: 'the wrong forehead, the wrong site or too much dose' },
+      { id: 'type-compensatory', title: 'Check whether your forehead is working', why: 'the eyelid test' },
+      { id: 'inj-microbotox', title: 'Micro-dosing next time', why: 'surface fibres only, brow height preserved in reports' },
+      { id: 'inj-toxin-glabella-first', title: 'Or the frown lines alone', why: 'the plan with no downside' },
+    ],
+  },
+  {
+    concern: 'Lines on one side of my forehead only',
+    paths: [
+      { id: 'type-asymmetric', title: 'One-sided lines', why: 'all 28 in the series had ptosis on that side' },
+      { id: 'workup', title: 'Compare the lids in a photograph', why: 'the lined side shows less upper lid' },
+      { id: 'clinic-blepharoplasty', title: 'The lid, not the line', why: 'an oculoplastic opinion before any toxin on that side' },
+    ],
+  },
+  {
+    concern: 'Deep furrows in a thick forehead that toxin only softens',
+    paths: [
+      { id: 'type-static', title: 'Etched furrows', why: 'skin and structure, not just muscle' },
+      { id: 'inj-toxin-frontalis', title: 'Toxin as the base', why: 'stops the folding' },
+      { id: 'inj-forehead-volume', title: 'Support on the bone', why: 'a convex forehead folds less — 132-patient double-blind trial' },
+      { id: 'clinic-fractional-laser', title: 'Resurfacing for the print', why: 'after the muscle is quiet' },
+    ],
+  },
+  {
+    concern: "I'm in my twenties and want to prevent them",
+    paths: [
+      { id: 'faq-prevent', title: 'Prevention in the twenties', why: 'how often the skin folds and how well it springs back' },
+      { id: 'home-spf', title: 'Sunscreen and a hat', why: 'the most sun-exposed skin on the face' },
+      { id: 'home-eyes', title: 'Glasses and sunglasses', why: 'so the brows stay down' },
+      { id: 'inj-toxin-frontalis', title: 'Light toxin when a line lingers', why: 'the strongest evidence on the page' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: the raise test, the eyelid test — and photograph',
+    when: 'Before any consultation',
+    blurb: 'Dynamic or etched; working or resting; both sides compared. A straight-on photograph at rest and raised, with the brows’ resting height visible.',
+  },
+  {
+    id: 'home-spf',
+    step: 'Day 1 onward: the skin base and the habits',
+    when: 'Whatever else you do',
+    blurb: 'Sunscreen and a hat, a retinoid, an eye test and sunglasses; notice the eyebrows when you talk.',
+  },
+  {
+    id: 'inj-toxin-frontalis',
+    step: 'Month 1: the frown lines, then the frontalis lightly and high',
+    when: 'Reviewed at two weeks',
+    blurb: 'Glabella first; small doses above the convergence line, nothing within a centimetre of the brow. For the working forehead, the glabella alone.',
+  },
+  {
+    id: 'clinic-blepharoplasty',
+    step: 'Months 3–12: skin work for the residue, or the lid and the brow',
+    when: 'Once the muscle has been quiet for a cycle',
+    blurb: 'A superficial filler or resurfacing for the etched print; eyelid surgery, an ultrasound brow lift or a brow lift when the forehead was working.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="forehead-lines" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Forehead lines (horizontal lines)</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Forehead lines, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Folded by the only muscle that lifts your brows &mdash; a muscle that, in many foreheads, is also holding
+          heavy lids out of your eyes. Below, the eyelid test that tells you which forehead you have, every treatment
+          from toxin to the brow lift graded by the trials behind it, and the dropped brow in numbers.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Forehead lines — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'inj' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The convergence line, the five points and the centimetre above the brow" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Resting, working and one-sided — the three foreheads in the eyelid test" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'inj-toxin-frontalis',
+                    kind: 'For dynamic lines',
+                    title: 'Toxin with the frown lines',
+                    blurb: 'Two phase 3 trials — 61% two grades better at a month against 0% on placebo — and a label that prints the trade: brow droop 2%, eyelid droop 2%.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'clinic-blepharoplasty',
+                    kind: 'When the lids are the cause',
+                    title: 'Upper blepharoplasty',
+                    blurb: 'Fix the lid and the frontalis stands down: its electrical activity halved at a year in a 54-patient randomised trial, with fewer headaches.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'inj-ha-static',
+                    kind: 'For etched lines',
+                    title: 'A superficial filler, by cannula',
+                    blurb: 'The one filler licensed for forehead lines in Europe improved 83% at 12 weeks; the forehead is the highest-risk site for filler blindness, so expert hands only.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'clinic-hifu-brow',
+                    kind: 'For the low brow',
+                    title: 'An ultrasound brow lift',
+                    blurb: 'About 2 mm of brow for a year in a 42-person randomised blinded study — the non-surgical way to unload a working forehead.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your forehead</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. The eyelid test first, the frown lines second, the frontalis lightly, and the lid or brow when the forehead was working.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, phase 3 trials, prescribing information, consensus statements or
+            clinical series, linked inline within each section. Primary sources: PubMed/PMC, Dermatologic Surgery,
+            Plastic and Reconstructive Surgery, Aesthetic Plastic Surgery, Aesthetic Surgery Journal, the British
+            Journal of Dermatology, DailyMed and the Journal of Plastic, Reconstructive &amp; Aesthetic Surgery.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. The muscle that makes these lines is the muscle that keeps your
+          brows and eyelids out of your eyes, and the arteries under this skin connect to the eye &mdash; toxin here
+          is a matter of small doses and exact placement, filler belongs to an expert with hyaluronidase in the room,
+          and a one-sided forehead deserves an eyelid examination before anything.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

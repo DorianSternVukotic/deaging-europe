@@ -1,0 +1,438 @@
+---
+/**
+ * The dull-skin guide (/dull-skin) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video,
+ * the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/dull-skin';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Dull, uneven skin — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Glow is light reflected evenly off a smooth, hydrated, evenly coloured surface; dullness is what slowed turnover, dehydration, uneven colour, stretched pores and a stripped barrier do to it. The self-checks that sort them, sunscreen to retinoids to peels, boosters, micro-toxin and lasers graded by trial evidence, and the habits with experiments that measure the face the next morning.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-one-product': 'Sunscreen, then a retinoid',
+  'faq-exfoliate-how-often': '2–4 nights, one acid',
+  'faq-hydrafacial': 'For an afternoon',
+  'faq-skinvive': 'Hydration, six months',
+  'faq-water': 'A little, if you drink little',
+  'faq-diet': 'Colour, within a month',
+  'faq-dermaplaning': 'Hair removal with a glow',
+  'faq-timeline': 'Days to three months',
+  'faq-cost-ladder': 'Free to €1,800',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Rough, flaky, and dry no matter what I put on',
+    paths: [
+      { id: 'type-rough', title: 'Slow turnover and dehydration', why: 'dead cells lingering on a dry outer layer' },
+      { id: 'home-moisturiser', title: 'A humectant-and-barrier moisturiser', why: 'the fastest change on the page' },
+      { id: 'home-retinoid', title: 'A retinoid', why: 'speeds the turnover from beneath — flakier first, smoother at three months' },
+      { id: 'home-aha-pha', title: 'Then one gentle acid', why: 'polyhydroxy first if you sting' },
+    ],
+  },
+  {
+    concern: 'Sallow, grey, tired-looking even after a good night',
+    paths: [
+      { id: 'type-tone', title: 'Colour, not texture', why: 'compare the face with the inner arm' },
+      { id: 'home-sleep-smoke', title: 'A week of eight-hour nights, no cigarettes', why: 'one lost night yellowed 28 faces on a spectrophotometer' },
+      { id: 'home-niacinamide-vitc', title: 'Niacinamide and vitamin C', why: 'sallowness and blotchiness reduced in the split-face trial' },
+      { id: 'home-diet-water', title: 'Three more portions a day', why: 'skin colour shifted within four weeks in the randomised trial' },
+    ],
+  },
+  {
+    concern: 'Blotchy, uneven colour — brown patches, red patches',
+    paths: [
+      { id: 'type-tone', title: 'Mottled pigment and vessels', why: 'sun, pollution and dilated capillaries' },
+      { id: 'home-sunscreen', title: 'Daily sunscreen', why: 'mottling improved 40–52% in a year on its own' },
+      { id: 'clinic-ipl', title: 'Intense pulsed light', why: 'pigment and vessels improved in the blinded trial — fair to olive skin' },
+      { id: 'safety-devices-darker-skin', title: 'A dermatoscope first', why: 'melasma gets worse with every device on this page' },
+    ],
+  },
+  {
+    concern: 'Big pores and an oily T-zone',
+    paths: [
+      { id: 'type-pores', title: 'Sebum, slack and follicle size', why: 'the three causes in the review that defined them' },
+      { id: 'home-bha', title: 'Salicylic acid on the T-zone', why: 'the acid that clears the pore rather than the surface' },
+      { id: 'inj-microtoxin', title: 'Intradermal micro-doses of toxin', why: 'pores and sebum down for about four months in split-face trials' },
+      { id: 'clinic-nafl-thulium', title: 'A non-ablative fractional laser', why: 'pore counts down 29% in the split-face comparison' },
+    ],
+  },
+  {
+    concern: 'I want "glass skin" before an event',
+    paths: [
+      { id: 'inj-microdroplet-ha', title: 'Microdroplet hyaluronic injections', why: '58% smoother against 5% untreated, six months, book a month ahead' },
+      { id: 'clinic-hydradermabrasion', title: 'A hydradermabrasion session the day before', why: 'an afternoon of smooth, hydrated skin' },
+      { id: 'faq-skinvive', title: 'What glass skin actually is', why: 'a hydrated outer layer and a ring light' },
+    ],
+  },
+  {
+    concern: 'Darker skin, and I am worried about lasers and peels',
+    paths: [
+      { id: 'safety-devices-darker-skin', title: 'What light does in Fitzpatrick IV–VI', why: 'darkening, and permanent lightening from repeated toning' },
+      { id: 'home-retinoid', title: 'A retinoid and sunscreen', why: 'no pigment risk, the strongest evidence' },
+      { id: 'clinic-superficial-peels', title: 'Superficial peels at the right depth', why: 'mandelic and lactic before glycolic' },
+    ],
+  },
+  {
+    concern: 'My skin stings, looks shiny-red and duller than before I started',
+    paths: [
+      { id: 'safety-over-exfoliation', title: 'The stripped barrier', why: 'the commonest cause of dullness in people who buy products' },
+      { id: 'home-moisturiser', title: 'A month of ceramide moisturiser and nothing else', why: 'the barrier rebuilds in weeks' },
+      { id: 'type-dehydrated', title: 'Dehydrated, not dry', why: 'water first, then one active at a time' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: raking light, the blot, the pinch — and a four-week diary',
+    when: 'Before anything',
+    blurb: 'Texture, oil, dehydration or colour; a daylight photograph without make-up; sleep, cigarettes and every product written down; melasma and rosacea ruled out.',
+  },
+  {
+    id: 'home-sunscreen',
+    step: 'Day 1 onward: the four with trials, and eight hours',
+    when: 'Whatever else you do',
+    blurb: 'Sunscreen every morning, a retinoid at night, niacinamide, a moisturiser that matches dehydrated or dry; sleep, no cigarettes, three more portions; every scrub and brush in the bin.',
+  },
+  {
+    id: 'home-aha-pha',
+    step: 'Months 1–3: one exfoliant, then the clinic by type',
+    when: 'Judged at four weeks each',
+    blurb: 'One acid two to four nights a week; a course of superficial peels for texture, micro-toxin for oily pores, intense pulsed light or the thulium laser for colour — after a dermatoscope.',
+  },
+  {
+    id: 'inj-microdroplet-ha',
+    step: 'Month 3 onward: the booster for what skincare cannot hydrate',
+    when: 'Once the routine has had three months',
+    blurb: 'Microdroplet hyaluronic injections for the dehydrated, crepey surface, judged at a month and repeated at six to nine; everything else compared against the daylight photograph.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="dull-skin" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Uneven texture &amp; dullness</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Dull, uneven skin, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Glow is light reflected evenly off a smooth, hydrated, evenly coloured surface &mdash; and dullness is what
+          slowed turnover, dehydration, uneven colour, stretched pores and a stripped barrier do to it. Below, the
+          self-checks that sort them, every treatment from sunscreen to lasers graded by the trials behind it, and
+          the habits with experiments that measure the face the next morning.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Dull skin — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'home' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Why a rough, dry surface scatters light — and what a hydrated one does instead" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Raking light across the cheek — the same skin before and after a month of the routine" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-sunscreen',
+                    kind: 'The base',
+                    title: 'Sunscreen and a retinoid',
+                    blurb: 'Texture, clarity and mottling 40–52% better in a year with sunscreen alone; eight randomised tretinoin trials for the turnover that makes skin dull.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'home-niacinamide-vitc',
+                    kind: 'For colour',
+                    title: 'Niacinamide',
+                    blurb: 'Sallowness, red blotchiness, mottled pigment and texture all improved against vehicle in a 12-week double-blind split-face trial — and it lowers sebum for the pore type.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'inj-microdroplet-ha',
+                    kind: 'For the surface skincare cannot hydrate',
+                    title: 'Microdroplet hyaluronic injections',
+                    blurb: 'The one glow injection with a proper trial: smoothness improved in 58% against 5% of untreated controls in 202 people, holding six months.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'clinic-nafl-thulium',
+                    kind: 'For colour and pores',
+                    title: 'The thulium laser',
+                    blurb: 'A 17-study review, and in 27 patients three sessions improved pores, pigment and epidermal thickness with no post-inflammatory darkening — though not texture.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your skin</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Diagnose the type, fix the habits and the four products first, exfoliate once, and buy the clinic rung that matches the sign.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, randomised trials, meta-analyses or clinical series, linked inline
+            within each section. Primary sources: PubMed/PMC, Dermatologic Surgery, the Journal of Investigative
+            Dermatology, the Journal of Cosmetic Dermatology, Skin Research and Technology, PLOS One, JAMA Dermatology
+            and Clinical, Cosmetic and Investigational Dermatology.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. A stinging, shiny-red, darkening surface is a stripped barrier and
+          needs a month off, not another exfoliant; a symmetrical brown mask is melasma until a dermatoscope says
+          otherwise and worsens with every light and laser on this page; and intradermal toxin is measured in single
+          units by a clinician who has done it before.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

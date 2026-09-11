@@ -1,0 +1,438 @@
+---
+/**
+ * The nasolabial-folds guide (/nasolabial-folds) — problem-template variant
+ * of the collagen-guide layout: title, description, a full-width explainer
+ * video, the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/nasolabial-folds';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Nasolabial folds (smile lines) — every treatment graded by evidence | DeAging Europe';
+const description =
+  'A nasolabial fold is a seam, not a wrinkle: it deepens as the cheek descends, the bone beside the nose recedes and the skin thins. The recline test that sorts folds, filler, collagen stimulators, threads, devices and surgery graded by trial evidence, and the artery under the fold in numbers.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-normal': 'Smiling yes; at rest, your call',
+  'faq-fill-or-cheek': 'Support first, then fold',
+  'faq-how-long': 'About a year (HA)',
+  'faq-facelift': 'Softens, rarely erases',
+  'faq-threads': 'Rarely',
+  'faq-weight': 'Partly; replace volume',
+  'faq-sleep': 'Plausibly, over decades',
+  'faq-permanent': 'PMMA, fat, surgery',
+  'faq-timeline': 'Days to a year',
+  'faq-cost-ladder': '€300 / year to €20,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'The fold softens or vanishes when I lie on my back',
+    paths: [
+      { id: 'type-fat', title: 'The heavy cheek', why: 'descent and deflation above an anchored seam' },
+      { id: 'inj-midface', title: 'Medial cheek and nose-to-cheek support', why: 'props the tissue above the fold — if it goes in the right place' },
+      { id: 'inj-ha-fold', title: 'Then a little under the fold', why: 'the 51-trial evidence, with half the gel' },
+      { id: 'clinic-facelift', title: 'Surgery, if there are jowls and a neck too', why: 'the only treatment that repositions — with the fold as a bonus' },
+    ],
+  },
+  {
+    concern: 'A deep groove beside my nose that stays when I lie down',
+    paths: [
+      { id: 'type-bone', title: 'Bone retrusion', why: 'the maxilla and pyriform rim have receded' },
+      { id: 'inj-pyriform', title: 'Deep pyriform-space support', why: 'rebuilds the shelf the fold hangs from' },
+      { id: 'inj-ha-fold', title: 'Then the fold', why: 'medium gel under the crease, never flat' },
+      { id: 'clinic-dental', title: 'Check the teeth', why: 'lost upper teeth resorb the bone underneath' },
+    ],
+  },
+  {
+    concern: 'A fine crease in thin, sun-damaged skin, without much of a roll above it',
+    paths: [
+      { id: 'type-skin', title: 'The fine crease', why: 'the skin has lost recoil — deep volume is wasted here' },
+      { id: 'home-retinoid', title: 'A retinoid and sunscreen', why: 'the wrinkle toolkit, for the skin type only' },
+      { id: 'inj-ha-fold', title: 'A soft gel threaded along the crease', why: 'superficial and sparing, with a cannula' },
+      { id: 'clinic-subcision', title: 'Subcision for a tethered crease', why: 'releases the septa the seam is stitched with' },
+    ],
+  },
+  {
+    concern: 'It only shows when I smile — and my gums show too',
+    paths: [
+      { id: 'type-dynamic-muscle', title: 'The fold that only appears on smiling', why: 'normal anatomy — do not fill it' },
+      { id: 'inj-toxin', title: 'Toxin for the gummy smile only', why: 'a few units beside the nose lower the lip and soften the medial fold' },
+    ],
+  },
+  {
+    concern: 'I lost a lot of weight and the folds deepened',
+    paths: [
+      { id: 'weight-sleep', title: 'What weight loss did', why: 'deep facial fat leaves with body fat' },
+      { id: 'home-weight', title: 'Keep the weight off, replace the volume', why: 'the trade, stated plainly' },
+      { id: 'inj-midface', title: 'Medial cheek support', why: 'put the volume back where it came from' },
+      { id: 'inj-fat', title: 'Fat grafting for large losses', why: 'your own tissue, matched hyaluronic acid in the one randomised comparison' },
+    ],
+  },
+  {
+    concern: 'I want the longest-lasting option',
+    paths: [
+      { id: 'faq-permanent', title: 'What actually lasts', why: 'and what it costs to have it not dissolve' },
+      { id: 'inj-caha', title: 'Calcium hydroxylapatite', why: '79% of folds still improved at a year against 43% for HA' },
+      { id: 'inj-plla', title: 'Poly-L-lactic acid', why: 'to 25 months in the pivotal extension' },
+      { id: 'inj-pmma', title: 'PMMA, with eyes open', why: 'five-year data on 1,008 patients, 1.7% granulomas, permanent' },
+    ],
+  },
+  {
+    concern: 'I am nervous about filler near my nose',
+    paths: [
+      { id: 'safety-vascular-nlf', title: 'The artery under the fold', why: 'the numbers, and what makes it safer' },
+      { id: 'inj-ha-fold', title: 'Hyaluronic acid by cannula', why: 'reversible, and six times fewer occlusions than a needle' },
+      { id: 'clinic-rf', title: 'Or a device, for mild laxity', why: 'no artery risk, a fifth of the effect' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: recline, smile, run a finger — and photograph',
+    when: 'Before any consultation',
+    blurb: 'Descent, bone or skin; smiling-only is normal; teeth and dentures checked; a photograph from below in one light.',
+  },
+  {
+    id: 'home-spf-quit',
+    step: 'Day 1 onward: the skin base and the two habits',
+    when: 'Whatever else you do',
+    blurb: 'Sunscreen, no smoking, a retinoid along the fold; back-sleeping if you can; lose weight slowly and budget for volume after.',
+  },
+  {
+    id: 'inj-midface',
+    step: 'Month 1: support first, then the fold',
+    when: 'Reviewed at two weeks',
+    blurb: 'Deep medial cheek and, for the bone type, the pyriform aperture — then a medium gel under the crease by cannula, stopping while the fold is still there.',
+  },
+  {
+    id: 'inj-caha',
+    step: 'Months 12–24: trade up, or reposition',
+    when: 'Once you know how your fold behaves',
+    blurb: 'Calcium hydroxylapatite or PLLA for one to two years a round; a facelift with fat grafting only if jowls and neck justify it.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="nasolabial-folds" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Nasolabial folds (smile lines)</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Nasolabial folds, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          A seam, not a wrinkle: it is in every smile at every age, and it deepens at rest as the cheek above it
+          descends, the bone beside the nose recedes and the skin thins. Below, the recline test that sorts folds,
+          every treatment from a syringe to a facelift graded by the trials behind it, and the artery under the
+          fold in numbers.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Nasolabial folds — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'inj' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Support first, then the fold — where each syringe goes" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Heavy cheek, bony groove, thin crease — the three folds from below" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'inj-ha-fold',
+                    kind: 'For the fold',
+                    title: 'Hyaluronic acid under the crease',
+                    blurb: '51 randomised trials in 4,097 people; wrinkle scores from 3.2 to 1.8 at a month and 2.5 at a year. Reversible, by cannula, never flat.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'inj-midface',
+                    kind: 'Support first',
+                    title: 'Medial cheek and pyriform support',
+                    blurb: 'Props the tissue above the seam and halves what the fold needs — placed medially, where the imaging says it works, not on the cheekbone.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'inj-caha',
+                    kind: 'For longevity',
+                    title: 'Calcium hydroxylapatite',
+                    blurb: 'Two randomised split-face trials: 79% of folds still improved at twelve months against 43% for hyaluronic acid. Firmer, longer, no eraser.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'clinic-facelift',
+                    kind: 'For true descent',
+                    title: 'A facelift — for the jowls, with the fold as a bonus',
+                    blurb: 'The only treatment that repositions the cheek; a 16-study review finds the fold itself softened, not reliably erased.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your folds</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. The skin first, the support second, the fold third, the knife last and only for the right reasons.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, pivotal-trial reports, meta-analyses or clinical series, linked
+            inline within each section. Primary sources: PubMed/PMC, Plastic and Reconstructive Surgery, Dermatologic
+            Surgery, the Journal of the American Academy of Dermatology, Aesthetic Surgery Journal, the Journal of
+            Cosmetic Dermatology and the American Academy of Ophthalmology.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. The facial artery runs under this fold &mdash; filler here belongs
+          to a trained injector with a cannula and hyaluronidase in the room, and the fold itself should be supported
+          and softened, never filled flat.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

@@ -1,0 +1,432 @@
+---
+/**
+ * The fine-lines & wrinkles guide (/wrinkles) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video, the
+ * three drivers as cards, evidence strength as the primary visual signal, one
+ * interactive block (situation matcher) and a month-by-month action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/wrinkles';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Fine lines & wrinkles — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Fine lines, expression lines, deep folds and lip lines are different problems. What causes each, every treatment from sunscreen to a deep peel graded by trial evidence, and a plan by wrinkle type.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-retinol-vs-tretinoin': 'Tretinoin, if you can',
+  'faq-when-start': 'SPF now; retinoid late 20s',
+  'faq-timeline': 'Hours to 12 weeks',
+  'faq-botox-forever': 'No',
+  'faq-lines-vs-folds': 'Folds need filler',
+  'faq-eye-cream': 'No',
+  'faq-lip-lines': 'Resurfacing + toxin',
+  'faq-collagen-drinks': 'Modestly',
+  'faq-pillow': 'Plausible, cheap',
+  'faq-cost-ladder': '€20 / month to €5,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Fine lines and crepey texture on the cheeks or under the eyes',
+    paths: [
+      { id: 'home-tretinoin', title: 'Tretinoin (or a stated-strength retinol)', why: 'the one cream that rebuilds the upper dermis — decades of trials' },
+      { id: 'home-spf', title: 'Daily sunscreen', why: '24% less measured aging over 4.5 years in the only prevention trial' },
+      { id: 'clinic-nafl', title: 'Non-ablative fractional laser', why: 'texture and fine lines with a day or two of redness' },
+    ],
+  },
+  {
+    concern: 'Lines that appear only when I frown, squint or raise my brows',
+    paths: [
+      { id: 'inj-toxin', title: 'Botulinum toxin', why: 'dynamic lines are its home territory — 77–89% responders at a month' },
+      { id: 'home-tretinoin', title: 'Plus the retinoid base', why: 'so the skin between doses keeps improving' },
+    ],
+  },
+  {
+    concern: 'Lines that stay even when my face is still (etched forehead, crow’s feet)',
+    paths: [
+      { id: 'inj-toxin', title: 'Toxin first', why: 'stops the folding so the dermis can recover' },
+      { id: 'clinic-ablative', title: 'Then resurfacing', why: 'an ablative fractional laser rebuilds the floor of an etched line' },
+      { id: 'inj-ha-lines', title: 'A thin filler for the deepest grooves', why: 'in the ones that resist both' },
+    ],
+  },
+  {
+    concern: 'Deep folds from nose to mouth or mouth to chin',
+    paths: [
+      { id: 'type-folds', title: 'Read this first', why: 'these are volume and descent, not wrinkles — and why cream fails' },
+      { id: 'inj-ha-folds', title: 'Hyaluronic-acid filler', why: '~80% still responding at a year; reversible' },
+      { id: 'inj-plla', title: 'Or a collagen stimulator', why: 'slower, subtler, up to 25 months' },
+    ],
+  },
+  {
+    concern: 'Vertical lip lines',
+    paths: [
+      { id: 'type-perioral', title: 'Why they are the hardest lines', why: 'thin skin, a pursing muscle, sun and lost volume' },
+      { id: 'clinic-ablative', title: 'Fractional ablative laser', why: 'rebuilds the dermis where creams cannot reach' },
+      { id: 'clinic-peel-deep', title: 'Or a phenol–croton oil peel', why: 'the most powerful single treatment for this zone, in fair skin' },
+      { id: 'inj-ha-lines', title: 'Plus a little toxin and thin filler', why: 'for the pursing and the deepest grooves' },
+    ],
+  },
+  {
+    concern: 'Creases from sleeping, or lines on my chest',
+    paths: [
+      { id: 'type-sleep', title: 'Sleep wrinkles', why: 'mechanical, plausible, and thinly evidenced' },
+      { id: 'home-silicone', title: 'Silicone patches and back-sleeping', why: 'cheap experiments; hours of effect' },
+      { id: 'home-spf', title: 'Sunscreen to the chest', why: 'where the real damage is' },
+    ],
+  },
+  {
+    concern: "I'm in my twenties and want to prevent all of it",
+    paths: [
+      { id: 'why-early', title: 'Prevention in numbers', why: 'the only randomised prevention evidence costs €20 a month' },
+      { id: 'home-retinol', title: 'A retinoid from the late twenties', why: 'the dermatologist consensus, and the trials behind it' },
+      { id: 'inj-preventive', title: '"Baby Botox" — read before buying', why: 'one pair of twins is the evidence' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: read your face and photograph it',
+    when: 'Before buying anything',
+    blurb: 'The stretch test sorts surface lines from etched ones from folds; same-light photos are the only honest judge.',
+  },
+  {
+    id: 'safety-retinoids',
+    step: 'Weeks 1–8: the retinoid ramp',
+    when: 'Sunscreen from day one',
+    blurb: 'Two or three nights a week, buffered; dryness peaks at week three and passes. Most people quit here — don’t.',
+  },
+  {
+    id: 'faq-timeline',
+    step: 'Months 3–6: first change',
+    when: 'Compare photos, not mirrors',
+    blurb: 'Fine lines soften and texture evens; toxin, if you added it, has peaked and faded once by now.',
+  },
+  {
+    id: 'faq-cost-ladder',
+    step: 'Month 6–12: add the next rung',
+    when: 'Decide with a dermatologist',
+    blurb: 'Toxin for what still moves, filler for what has folded, resurfacing for what is etched — never skipping the base.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="wrinkles" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Fine lines &amp; wrinkles</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Wrinkles, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Fine lines, expression lines, deep folds and lip lines are four different problems, and the tool that
+          fixes one does little for the others. Below, what causes each, every treatment graded by the trials
+          behind it, and a plan by wrinkle type.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 6 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Wrinkles — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'inj' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Toxin, filler, laser — what each one actually does" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The four wrinkle types, mapped on a face" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per wrinkle type — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-tretinoin',
+                    kind: 'The base',
+                    title: 'Tretinoin + daily SPF',
+                    blurb: 'The only prevention with randomised trials, and the one cream that changes the dermis. €20–50 a month.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'inj-toxin',
+                    kind: 'For expression lines',
+                    title: 'Botulinum toxin',
+                    blurb: 'The most-studied cosmetic treatment there is: 77–89% responders at a month, three to four months a dose.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'inj-ha-folds',
+                    kind: 'For folds',
+                    title: 'Hyaluronic-acid filler',
+                    blurb: 'Regulator-grade trials, ~80% responding at a year, and reversible on demand. Treat the cheek, not just the line.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'clinic-ablative',
+                    kind: 'For etched lines',
+                    title: 'Fractional ablative laser',
+                    blurb: 'Rebuilds the dermis under crow’s feet and lip lines; results last years, with a week of downtime.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your lines</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. The base comes first, whatever else you add.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, pivotal-trial reports or regulatory documents, linked
+            inline within each section. Primary sources: PubMed/PMC, the Annals of Internal Medicine, the
+            Journal of the American Academy of Dermatology, the British Journal of Dermatology, Dermatologic
+            Surgery, Plastic and Reconstructive Surgery, JAMA Dermatology and FDA documents.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Retinoids are avoided in pregnancy; injectables and
+          resurfacing carry rare but serious risks that depend on who performs them &mdash; see the safety
+          drawers and choose a licensed clinician who examines your face before quoting a treatment.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

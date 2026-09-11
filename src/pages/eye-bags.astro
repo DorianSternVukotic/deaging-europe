@@ -1,0 +1,438 @@
+---
+/**
+ * The under-eye bags & puffy eyes guide (/eye-bags) — problem-template variant
+ * of the collagen-guide layout: title, description, a full-width explainer
+ * video, the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/eye-bags';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Under-eye bags & puffy eyes — every fix graded by evidence | DeAging Europe';
+const description =
+  'An eye bag is fat, fluid or a shadow — three tests tell you which. Every fix from a cold spoon to lower blepharoplasty graded by trial evidence, the under-eye filler risks in numbers, and when puffy eyes are a medical problem.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-morning': 'Fluid',
+  'faq-permanent': 'Fluid yes, fat no',
+  'faq-filler-or-surgery': 'Hollow vs bulge',
+  'faq-eye-cream': 'Not for fat',
+  'faq-age-young': 'Yes',
+  'faq-dark-circles': 'Related, not same',
+  'faq-timeline': 'Minutes to 3 months',
+  'faq-surgery-lasts': '10–15+ years',
+  'faq-crying-hangover': 'Cold, upright, caffeine',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Puffy in the morning, gone by lunch',
+    paths: [
+      { id: 'type-fluid', title: 'The fluid bag', why: 'plumbing, not anatomy — and the one type that is free to fix' },
+      { id: 'home-sleep-salt-alcohol', title: 'Sleep, salt, alcohol, a second pillow', why: 'the whole treatment' },
+      { id: 'home-cold', title: 'Cold and caffeine for the morning itself', why: 'an hour of effect, no lasting change' },
+    ],
+  },
+  {
+    concern: 'A pouch that is there all day and bulges when I look up',
+    paths: [
+      { id: 'type-fat', title: 'The fat bag', why: 'orbital fat through a weak membrane — nothing in a jar reaches it' },
+      { id: 'surg-lower-bleph', title: 'Transconjunctival blepharoplasty', why: 'the only treatment that moves or removes it; 1% revision in 200 cases' },
+      { id: 'faq-filler-or-surgery', title: 'Why not filler?', why: 'gel over a bulge makes a bigger bulge' },
+    ],
+  },
+  {
+    concern: "A hollow or shadow under the eye that sleep doesn't fix",
+    paths: [
+      { id: 'type-hollow', title: 'The tear trough', why: 'a groove whose shadow reads as a bag' },
+      { id: 'inj-tear-trough', title: 'Filler, in expert hands', why: '87% responders at three months — and the safety drawer first' },
+      { id: 'safety-filler-eye', title: 'The risks in numbers', why: 'swelling in a fifth, malar edema up to 11%, the rare emergency' },
+    ],
+  },
+  {
+    concern: 'Puffiness lower down, on the cheekbone, that never goes',
+    paths: [
+      { id: 'type-festoons', title: 'Festoons and malar mounds', why: 'the hardest problem on this page — and why filler makes it worse' },
+      { id: 'inj-tetracycline', title: 'Tetracycline injections', why: 'about a 50% success rate for fluid-dominant festoons' },
+      { id: 'surg-festoon', title: 'Festoon surgery', why: 'the definitive answer when skin and muscle are the content' },
+    ],
+  },
+  {
+    concern: 'Dark circles more than bags',
+    paths: [
+      { id: 'type-dark-circles', title: 'Pigment, vessels or shadow', why: 'stretch the skin and tilt the head to tell them apart' },
+      { id: 'home-retinoid', title: 'A retinoid and sunscreen on the bone', why: 'the base for pigment and thin skin' },
+      { id: 'inj-tear-trough', title: 'Filler if it is a shadow', why: 'the structural type is the one filler treats' },
+    ],
+  },
+  {
+    concern: 'Itchy, watery and worse in spring or around the cat',
+    paths: [
+      { id: 'home-allergy', title: 'Treat the allergy', why: 'antihistamine, nasal spray, saline, and not rubbing' },
+      { id: 'type-fluid', title: 'Why allergies swell the lids', why: 'congested veins under the thinnest skin on the face' },
+      { id: 'safety-red-flags', title: 'When to see a doctor instead', why: 'one-sided, painful, red or with a changed eye shape' },
+    ],
+  },
+  {
+    concern: 'I had filler under my eyes and now I am puffier',
+    paths: [
+      { id: 'inj-hyaluronidase', title: 'Dissolve it', why: 'one injection resolved eyelid edema in a 20-patient series' },
+      { id: 'safety-filler-eye', title: 'What went wrong, and why it is common', why: 'malar edema in up to 11%, sometimes years later' },
+    ],
+  },
+  {
+    concern: "I'm in my twenties with my mother's bags",
+    paths: [
+      { id: 'how-common', title: 'Heritability is about 61%', why: 'inherited bags are pure fat, from a lax septum' },
+      { id: 'faq-age-young', title: 'Is surgery reasonable at 25?', why: 'yes — it is the standard operation for exactly this' },
+      { id: 'surg-lower-bleph', title: 'What the operation involves', why: 'from inside the lid, no scar, once' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: look up, press, lift — and photograph twice a day',
+    when: 'Before any consultation',
+    blurb: 'Three tests sort fat from fluid from shadow; a week of 7 a.m. and 5 p.m. photos proves which you have.',
+  },
+  {
+    id: 'home-sleep-salt-alcohol',
+    step: 'Weeks 1–4: the fluid tier, for everyone',
+    when: 'Free, and judged in a fortnight',
+    blurb: 'Sleep, a second pillow, salt and alcohol counted, allergies treated, a retinoid on the bone. If mornings clear, you are done.',
+  },
+  {
+    id: 'inj-tear-trough',
+    step: 'Months 1–3: filler only if it is a hollow',
+    when: 'Expert injector, safety drawer read',
+    blurb: 'A soft gel on the bone lifts a shadow; judged at four weeks, when a lump can still be dissolved. Never over a bulge.',
+  },
+  {
+    id: 'surg-lower-bleph',
+    step: 'Month 3+: surgery if it is fat',
+    when: 'Oculoplastic or facial plastic surgeon',
+    blurb: 'Transconjunctival, fat repositioned into the trough, skin handled without cutting it. Once, for a decade or more.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="eye-bags" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Under-eye bags &amp; puffy eyes</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Eye bags, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          An eye bag is fat, fluid or a shadow, and the fix for one does nothing for the others. Below, three tests
+          that tell you which you have, every treatment graded by the trials behind it, and the numbers on the
+          under-eye filler risks nobody quotes.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 6 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Eye bags — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'inj' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The look-up, press and lift tests, demonstrated" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Fat, fluid and shadow — the three bags in cross-section" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per bag type — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-sleep-salt-alcohol',
+                    kind: 'For fluid',
+                    title: 'Sleep, salt, alcohol, a second pillow',
+                    blurb: 'The whole treatment for the morning bag, with the one controlled study of sleep loss behind it. Free.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'inj-tear-trough',
+                    kind: 'For the hollow',
+                    title: 'Filler, in expert hands',
+                    blurb: '87% responders at three months in the pivotal trial — and the highest routine-complication rate of any filler zone.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'surg-lower-bleph',
+                    kind: 'For fat',
+                    title: 'Transconjunctival blepharoplasty',
+                    blurb: 'The only treatment that moves orbital fat: no scar, 1% revision in 200 cases, and a decade or more of result.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'dev-co2',
+                    kind: 'For crepey skin',
+                    title: 'Fractional laser on the lower lid',
+                    blurb: 'Rebuilds the thinnest dermis on the face — the standard way to handle skin without cutting it.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your eyes</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Fluid first, because it is free; then the hollow; then the fat.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, pivotal-trial reports or regulatory documents, linked
+            inline within each section. Primary sources: PubMed/PMC, JAMA Dermatology, Sleep, Aesthetic
+            Surgery Journal, the Journal of the American Academy of Dermatology, the Journal of Cosmetic
+            Dermatology, StatPearls and the American Thyroid Association.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. New, one-sided, painful or worsening eye swelling needs a
+          doctor before a clinic; under-eye filler and lower-lid surgery carry risks to sight in the wrong
+          hands &mdash; choose clinicians who treat eyes every week and examine before they quote.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

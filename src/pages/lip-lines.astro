@@ -1,0 +1,431 @@
+---
+/**
+ * The lip-lines guide (/lip-lines) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video, the
+ * three drivers as cards, evidence strength as the primary visual signal, one
+ * interactive block (situation matcher) and a month-by-month action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/lip-lines';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Lip lines (barcode / smoker’s lines) — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Lip lines are a pursing muscle, thin sun-exposed skin and a deflating lip at once. The pucker test that sorts them, toxin, filler, lasers, dermabrasion and the phenol peel graded by trial evidence, and the mouth’s own risks in numbers.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-remove': 'Resurfacing, yes',
+  'faq-smokers': 'Muscle, sun, deflation',
+  'faq-straws': 'Vape yes; straw no',
+  'faq-filler-lines': 'Border, not lines',
+  'faq-toxin-speech': 'Briefly, mildly',
+  'faq-laser-or-peel': 'Phenol deepest',
+  'faq-timeline': 'Weeks to 6 months',
+  'faq-prevent': 'SPF, no smoke, retinoid',
+  'faq-cost-ladder': '€20 / month to €2,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Fine vertical lines only when I purse my lips',
+    paths: [
+      { id: 'type-dynamic', title: 'Dynamic lip lines', why: 'the muscle alone — the stage where prevention still works' },
+      { id: 'inj-toxin', title: 'Toxin micro-doses', why: 'four to six units soften the purse for three months' },
+      { id: 'home-spf-quit', title: 'Sunscreen to the lip, no smoking', why: 'the only prevention with evidence' },
+    ],
+  },
+  {
+    concern: 'Lines at rest that my lipstick bleeds into',
+    paths: [
+      { id: 'type-static', title: 'Etched lines', why: 'the dermis has lost its floor — only resurfacing removes them' },
+      { id: 'clinic-co2-full', title: 'Full-field CO₂ or erbium', why: '87% less wrinkle depth at two years' },
+      { id: 'clinic-phenol', title: 'Or a phenol–croton oil peel', why: 'the deepest, longest result — fair skin, two weeks' },
+      { id: 'inj-ha-perioral', title: 'Border filler underneath', why: 'support first, so the resurfaced skin has something to sit on' },
+    ],
+  },
+  {
+    concern: 'My lips have thinned and the border has blurred',
+    paths: [
+      { id: 'type-deflation', title: 'The deflated lip', why: 'volume and support, not the muscle' },
+      { id: 'inj-ha-perioral', title: 'Hyaluronic acid on the border and in the body', why: 'two-thirds improved in the pivotal trial' },
+      { id: 'surg-lip-lift', title: 'A lip lift for a long philtrum', why: 'the surgical answer to length, not lines' },
+    ],
+  },
+  {
+    concern: 'Deep smoker’s lines after decades of smoking',
+    paths: [
+      { id: 'smoking-vaping', title: 'What smoking did', why: 'the purse plus the smoke — and why quitting is the treatment' },
+      { id: 'clinic-phenol', title: 'The phenol–croton oil peel', why: 'where the 639-patient series says lasers fall short' },
+      { id: 'clinic-co2-full', title: 'Or full-field CO₂ for smokers’ lines', why: 'the 2024 series and the two-year data' },
+    ],
+  },
+  {
+    concern: 'Darker skin, and I am afraid of lightening or dark marks',
+    paths: [
+      { id: 'safety-resurfacing-lip', title: 'What resurfacing does in darker skin', why: 'permanent lightening from phenol and full CO₂, darkening from any injury' },
+      { id: 'clinic-nafl', title: 'Non-ablative or fractional lasers', why: 'softening with far less pigment risk' },
+      { id: 'inj-ha-perioral', title: 'Border support and toxin', why: 'the injectables carry no pigment risk at all' },
+    ],
+  },
+  {
+    concern: "I'm in my thirties and want to prevent them",
+    paths: [
+      { id: 'faq-prevent', title: 'Prevention in the thirties', why: 'the strip of skin everyone forgets' },
+      { id: 'home-spf-quit', title: 'Sunscreen to the lip, an SPF balm, no smoking', why: 'the only prevention with trials' },
+      { id: 'home-retinoid', title: 'A retinoid above the lip', why: 'eight randomised trials in the meta-analysis' },
+    ],
+  },
+  {
+    concern: 'Lines at the corners pulling my mouth down',
+    paths: [
+      { id: 'type-marionette-corners', title: 'Marionette lines are a different problem', why: 'descent and a downward-pulling muscle' },
+      { id: 'inj-combo', title: 'Toxin plus filler', why: 'the combination beat filler alone for melomental folds' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: pucker, stretch, profile — and photograph',
+    when: 'Before any consultation',
+    blurb: 'Dynamic, etched or deflated; teeth and dentures checked; a photograph at rest and puckered in the same light.',
+  },
+  {
+    id: 'home-spf-quit',
+    step: 'Day 1 onward: sunscreen to the lip, no smoking, a retinoid ramp',
+    when: 'Whatever else you do',
+    blurb: 'Face sunscreen carried down to the vermilion, an SPF balm, no cigarette or vape, a retinoid above the lip two nights a week.',
+  },
+  {
+    id: 'inj-ha-perioral',
+    step: 'Month 1: toxin micro-doses and border support',
+    when: 'Reviewed at two weeks',
+    blurb: 'Four to six units along the upper lip, and a soft gel on the border and in the body — never in the lines.',
+  },
+  {
+    id: 'clinic-co2-full',
+    step: 'Months 3–6: resurface what stays',
+    when: 'Fair skin, two weeks off, antivirals',
+    blurb: 'Full-field CO₂, dermabrasion or a phenol peel for the etched lines; fractional in darker skin. Judged at three months.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="lip-lines" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Lip lines (barcode &middot; smoker's lines)</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Lip lines, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          The hardest lines on the face: a pursing muscle, the thinnest sun-exposed skin after the eyelids, and a lip
+          that deflates &mdash; three problems in one strip. Below, the pucker test that sorts them, every treatment
+          from toxin to the phenol peel graded by the trials behind it, and the mouth's own risks in numbers.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Lip lines — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'inj' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Toxin in fractions, filler on the border — where each goes" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Dynamic, etched and deflated — the three lips in profile" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'home-spf-quit',
+                    kind: 'The base',
+                    title: 'Sunscreen to the lip, no smoking',
+                    blurb: 'The only prevention with a randomised trial, on the strip of skin everyone forgets — and the habit with the twin photographs.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'inj-toxin',
+                    kind: 'For dynamic lines',
+                    title: 'Toxin micro-doses',
+                    blurb: 'Four to six units along the upper lip: softer lines and a slight eversion for three months, with a three-year controlled study behind it.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'inj-ha-perioral',
+                    kind: 'For the deflated lip',
+                    title: 'Hyaluronic acid on the border',
+                    blurb: 'A 225-person randomised trial: perioral lines improved in two-thirds at a year. Border and body — never the grooves.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'clinic-phenol',
+                    kind: 'For etched lines',
+                    title: 'The phenol–croton oil peel',
+                    blurb: 'A 639-patient series and the longest results of any non-surgical treatment — two raw weeks, fair skin, very few hands.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your lips</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. The purse first, the support second, the line itself last.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, pivotal-trial reports or clinical series, linked inline within
+            each section. Primary sources: PubMed/PMC, Dermatologic Surgery, the Journal of the American Academy of
+            Dermatology, the British Journal of Plastic Surgery, Aesthetic Surgery Journal, the Journal of Cosmetic
+            Dermatology and Lasers in Surgery and Medicine.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. The mouth carries the labial artery, the herpes virus and the
+          muscle you speak with &mdash; toxin is measured in single units here, filler stays off the lines, and
+          resurfacing needs antiviral cover and a clear conversation about permanent lightening before it starts.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
