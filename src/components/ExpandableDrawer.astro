@@ -1,15 +1,13 @@
 ---
 /**
- * ExpandableDrawer — EXPERIMENTAL.
+ * ExpandableDrawer — a native <details> drawer on ink hairlines: a big title
+ * (plus an optional one-line short answer, always visible) and a chevron;
+ * open, the full content. Content stays in the DOM, so it is searchable and
+ * keyboard/screen-reader friendly without JS.
  *
- * A self-contained drawer that shows a title (plus an optional one-line short
- * answer) and expands to reveal the full content. Unlike the page's existing
- * `info-drawers` (which hide everything behind the summary), the short answer
- * — when given — stays visible whether open or closed, so a skimmer gets the
- * gist without interacting, and only taps through when they want the detail.
- *
- * Native <details>, so it works without JS and is keyboard/screen-reader
- * friendly. Full content goes in the default slot (or pass `bodyHtml`).
+ * Drawers stack without gaps: each draws its top rule, the last one in a run
+ * draws the bottom rule too. Full content goes in the default slot (or pass
+ * `bodyHtml`).
  */
 interface Props {
   id?: string;
@@ -23,40 +21,24 @@ interface Props {
 const { id, title, short, bodyHtml, class: className = '' } = Astro.props;
 ---
 
-<details
-  id={id}
-  class:list={[
-    'exp-drawer group scroll-mt-32 border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40',
-    className,
-  ]}
->
-  <summary class="exp-summary cursor-pointer list-none flex items-start gap-4">
-    <div class="min-w-0 flex-1">
-      <h3 class="font-display text-2xl leading-tight group-hover:text-rose group-open:text-rose transition">
+<details id={id} class:list={['exp-drawer group scroll-mt-32 border-t border-ink last:border-b', className]}>
+  <summary class="exp-summary cursor-pointer grid grid-cols-[minmax(0,1fr)_40px] md:grid-cols-[minmax(0,1fr)_44px] gap-4 md:gap-6 items-center py-3.5 min-h-[44px]">
+    <div class="min-w-0 max-w-[980px]">
+      <h3 class="text-[19px] md:text-2xl leading-tight group-hover:text-accent group-open:text-accent transition-colors">
         {title}
       </h3>
-      {short && <p class="mt-1 text-ink/70 text-base leading-snug">{short}</p>}
+      {short && <p class="mt-1 text-ink/65 text-[15px] leading-snug">{short}</p>}
     </div>
-    <span
-      class="caret shrink-0 mt-1 w-8 h-8 flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition"
-      aria-hidden="true"
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
-    </span>
+    <span class="toggle justify-self-end" aria-hidden="true"></span>
   </summary>
 
-  <div class="exp-body mt-3 pt-3 border-t border-ink/10">
+  <div class="exp-body pb-6 max-w-[900px]">
     {bodyHtml ? (
-      <div class="prose-anti text-ink/85" set:html={bodyHtml}></div>
+      <div class="prose-anti" set:html={bodyHtml}></div>
     ) : (
-      <div class="prose-anti text-ink/85"><slot /></div>
+      <div class="prose-anti"><slot /></div>
     )}
-    <button
-      type="button"
-      class="exp-collapse mt-4 inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold text-ink/50 hover:text-rose transition"
-    >
+    <button type="button" class="exp-collapse cta mt-4">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <polyline points="18 15 12 9 6 15"></polyline>
       </svg>
@@ -79,27 +61,41 @@ const { id, title, short, bodyHtml, class: className = '' } = Astro.props;
 </script>
 
 <style>
-  /* Reveal-on-open feel — the body slides/fades in. Respects reduced motion. */
-  .exp-drawer .exp-body {
-    animation: exp-reveal 0.22s ease-out;
+  /* The opener: an accent chevron drawn in CSS, pointing up when open. */
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: block;
+    color: var(--color-accent);
+    transition: color 0.15s ease, transform 0.2s ease;
   }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    width: 15px;
+    height: 15px;
+    margin-left: -7.5px;
+    border-right: 3px solid currentColor;
+    border-bottom: 3px solid currentColor;
+    transform: rotate(45deg);
+  }
+  @media (min-width: 768px) {
+    .toggle { width: 44px; height: 44px; }
+    .toggle::after { width: 17px; height: 17px; margin-left: -8.5px; }
+  }
+  summary:hover .toggle { color: var(--color-ink); }
+  details[open] > summary .toggle { transform: rotate(180deg); color: var(--color-accent); }
+
+  /* Reveal-on-open feel — the body fades in. Respects reduced motion. */
+  .exp-drawer .exp-body { animation: exp-reveal 0.22s ease-out; }
   @keyframes exp-reveal {
-    from {
-      opacity: 0;
-      transform: translateY(-4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .exp-drawer .exp-body {
-      animation: none;
-    }
-  }
-  /* Hide the native disclosure triangle across browsers. */
-  .exp-summary::-webkit-details-marker {
-    display: none;
+    .exp-drawer .exp-body { animation: none; }
   }
 </style>

@@ -79,24 +79,24 @@ the data module), `title`/`description`, then the **override maps** — keep the
   `homeRows` (jowls: explicit `homeCardIds` list from the `home` group).
 
 Body, in order (all inside `<article class="bg-bone">`; section `id`s are the anchor contract):
-1. **Hero** `<header>` — eyebrow (problem template only: `Problem · Jowls`), `<h1 class="font-display …">Topic, end&#8209;to&#8209;end<span class="text-rose">.</span></h1>`, one-sentence sub, meta line `Updated … · ~{readingMinutes} min full read · {allSections().length} sections`, `<MediaPlaceholder kind="image" ratio="4/5" label="…" tone="rose" class="w-full lg:w-72" />`.
-2. **`#takeaways`** — eyebrow "The case in five lines", `<h2>If you read nothing else</h2>`, `<ol>` of `keyTakeaways` with rose `font-display` numerals; then `<MediaPlaceholder kind="video" ratio="16/9" label="… · 2 min" tone="sage" />`.
-3. **Top info groups** (still on bone) — per group `<section id={g.id}>` h2 + intro + `<ExpandableDrawer id={s.id} title={s.title} short={shortFor(s)} bodyHtml={s.bodyHtml} />`.
-4. **White slab** `<section class="bg-white border-y border-ink/5">` — eyebrow "The full breakdown", `<h2>Topic — what the evidence says</h2>`, then `<div id="guide-body">` with one `<section id={g.id} class="group-section …" data-group={g.id}>` per chart group: `Part 0X` eyebrow, h2, intro, optional featured `MediaPlaceholder` pair for the hero group, and
+1. **Hero** `<header>` — eyebrow (problem template only: `Problem · Jowls`), `<h1 class="font-display …">Topic, end&#8209;to&#8209;end.</h1>` (the `h1` renders in the serif via the global element rule), one-sentence sub, `<p class="meta">Updated … · ~{readingMinutes} min full read · {allSections().length} sections</p>`, `<MediaPlaceholder kind="image" ratio="4/5" label="…" class="w-full lg:w-72" />`.
+2. **`#takeaways`** — eyebrow "The case in five lines", `<h2>If you read nothing else</h2>`, `<ol>` of `keyTakeaways` with accent `font-display` numerals; then `<MediaPlaceholder kind="video" ratio="16/9" label="…" />`.
+3. **Top info groups** (still on bone) — per group `<section id={g.id}>` h2 (no intro on first sight) + a gapless `<div class="mt-6 grid">` of `<ExpandableDrawer id={s.id} title={s.title} short={shortFor(s)} bodyHtml={s.bodyHtml} />`.
+4. **The chart** `<section>` — a `<div class="mb-10 pt-7 border-t-2 border-ink">` head with eyebrow "The full breakdown" and `<h2>Topic — what the evidence says</h2>`, then `<div id="guide-body">` with one `<section id={g.id} class="group-section …" data-group={g.id}>` per chart group: `Part 0X` eyebrow, h2 (no intro), optional featured `MediaPlaceholder` pair for the hero group, and
    ```astro
-   <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+   <div class="chart mt-8">
+     <div class="chart-cols" aria-hidden="true"><span>Evidence · 0–4</span><span>Treatment</span><span></span></div>
      {orderedSections(g).map((s) => (
-       <EvidenceRow s={s} variant="bar" tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
-                    mediaTone={g.id === 'boost-clinical' ? 'rose' : 'gold'} />
+       <EvidenceRow s={s} figure={g.id === 'boost-clinical' || g.id === 'boost-topical'} />
      ))}
    </div>
    ```
-   `EvidenceRow` props: `s` (structural — any object with id/title/tldr/bodyHtml[/evidence/note/sessions/downtime/cost]), `variant="bar"` (house choice; `"pips"` exists), `tag` pre-resolved label, `mediaTone` adds a 4/5 placeholder in the expanded body. Rows without `evidence` render an "info" pill — only use that deliberately.
-5. **`#picks` "Our picks"** — rendered right after the *last* chart group (`g.id === 'boost-clinical'` / `'surgical'`): 4 inline `{id, kind, title, blurb, tone}` cards linking to `#<section id>`; ids must exist. One daily-care, one supplement/topical, two treatments is the pattern.
+   `EvidenceRow` props: `s` (structural — any object with id/title/tldr/bodyHtml[/evidence/note/sessions/downtime/cost]), `figure` (adds the 4:5 photo/placeholder beside the expanded body), `open`. The row is rating-first (four-cell scale, tier word, "n / 4"), then title + one-line summary, then the chevron; there are no tags. Rows without `evidence` render an empty scale and "Information" — only use that deliberately.
+5. **`#picks` "Our picks"** — rendered right after the *last* chart group (`g.id === 'boost-clinical'` / `'surgical'`) as the page's one dark band: `<div id="picks" class="band bleed scroll-mt-32 mb-16 py-12 md:py-14">` with a `<div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">` of 4 inline `{id, kind, title, blurb}` `tile tile--flush` cards (`eyebrow` kind, `.cta` link) linking to `#<section id>`; ids must exist. One daily-care, one supplement/topical, two treatments is the pattern.
 6. **Tail (back on bone)** — tail info groups as drawers with `short={faqAnswer[s.id] ?? s.tldr}`.
-7. **Interactive block** — `bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl` card, eyebrow "Interactive": routine builder (supplement) or cause matcher (problem). Keep it one widget; JS lives in the page's `<script is:inline>`.
-8. **Comparison cards** `#compare-topical` / `#compare-home` — white card, 3-col grid of `<a href="#id">` with the `evidencePillClass` pill, title, tldr, and the stripped note line.
-9. **`#references`** white card + the italic "Educational content, not medical advice" line.
+7. **Interactive block** — a hairline section (`scroll-mt-32 mb-16 pt-8 border-t border-ink`), eyebrow "Interactive": routine builder (supplement; tier pills via `evidencePillClass` → `tier-pill tier-*`) or cause matcher (problem; `details.matcher-item` on hairlines with numbered `label label--steel` paths). Keep it one widget; JS lives in the page's `<script is:inline>`.
+8. **Comparison tiles** `#compare-topical` / `#compare-home` — hairline section, `<div class="tiles mt-6 sm:grid-cols-2 lg:grid-cols-3">` of `<a href="#id" class="tile group">` with the `evidencePillClass` pill, title, tldr, and the stripped note line.
+9. **`#references`** hairline section (`scroll-mt-32 pt-6 border-t border-ink`) + the italic "Educational content, not medical advice" line.
 10. **Sticky clinician CTA** — `bg-ink text-bone` pill, md+ only, `href="#"` placeholder until a booking URL exists.
 11. `<style>` (drawer marker reset, `.card[open]`, `.prose-anti` rules, `scroll-margin-top` calc) and `<script is:inline>` (chrome measurement, open `<details>` on hash, widget logic) — copy verbatim.
 
@@ -107,7 +107,7 @@ Body, in order (all inside `<article class="bg-bone">`; section `id`s are the an
 - Nav: add/adjust the link in `src/components/Header.astro` (guides are hard-coded hrefs, not `localePath`).
 - Homepage: the hero CTA row and the flagship card live in `src/pages/index.astro`; the card reads `evidenceCounts()`/`readingMinutes()` from the data module — point it at the new module if the new guide becomes the flagship, otherwise add a secondary CTA only.
 - i18n: guides are **English-only** (`const locale = DEFAULT_LOCALE`); do not add `[lang]` variants. Localized pages (`src/pages/[lang]/…`) never link to guides.
-- Brand tokens (`src/styles/global.css`): `bone` bg, `ink` text, `rose` accent, `sage` eyebrows, `gold` secondary; `font-display` Cormorant Garamond for h1–h4, Inter body. Evidence colours are the saturated `evidenceColor` map, not the brand tones.
+- Design system (`src/styles/global.css`, see CLAUDE.md): `bone` ground, `bench` fields, `ink`, `steel`, one `accent`, `sky` for buttons; `h1` serif (Cormorant Garamond), every other heading Archivo, IBM Plex Sans body, IBM Plex Mono captions. Use the global classes (`eyebrow`, `label`, `mono`, `meta`, `btn`, `cta`, `tiles`/`tile`, `band`+`bleed`) rather than re-deriving them; no cards, no `rounded-*`, no shadows. Evidence colours are the `evidenceColor` map (`--color-tier-*`), not the brand tones.
 
 ## 5. Editorial rules (see memory: deaging-europe-business)
 

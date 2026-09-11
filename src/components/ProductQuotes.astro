@@ -15,11 +15,11 @@ const { locale, quotes, note } = Astro.props;
 ---
 {quotes.length > 0 && (
   <section id="quotes" class="scroll-mt-32 bg-white border-y border-ink/5">
-    <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
-      <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.quotes.title')}</h2>
-      <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-16 md:py-20">
+      <h2 class="text-[32px] md:text-[44px] leading-none">{t(locale, 'product.quotes.title')}</h2>
+      <div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">
         {quotes.map((q) => (
-          <figure class="flex flex-col border border-ink/10 bg-bone/60 p-6">
+          <figure class="tile">
             <blockquote class="font-display text-xl leading-snug text-ink/90 flex-1">“{q.body}”</blockquote>
             <figcaption class="mt-5 text-xs text-ink/60">
               <span class="font-semibold text-ink/80">{q.name}</span>

@@ -1,14 +1,18 @@
 ---
 /**
- * EvidenceRow — one collapsible row in the "what the evidence says" chart.
+ * EvidenceRow — one collapsible row in the "what the evidence says" chart,
+ * rating first.
  *
- * EXPERIMENTAL: two variants of the evidence indicator, so they can be
- * compared. Both cap the indicator to a fixed width (instead of letting it
- * stretch across the whole row) and use the reclaimed space for the section's
- * one-line summary, which was previously hidden until expansion.
+ * Closed: a four-cell scale (one cell per tier, filled in the tier's colour),
+ * the tier word and a small "n / 4" under it, then the title with its
+ * one-line summary, then a chevron. The summary stays visible so a skimmer
+ * gets the gist without opening anything.
  *
- *   variant="bar"  — fixed-width strength bar (longer = stronger) + word
- *   variant="pips" — 4-segment strength meter + word
+ * Open: the summary as a lead, the body, the key/value fields (best for,
+ * sessions, downtime, cost) on hairlines, and — when `figure` is set — a 4:5
+ * figure beside it (the row's own photo, or the placeholder field).
+ *
+ * Rows stack on ink hairlines; the chart wrapper draws the column heads.
  */
 import MediaPlaceholder from './MediaPlaceholder.astro';
 import { evidenceColor, type Evidence } from '../data/evidence';
@@ -25,140 +29,82 @@ interface EvidenceItem {
   sessions?: string;
   downtime?: string;
   cost?: string;
-  /** Optional 4:5 photo shown beside the expanded body (needs `mediaTone`). */
+  /** Optional 4:5 photo shown beside the expanded body (needs `figure`). */
   image?: { src: string; alt: string };
 }
 
 interface Props {
   s: EvidenceItem;
-  variant: 'bar' | 'pips';
-  /** Small label tag on the right (e.g. focus area or cause). Pre-resolved. */
-  tag?: string;
-  /** Show a 4/5 media placeholder in the expanded body. */
-  mediaTone?: 'rose' | 'gold';
+  /** Show the 4:5 figure (photo or placeholder) beside the expanded body. */
+  figure?: boolean;
   /** Render expanded on load (e.g. the row that carries the product pick). */
   open?: boolean;
 }
-const { s, variant, tag, mediaTone, open = false } = Astro.props;
+const { s, figure = false, open = false } = Astro.props;
 
-const evidenceWidth: Record<Evidence, number> = { strong: 100, moderate: 75, emerging: 50, limited: 25 };
-const evidenceLevel: Record<Evidence, number> = { strong: 4, moderate: 3, emerging: 2, limited: 1 };
+const level: Record<Evidence, number> = { strong: 4, moderate: 3, emerging: 2, limited: 1 };
+const word: Record<Evidence, string> = {
+  strong: 'Strong evidence',
+  moderate: 'Moderate evidence',
+  emerging: 'Emerging evidence',
+  limited: 'Limited evidence',
+};
+const tier = s.evidence;
+const n = tier ? level[tier] : 0;
 
-const evidence = s.evidence ?? 'limited';
-const hasRating = !!s.evidence;
-// The 25% fill is narrower than the word "limited"; every other fill holds its word.
-const labelOutside = evidence === 'limited';
+const fields: { k: string; v: string }[] = [];
+if (s.note) fields.push({ k: 'Best for', v: s.note.replace(/^best for:\s*/i, '') });
+if (s.sessions) fields.push({ k: 'Sessions', v: s.sessions });
+if (s.downtime) fields.push({ k: 'Downtime', v: s.downtime });
+if (s.cost) fields.push({ k: 'Cost', v: s.cost });
+const subject = s.title.split(/[:(—]/)[0].trim().toLowerCase();
 ---
 
-<details id={s.id} class="card group scroll-mt-32 transition" data-evidence={s.evidence ?? 'none'} open={open}>
-  <summary class="chart-row cursor-pointer list-none block py-2.5 px-3 -mx-3 border border-transparent hover:border-ink/10 hover:bg-bone/70 transition">
-    <div class="flex items-center gap-3">
-    <div class="flex-1 min-w-0 md:flex-none md:w-52 text-base md:text-sm font-medium text-ink/85 leading-snug group-hover:text-rose">{s.title}</div>
-
-    {/* ── Evidence indicator ──
-         Mobile: a fixed-width block, so weaker ratings don't trail a long
-         empty track. Desktop (md+): the capped strength bar with the tier word
-         inside it, on a ruled track whose tier marks sit along the top and
-         bottom edges — so every row shows all four segments and no mark ever
-         crosses the word. Length reads as longer = stronger down the sorted list. */}
-    {variant === 'bar' ? (
-      <>
-        {hasRating ? (
-          <span
-            class="md:hidden shrink-0 w-24 inline-flex items-center justify-center py-1 text-xs uppercase tracking-widest font-semibold text-white"
-            style={`background: ${evidenceColor[evidence]};`}
-          >{evidence}</span>
-        ) : (
-          <span class="md:hidden shrink-0 w-24 inline-flex items-center justify-center py-1 text-xs uppercase tracking-widest font-semibold bg-ink/10 text-ink/50">info</span>
-        )}
-        <div class:list={['hidden md:block shrink-0 relative w-48 h-6 bg-ink/[0.07]', hasRating && 'scale-track']}>
-          {hasRating && (
-            <div
-              class="absolute inset-y-0 left-0"
-              style={`width: ${evidenceWidth[evidence]}%; background: ${evidenceColor[evidence]};`}
-            ></div>
-          )}
-          {/* The word sits inside its fill; "limited" is the one fill too short
-              to hold it, so that word sits just after the fill on the track. */}
-          <span
-            class:list={[
-              'scale-label absolute inset-y-0 flex items-center text-[10px] uppercase tracking-widest font-semibold whitespace-nowrap',
-              !hasRating ? 'left-3 text-ink/45' : labelOutside ? 'text-ink/65' : 'left-3 text-white',
-            ]}
-            style={hasRating && labelOutside ? `left: calc(${evidenceWidth[evidence]}% + 0.5rem);` : undefined}
-          >{hasRating ? evidence : 'info'}</span>
-        </div>
-      </>
-    ) : (
-      <div class="shrink-0 md:w-48 flex items-center gap-2">
-        {hasRating ? (
-          <>
-            <span class="flex gap-1" aria-hidden="true">
-              {[1, 2, 3, 4].map((i) => (
-                <span
-                  class="w-2.5 h-2.5"
-                  style={`background: ${i <= evidenceLevel[evidence] ? evidenceColor[evidence] : 'rgba(28,25,23,0.12)'};`}
-                ></span>
-              ))}
-            </span>
-            <span class="text-[10px] uppercase tracking-widest font-semibold" style={`color: ${evidenceColor[evidence]};`}>{evidence}</span>
-          </>
-        ) : (
-          <span class="text-[10px] uppercase tracking-widest font-semibold text-ink/45">info</span>
-        )}
+<details id={s.id} class="card group scroll-mt-32 border-b border-ink py-4" data-evidence={tier ?? 'none'} open={open}>
+  <summary class="chart-row cursor-pointer grid grid-cols-[minmax(0,1fr)_40px] md:grid-cols-[200px_minmax(0,1fr)_44px] gap-x-4 gap-y-2.5 md:gap-x-8 items-start md:items-center min-h-[44px]">
+    {/* ── Rating ── */}
+    <div class="reading col-start-1 flex flex-col gap-1.5 w-full md:w-[200px]" aria-label={tier ? `${word[tier]}, ${n} out of 4` : 'Information'}>
+      <div class="scale grid grid-cols-4 gap-px h-3.5 md:h-4" aria-hidden="true">
+        {[1, 2, 3, 4].map((i) => (
+          <span class="block h-full bg-bench" style={tier && i <= n ? `background: ${evidenceColor[tier]};` : undefined}></span>
+        ))}
       </div>
-    )}
-
-    {/* ── Summary preview, fills the reclaimed space (desktop only) ── */}
-    <p class="hidden md:block flex-1 min-w-0 truncate text-sm text-ink/55 leading-snug">{s.tldr}</p>
-
-    {tag && (
-      <span class="hidden lg:inline-flex shrink-0 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 bg-bone text-ink/60 border border-ink/10 whitespace-nowrap">
-        {tag}
-      </span>
-    )}
-    <span class="caret shrink-0 w-9 h-9 flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition" aria-hidden="true">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
-    </span>
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="label">{tier ? word[tier] : 'Information'}</span>
+        <span class="mono whitespace-nowrap">{tier ? <><b class="font-display font-semibold text-[13px] text-ink not-italic">{n}</b> / 4</> : '– / 4'}</span>
+      </div>
     </div>
+
+    {/* ── Title + summary ── */}
+    <div class="col-start-1 md:col-start-2 min-w-0">
+      <h3 class="text-[19px] md:text-2xl leading-tight group-hover:text-accent transition-colors">{s.title}</h3>
+      <p class="hidden md:block mt-1 text-sm text-ink/60 leading-snug truncate">{s.tldr}</p>
+    </div>
+
+    <span class="toggle col-start-2 row-start-1 row-span-2 self-start md:col-start-3 md:row-span-1 md:self-center justify-self-end" aria-hidden="true"></span>
   </summary>
 
-  <div class="card-body px-3 pb-6 pt-3 grid md:grid-cols-[1fr_auto] gap-6 items-start">
+  <div class:list={['card-body mt-4 pt-4 border-t border-ink/15 grid gap-8 lg:gap-10 items-start', figure && 'lg:grid-cols-[minmax(0,1fr)_320px]']}>
     <div class="min-w-0">
-      <p class="text-ink/80 text-base leading-relaxed pb-4 mb-4 border-b border-ink/10">{s.tldr}</p>
-      {s.note && <p class="-mt-2 mb-4 text-xs text-ink/55 italic">{s.note}</p>}
-      <div class="prose-anti text-ink/85" set:html={s.bodyHtml}></div>
-      {(s.sessions || s.downtime || s.cost) && (
-        <dl class="mt-5 grid grid-cols-3 gap-3 text-xs">
-          {s.sessions && (
-            <div class="bg-bone/60 p-3">
-              <dt class="uppercase tracking-widest text-ink/50 text-[10px]">Sessions</dt>
-              <dd class="mt-1 font-medium text-ink/85">{s.sessions}</dd>
+      <p class="font-display font-medium text-lg md:text-xl leading-snug tracking-tight mb-3.5">{s.tldr}</p>
+      <div class="prose-anti" set:html={s.bodyHtml}></div>
+      {fields.length > 0 && (
+        <dl class="mt-3.5 border-t border-ink/15">
+          {fields.map((f) => (
+            <div class="grid grid-cols-[100px_minmax(0,1fr)] md:grid-cols-[120px_minmax(0,1fr)] gap-3 md:gap-4 py-2 border-b border-ink/15 text-sm leading-normal">
+              <dt class="eyebrow eyebrow--steel pt-0.5">{f.k}</dt>
+              <dd>{f.v}</dd>
             </div>
-          )}
-          {s.downtime && (
-            <div class="bg-bone/60 p-3">
-              <dt class="uppercase tracking-widest text-ink/50 text-[10px]">Downtime</dt>
-              <dd class="mt-1 font-medium text-ink/85">{s.downtime}</dd>
-            </div>
-          )}
-          {s.cost && (
-            <div class="bg-bone/60 p-3">
-              <dt class="uppercase tracking-widest text-ink/50 text-[10px]">Cost</dt>
-              <dd class="mt-1 font-medium text-ink/85">{s.cost}</dd>
-            </div>
-          )}
+          ))}
         </dl>
       )}
     </div>
-    {mediaTone && (
-      <div class="md:w-56 shrink-0">
+    {figure && (
+      <div class="lg:w-80 shrink-0">
         {s.image ? (
           <img src={s.image.src} alt={s.image.alt} loading="lazy" class="w-full aspect-[4/5] object-cover" />
         ) : (
-          <MediaPlaceholder kind="image" ratio="4/5" label={s.title} tone={mediaTone} />
+          <MediaPlaceholder kind="image" ratio="4/5" label={subject} />
         )}
       </div>
     )}
@@ -166,29 +112,31 @@ const labelOutside = evidence === 'limited';
 </details>
 
 <style>
-  /* The track is a ruled scale: a hairline mark at each of the four tiers
-     (limited 25 · emerging 50 · moderate 75 · strong 100), drawn as short
-     notches along the top and bottom edges, over fill and track alike. Every
-     rating shows all four segments and the middle band stays clear for the
-     word. Unrated rows get the plain track without the scale. */
-  .scale-track::before,
-  .scale-track::after {
+  /* The opener: an accent chevron drawn in CSS, pointing up when open. */
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: block;
+    color: var(--color-accent);
+    transition: color 0.15s ease, transform 0.2s ease;
+  }
+  .toggle::after {
     content: '';
     position: absolute;
-    left: 0;
-    right: 0;
-    height: 6px;
-    z-index: 1;
-    pointer-events: none;
-    background-image: repeating-linear-gradient(
-      to right,
-      transparent 0,
-      transparent calc(25% - 1px),
-      rgba(26, 20, 16, 0.3) calc(25% - 1px),
-      rgba(26, 20, 16, 0.3) 25%
-    );
+    left: 50%;
+    top: 7px;
+    width: 15px;
+    height: 15px;
+    margin-left: -7.5px;
+    border-right: 3px solid currentColor;
+    border-bottom: 3px solid currentColor;
+    transform: rotate(45deg);
   }
-  .scale-track::before { top: 0; }
-  .scale-track::after { bottom: 0; }
-  .scale-label { z-index: 2; }
+  @media (min-width: 768px) {
+    .toggle { width: 44px; height: 44px; }
+    .toggle::after { width: 17px; height: 17px; margin-left: -8.5px; }
+  }
+  summary:hover .toggle { color: var(--color-ink); }
+  details[open] > summary .toggle { transform: rotate(180deg); color: var(--color-accent); }
 </style>

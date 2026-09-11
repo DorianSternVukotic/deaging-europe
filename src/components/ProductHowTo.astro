@@ -21,16 +21,16 @@ const { locale, howTo } = Astro.props;
   <section id="how-to" class="scroll-mt-32 bg-white border-y border-ink/5">
     <div
       class:list={[
-        'max-w-6xl mx-auto px-6 py-16 md:py-20 grid gap-12 lg:gap-16',
+        'max-w-[1440px] mx-auto px-5 md:px-14 py-16 md:py-20 grid gap-12 lg:gap-16',
         howTo.video ? 'lg:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)]' : 'lg:grid-cols-2',
       ]}
     >
       <div>
-        <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.howto.title')}</h2>
+        <h2 class="text-[32px] md:text-[44px] leading-none">{t(locale, 'product.howto.title')}</h2>
         <ol class="mt-6 space-y-5">
           {howTo.steps.map((s, i) => (
             <li class="flex gap-4">
-              <span class="font-display text-3xl text-rose leading-none w-8 shrink-0">{i + 1}</span>
+              <span class="font-display text-3xl text-accent leading-none w-8 shrink-0">{i + 1}</span>
               <p class="text-ink/80 leading-relaxed pt-1">{s}</p>
             </li>
           ))}
@@ -56,12 +56,12 @@ const { locale, howTo } = Astro.props;
 
       {howTo.timeline.length > 0 && (
         <div>
-          <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.timeline.title')}</h2>
+          <h2 class="text-[32px] md:text-[44px] leading-none">{t(locale, 'product.timeline.title')}</h2>
           <ol class="timeline mt-6 relative border-l border-ink/15 pl-6 space-y-6">
             {howTo.timeline.map((tl) => (
               <li class="relative">
-                <span class="absolute -left-[31px] top-1.5 w-2.5 h-2.5 bg-sage ring-4 ring-white" aria-hidden="true"></span>
-                <p class="text-[11px] uppercase tracking-widest text-sage font-semibold">{tl.when}</p>
+                <span class="absolute -left-[31px] top-1.5 w-2.5 h-2.5 bg-accent ring-4 ring-bone" aria-hidden="true"></span>
+                <p class="eyebrow">{tl.when}</p>
                 <p class="mt-1 text-sm text-ink/80 leading-relaxed">{tl.what}</p>
               </li>
             ))}

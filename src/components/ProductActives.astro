@@ -24,15 +24,15 @@ const { locale, actives, guidePath } = Astro.props;
 const barWidth: Record<Evidence, number> = { strong: 100, moderate: 66, emerging: 40, limited: 18 };
 ---
 <section id="actives" class="scroll-mt-32 bg-white border-y border-ink/5">
-  <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
-    <p class="text-xs uppercase tracking-[0.3em] text-sage">{t(locale, 'product.actives.eyebrow')}</p>
-    <h2 class="font-display text-3xl md:text-4xl mt-2 max-w-2xl">{t(locale, 'product.actives.title')}</h2>
+  <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-16 md:py-20">
+    <p class="eyebrow">{t(locale, 'product.actives.eyebrow')}</p>
+    <h2 class="text-[32px] md:text-[44px] leading-none mt-2 max-w-2xl">{t(locale, 'product.actives.title')}</h2>
 
-    <div class="mt-10 grid md:grid-cols-2 gap-5">
+    <div class="tiles mt-10 md:grid-cols-2">
       {actives.map((a) => (
-        <article class="flex flex-col border border-ink/10 bg-bone/60 p-6">
-          <p class="text-[11px] uppercase tracking-widest text-ink/50">{a.supplier} · {a.country}</p>
-          <h3 class="font-display text-2xl leading-tight mt-1">{a.name}</h3>
+        <article class="tile">
+          <p class="eyebrow eyebrow--steel">{a.supplier} · {a.country}</p>
+          <h3 class="text-2xl leading-tight mt-1">{a.name}</h3>
           {a.brand && <p class="text-sm text-ink/55">{a.brand}</p>}
 
           <div class="mt-4 flex items-baseline justify-between gap-4 border-y border-ink/10 py-3">
@@ -53,7 +53,7 @@ const barWidth: Record<Evidence, number> = { strong: 100, moderate: 66, emerging
           <p class="mt-2 text-sm text-ink/65 leading-relaxed flex-1">{a.finding}</p>
 
           {a.guideId && (
-            <a href={`${guidePath}#${a.guideId}`} class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose hover:gap-2 transition-all">
+            <a href={`${guidePath}#${a.guideId}`} class="cta mt-4 self-start">
               {t(locale, 'product.actives.guide')}
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
             </a>

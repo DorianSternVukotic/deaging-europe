@@ -12,7 +12,6 @@ import { DEFAULT_LOCALE } from '../i18n/ui';
 import {
   keyTakeaways,
   groups,
-  focusLabels,
   allSections,
   readingMinutes as guideReadingMinutes,
   type Evidence,
@@ -29,12 +28,12 @@ const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emergin
 
 const evidencePillClass = (e?: Evidence) =>
   e === 'strong'
-    ? 'bg-sage/15 text-sage'
+    ? 'tier-pill tier-strong'
     : e === 'moderate'
-    ? 'bg-gold/15 text-gold'
+    ? 'tier-pill tier-moderate'
     : e === 'emerging'
-    ? 'bg-rose/15 text-rose'
-    : 'bg-ink/10 text-ink/60';
+    ? 'tier-pill tier-emerging'
+    : 'tier-pill tier-none';
 
 const orderedSections = (g: (typeof groups)[number]) =>
   g.sections
@@ -143,35 +142,35 @@ const ladderRows = [
 <BaseLayout title={title} description={description} locale={locale} path="neck" type="article">
   <article class="bg-bone">
     <!-- ════════════ HERO ════════════ -->
-    <header class="relative border-b border-ink/10 overflow-hidden">
-      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+    <header class="relative">
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
         <div>
-          <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Neck</p>
+          <p class="eyebrow mb-4">Problem · Neck</p>
           <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
-            The neck, honestly<span class="text-rose">.</span>
+            The neck, honestly.
           </h1>
           <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
             Crepey texture, necklace lines, platysmal bands and laxity &mdash; four different
             problems, every fix graded from cream to surgery.
           </p>
-          <p class="mt-3 text-xs text-ink/50">
+          <p class="meta">
             Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
-        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — profile portrait" tone="rose" class="w-full lg:w-72" />
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — profile portrait" class="w-full lg:w-72" />
       </div>
     </header>
 
 
     <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
-    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+    <section id="takeaways" class="scroll-mt-32 max-w-[1440px] mx-auto px-5 md:px-14 py-12 space-y-10">
       <div>
-        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
-        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <p class="eyebrow">The case in five lines</p>
+        <h2 class="text-3xl mt-2">If you read nothing else</h2>
         <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
           {keyTakeaways.map((k, i) => (
             <li class="flex gap-3">
-              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span class="font-display text-accent w-6 shrink-0">{i + 1}.</span>
               <span>{k}</span>
             </li>
           ))}
@@ -179,13 +178,13 @@ const ladderRows = [
       </div>
 
       <div>
-        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" />
       </div>
 
       {topInfoGroups.map((g) => (
         <section id={g.id} class="scroll-mt-32 pt-2">
-          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
-          <div class="mt-6 grid gap-2">
+          <h2 class="text-[32px] md:text-[44px] leading-none">{g.title}</h2>
+          <div class="mt-6 grid">
             {g.sections.map((s) => (
               <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
             ))}
@@ -195,88 +194,82 @@ const ladderRows = [
     </section>
 
     <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
-    <section class="bg-white border-y border-ink/5">
-      <div class="max-w-6xl mx-auto px-6 py-12">
+    <section>
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
 
-        <div class="mb-10 pt-4">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
-          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">The neck — what the evidence says</h2>
+        <div class="mb-10 pt-7 border-t-2 border-ink">
+          <p class="eyebrow">The full breakdown</p>
+          <h2 class="text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">The neck — what the evidence says</h2>
         </div>
 
         <div id="guide-body" class="min-w-0">
           {evidenceGroups.map((g) => (
           <>
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
-            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
-            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
 
             {g.id === 'devices' && (
               <div class="mt-6 grid md:grid-cols-2 gap-4">
-                <MediaPlaceholder kind="video" ratio="16/9" label="Ultherapy on the neck, step by step" tone="rose" />
-                <MediaPlaceholder kind="image" ratio="16/9" label="The four neck problems, mapped" tone="bone" />
+                <MediaPlaceholder kind="video" ratio="16/9" label="Ultherapy on the neck, step by step" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The four neck problems, mapped" />
               </div>
             )}
 
-            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+            <div class="chart mt-8">
+              <div class="chart-cols" aria-hidden="true"><span>Evidence · 0–4</span><span>Treatment</span><span></span></div>
                 {orderedSections(g).map((s) => (
                   <EvidenceRow
                     s={s}
-                    variant="bar"
-                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
-                    mediaTone={g.id === 'devices' || g.id === 'surgery' ? 'rose' : undefined}
+                    figure={g.id === 'devices' || g.id === 'surgery'}
                   />
                 ))}
             </div>
           </section>
 
           {g.id === lastChartGroupId && (
-            <div id="picks" class="mb-16 scroll-mt-32">
-              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
-              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+            <div id="picks" class="band bleed scroll-mt-32 mb-16 py-12 md:py-14">
+              <p class="eyebrow">Editor's choice</p>
+              <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Our picks</h2>
               <p class="mt-3 text-ink/70 max-w-2xl">One per problem — where the neck-specific evidence is actually good.</p>
 
-              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   {
                     id: 'home-retinoid',
                     kind: 'The base',
                     title: 'Retinoid + SPF to the chest',
                     blurb: 'The only prevention with trial data — and the tolerance trick is to start low and buffer.',
-                    tone: 'sage' as const,
                   },
                   {
                     id: 'inj-toxin',
                     kind: 'For bands',
                     title: 'Botulinum toxin',
                     blurb: 'The one neck injectable with pivotal trials; 3–4 months per session.',
-                    tone: 'rose' as const,
                   },
                   {
                     id: 'dev-ipl',
                     kind: 'For mottling',
                     title: 'IPL for poikiloderma',
                     blurb: 'Twenty years of series: >75% clearance of red-brown mottling in ~3 sessions.',
-                    tone: 'gold' as const,
                   },
                   {
                     id: 'surg-neck-lift',
                     kind: 'For a real fold',
                     title: 'A neck-lift consultation',
                     blurb: 'Before the devices, not after — the only fix for skin you can pinch.',
-                    tone: 'bone' as const,
                   },
                 ].map((pick) => (
                   <a
                     href={`#${pick.id}`}
-                    class="pick-card group flex flex-col bg-white border border-ink/10 overflow-hidden hover:border-rose transition"
+                    class="pick-card tile tile--flush group overflow-hidden"
                   >
-                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} />
                     <div class="p-5 flex flex-col flex-1">
-                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
-                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="eyebrow">{pick.kind}</p>
+                      <h3 class="text-xl leading-tight mt-1 transition-colors">{pick.title}</h3>
                       <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
-                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                      <span class="cta mt-4 self-start">
                         View details
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -296,14 +289,13 @@ const ladderRows = [
     </section>
 
     <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / LADDER / REFERENCES ════════════ -->
-    <div class="max-w-6xl mx-auto px-6 py-12">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
 
         {tailInfoGroups.map((g) => (
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
-            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
-            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
-            <div class="mt-8 grid gap-2">
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
+            <div class="mt-8 grid">
               {g.sections.map((s) => (
                 <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
               ))}
@@ -312,27 +304,27 @@ const ladderRows = [
         ))}
 
         <!-- ════════════ PROBLEM MATCHER ════════════ -->
-        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 p-6 md:p-10 border border-ink/5">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a treatment to your neck</h2>
+        <section id="matcher" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">Interactive</p>
+          <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Match a treatment to your neck</h2>
           <p class="mt-2 text-ink/70 max-w-2xl">Open the problem you actually have — each link jumps to the graded section.</p>
 
-          <div class="mt-8 grid gap-2">
+          <div class="mt-8 grid">
             {matcher.map((m) => (
-              <details class="matcher-item group border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
-                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
-                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
-                  <span class="shrink-0 w-8 h-8 flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+              <details class="matcher-item group border-t border-ink last:border-b">
+                <summary class="cursor-pointer flex items-center justify-between gap-4 py-3.5 min-h-[44px]">
+                  <h3 class="text-[19px] md:text-2xl leading-tight group-hover:text-accent group-open:text-accent transition-colors">{m.concern}</h3>
+                  <span class="shrink-0 w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-accent group-hover:text-ink transition" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter" class="transition-transform group-open:rotate-180">
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                   </span>
                 </summary>
-                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                <div class="pb-5">
                   {m.paths.map((p) => (
-                    <a href={`#${p.id}`} class="block p-3 bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
-                      <span class="font-medium text-ink/90">{p.title}</span>
-                      <span class="text-ink/60"> — {p.why}</span>
+                    <a href={`#${p.id}`} class="block p-3 bg-bone/50 border border-ink/5 hover:border-accent/40 transition">
+                      <span class="block font-display font-medium text-[17px] tracking-tight leading-snug group-hover/path:text-accent transition-colors">{p.title}</span>
+                      <span class="block mt-1 text-sm text-ink/65 leading-normal">{p.why}</span>
                     </a>
                   ))}
                 </div>
@@ -342,18 +334,18 @@ const ladderRows = [
         </section>
 
         <!-- ════════════ DURABILITY LADDER ════════════ -->
-        <section id="compare" class="scroll-mt-32 mb-16 bg-white border border-ink/5 p-6 md:p-8 overflow-hidden">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">The trade</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">How long each fix lasts</h2>
+        <section id="compare" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">The trade</p>
+          <h2 class="text-[32px] md:text-[44px] leading-none mt-2">How long each fix lasts</h2>
           <p class="mt-2 text-ink/65 max-w-2xl">Nothing except surgery and fat destruction is permanent — budget for maintenance of whatever works.</p>
 
-          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="tiles mt-6 sm:grid-cols-2 lg:grid-cols-4">
             {ladderRows.map((r) => (
-              <a href={`#${r.id}`} class="block p-5 bg-bone/40 border border-ink/5 hover:border-rose/40 transition group">
+              <a href={`#${r.id}`} class="tile group">
                 <div class="flex items-center justify-between gap-2 mb-2">
                   <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
                 </div>
-                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <h3 class="text-xl leading-tight transition-colors">{r.step}</h3>
                 <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
                 <p class="mt-3 text-xs font-medium text-ink/85">Lasts: {r.duration}</p>
               </a>
@@ -362,8 +354,8 @@ const ladderRows = [
         </section>
 
         <!-- ════════════ REFERENCES ════════════ -->
-        <section id="references" class="scroll-mt-32 bg-white p-8 border border-ink/5">
-          <h2 class="font-display text-3xl">References & further reading</h2>
+        <section id="references" class="scroll-mt-32 pt-6 border-t border-ink">
+          <h2 class="text-[32px] leading-none">References & further reading</h2>
           <p class="mt-2 text-ink/70 text-sm">
             All claims cite peer-reviewed studies, pivotal-trial reports, or regulatory documents,
             linked inline within each section. Primary sources: PubMed/PMC, Dermatologic Surgery,
@@ -386,11 +378,11 @@ const ladderRows = [
     details > summary { list-style: none; }
 
     details > summary:focus-visible {
-      outline: 2px solid var(--color-rose);
+      outline: 2px solid var(--color-accent);
       outline-offset: -2px;
     }
 
-    .card[open] > summary { background: rgba(184,130,109,0.04); }
+    .card[open] > summary { background: rgba(18,18,18,0.03); }
 
     section[id], details[id] {
       scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);

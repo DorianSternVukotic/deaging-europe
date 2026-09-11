@@ -1,70 +1,228 @@
 @import "tailwindcss";
 
+/*
+ * Tokens — the "Modern laboratory" system (design handoff 2a, first built on
+ * the lab branch for /lab/hair-loss), applied site-wide, with three deliberate
+ * exceptions: the one-line summaries stay visible on evidence rows and
+ * drawers, the four evidence tiers keep four distinct colours, and page titles
+ * (h1) keep the serif. Everything else — ground, ink, one accent, the grotesk
+ * headings, the mono captions, hairlines instead of cards — is the lab's.
+ */
 @theme {
-  --color-bone: #f7f4ee;
-  --color-ink: #1a1410;
-  --color-sage: #5a6b56;
-  --color-rose: #b8826d;
-  --color-gold: #c9a96e;
-  --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --color-bone: #fbfaf7;       /* the ground */
+  --color-bench: #f1efea;      /* figure fields, empty scale cells */
+  --color-ink: #121212;
+  --color-steel: #6b6f73;      /* mono captions, meta, column heads */
+  --color-accent: #2e5e8c;     /* eyebrows, links, openers, hover */
+  --color-sky: #a9c6e0;        /* button fill; eyebrows and CTAs on the dark band */
+  --color-sky-hover: #9dbad6;
+  /* Evidence tiers: kept saturated and distinct (the lab's single-hue scale
+     lost moderate vs emerging at a glance). `evidenceColor` in
+     src/data/evidence.ts points at these. */
+  --color-tier-strong: #16a34a;
+  --color-tier-moderate: #e0a106;
+  --color-tier-emerging: #e0673a;
+  --color-tier-limited: #8c8079;
+
+  --font-serif: "Cormorant Garamond", Georgia, serif;   /* page titles only */
+  --font-display: "Archivo", system-ui, sans-serif;     /* every other heading, labels, buttons */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* These rules are unlayered on purpose: they win over Tailwind's layered
+   utilities, so `h1` is serif even where a page still says `font-display`. */
+html { scroll-behavior: smooth; overflow-x: clip; }
 
 body {
   background: var(--color-bone);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4 {
+h1 { font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.01em; }
+h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.03em; }
+h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; }
+h1, h2, h3, .prose-anti p { text-wrap: pretty; }
+
+summary { list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary:focus-visible { outline: 1px solid var(--color-ink); outline-offset: 4px; }
+
+/* ── Type roles ─────────────────────────────────────────── */
+/* Micro headings carry the accent; the headings under them stay ink. */
+.eyebrow {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  line-height: 1.4;
+}
+/* Quiet variants: steel, for keys and labels that don't lead. */
+.eyebrow--steel { color: var(--color-steel); }
+.label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  line-height: 1.4;
+}
+.label--steel { color: var(--color-steel); }
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--color-steel);
+}
+/* The hero's "Updated · read time · sections" line: mono on a rule. */
+.meta {
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-ink);
+  max-width: 48rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-steel);
+  line-height: 1.5;
 }
 
-/* Long-form bodies rendered from HTML strings (guide rows, drawers, FAQ).
-   Global on purpose: the markup lives inside components, so page-scoped
-   rules never reach it. */
-.prose-anti p { margin-block: 0.85em; line-height: 1.7; }
-.prose-anti p:first-child { margin-top: 0; }
-.prose-anti a {
-  color: var(--color-rose);
-  text-decoration: underline;
-  text-decoration-color: rgba(184, 130, 109, 0.4);
-  text-underline-offset: 2px;
+/* ── Actions ────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--color-sky);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.prose-anti h4 { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-display); }
+.btn:hover { background: var(--color-sky-hover); color: var(--color-ink); }
+.btn:focus-visible { outline: 1px solid var(--color-ink); outline-offset: 3px; }
+.btn--lg { padding: 1.1rem 2rem; font-size: 13px; }
+.btn--outline { background: transparent; border: 1px solid var(--color-ink); }
+.btn--outline:hover { background: var(--color-ink); color: var(--color-bone); }
+/* Text CTA: tracked uppercase on a hairline. */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 3px;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.cta:hover { color: var(--color-ink); }
+
+/* ── Structure: hairlines, tiles, the dark band ─────────── */
+/* Tiles: cells on a 1px-gap grid drawn in ink. Set the columns with
+   Tailwind (`sm:grid-cols-2 lg:grid-cols-4`). */
+.tiles { display: grid; gap: 1px; background: var(--color-ink); border: 1px solid var(--color-ink); }
+.tile { background: var(--color-bone); padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 10px; min-width: 0; color: var(--color-ink); }
+.tile--flush { padding: 0; gap: 0; }
+.tile:hover h3 { color: var(--color-accent); }
+/* The one dark moment on a page (editor's picks; the product's studies). */
+.band { background: var(--color-ink); color: #ffffff; }
+.band h2, .band h3 { color: #ffffff; }
+.band p { color: rgba(255, 255, 255, 0.75); }
+.band .eyebrow { color: var(--color-sky); }
+.band .tiles { background: rgba(255, 255, 255, 0.28); border-color: rgba(255, 255, 255, 0.28); }
+.band .tile { background: var(--color-ink); color: #ffffff; }
+.band .tile:hover h3 { color: var(--color-sky); }
+.band .cta { color: var(--color-sky); }
+.band .cta:hover { color: #ffffff; }
+/* Full-bleed inside a centred container: bleed to the viewport edges and pad
+   the content back to where it was. (`html { overflow-x: clip }` absorbs the
+   scrollbar's half-width.) */
+.bleed { margin-inline: calc(50% - 50vw); padding-inline: calc(50vw - 50%); }
+
+/* The graded chart's column heads (desktop only); rows are EvidenceRow. */
+.chart-cols {
+  display: none;
+  grid-template-columns: 200px minmax(0, 1fr) 44px;
+  gap: 32px;
+  padding: 8px 0;
+  border-top: 1px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-steel);
+}
+@media (min-width: 768px) { .chart-cols { display: grid; } }
+@media (max-width: 767px) { .chart > details:first-of-type { border-top: 1px solid var(--color-ink); } }
+
+/* Tier pills (routine builders, comparison grids): the tier colour at 14%
+   behind itself. */
+.tier-pill { background: color-mix(in srgb, currentColor 14%, transparent); }
+.tier-strong { color: var(--color-tier-strong); }
+.tier-moderate { color: var(--color-tier-moderate); }
+.tier-emerging { color: var(--color-tier-emerging); }
+.tier-limited { color: var(--color-tier-limited); }
+.tier-none { color: rgba(18, 18, 18, 0.6); }
+
+/* ── Long-form bodies rendered from HTML strings (guide rows, drawers, FAQ).
+   Global on purpose: the markup lives inside components. ── */
+.prose-anti { font-size: 15px; line-height: 1.6; }
+.prose-anti p { margin-block: 0.8em; }
+.prose-anti > :first-child { margin-top: 0; }
+.prose-anti a { color: var(--color-accent); text-decoration: none; }
+.prose-anti a:hover { color: var(--color-ink); text-decoration: underline; text-underline-offset: 2px; }
+.prose-anti strong { font-weight: 500; }
+.prose-anti h4 { font-size: 1.125rem; margin-top: 1.5em; margin-bottom: 0.5em; }
 .prose-anti ul, .prose-anti ol { margin-block: 0.85em; padding-left: 1.5em; }
-.prose-anti ul { list-style: disc; }
+.prose-anti ul { list-style: square; }
 .prose-anti ol { list-style: decimal; }
-.prose-anti li { margin-block: 0.35em; line-height: 1.65; }
+.prose-anti li { margin-block: 0.35em; line-height: 1.6; }
 
 /* "Our pick" button inside a body — the same block button as the site's buy buttons. */
 .prose-anti a.product-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: var(--color-rose);
-  color: var(--color-bone);
+  padding: 0.9rem 1.5rem;
+  background: var(--color-sky);
+  color: var(--color-ink);
+  font-family: var(--font-display);
   font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.2;
   text-decoration: none;
   transition: background-color 0.15s ease;
 }
-.prose-anti a.product-btn:hover { background: var(--color-ink); }
-.prose-anti a.product-btn:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
+.prose-anti a.product-btn:hover { background: var(--color-sky-hover); color: var(--color-ink); text-decoration: none; }
+.prose-anti a.product-btn:focus-visible { outline: 1px solid var(--color-ink); outline-offset: 3px; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .reveal {
-    animation: reveal 0.6s ease-out both;
-  }
+  .reveal { animation: reveal 0.6s ease-out both; }
 }
-
 @keyframes reveal {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }

@@ -28,7 +28,6 @@ import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
 import {
   groups,
-  focusLabels,
   allSections,
   readingMinutes as guideReadingMinutes,
   PRODUCT_PATH,
@@ -73,12 +72,12 @@ const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emergin
 
 const evidencePillClass = (e?: Evidence) =>
   e === 'strong'
-    ? 'bg-sage/15 text-sage'
+    ? 'tier-pill tier-strong'
     : e === 'moderate'
-    ? 'bg-gold/15 text-gold'
+    ? 'tier-pill tier-moderate'
     : e === 'emerging'
-    ? 'bg-rose/15 text-rose'
-    : 'bg-ink/10 text-ink/60';
+    ? 'tier-pill tier-emerging'
+    : 'tier-pill tier-none';
 
 // Per-group ordering overrides (the data's evidence sort leaves unrated
 // sections in source order). In the top "read nothing else" batch, lead the
@@ -87,9 +86,6 @@ const groupOrder: Record<string, string[]> = { loss: ['signs', 'causes', 'preven
 // Title overrides (group id → heading). None currently.
 const groupTitle: Record<string, string> = {};
 const titleFor = (g: (typeof groups)[number]) => groupTitle[g.id] ?? g.title;
-// Intro overrides — '' hides the group's intro line on this page. None currently.
-const groupIntro: Record<string, string> = {};
-const introFor = (g: (typeof groups)[number]) => groupIntro[g.id] ?? g.intro;
 
 const orderedSections = (g: (typeof groups)[number]) => {
   const sorted = g.sections
@@ -164,17 +160,17 @@ const topicalRows = topicalGroup?.sections
 <BaseLayout title={title} description={description} locale={locale} path="collagen" type="article" image={media.hero.src}>
   <article class="bg-bone">
     <!-- ════════════ HERO ════════════ -->
-    <header class="relative border-b border-ink/10 overflow-hidden">
-      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+    <header class="relative">
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
         <div>
           <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
-            Collagen, end&#8209;to&#8209;end<span class="text-rose">.</span>
+            Collagen, end&#8209;to&#8209;end.
           </h1>
           <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
             What it is, what supplements actually do, and which clinical treatments stimulate new
             collagen.
           </p>
-          <p class="mt-3 text-xs text-ink/50">
+          <p class="meta">
             Updated 10 May 2026 · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
@@ -190,14 +186,14 @@ const topicalRows = topicalGroup?.sections
     </header>
 
     <!-- ════════════ TOP-FOLD SUMMARY + STATS ════════════ -->
-    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+    <section id="takeaways" class="scroll-mt-32 max-w-[1440px] mx-auto px-5 md:px-14 py-12 space-y-10">
       {/* Foundational info — what collagen is, the signs it is dropping, what
           burns through it, and how to slow that. Each drawer shows a one-line
           explainer while closed (the takeaway); expand for the full text. */}
       <div>
-        <p class="text-xs uppercase tracking-[0.3em] text-sage">Start here</p>
-        <h2 class="font-display text-3xl md:text-4xl mt-2">If you read nothing else</h2>
-        <div class="mt-6 grid gap-2">
+        <p class="eyebrow">Start here</p>
+        <h2 class="text-[32px] md:text-[44px] leading-none mt-2">If you read nothing else</h2>
+        <div class="mt-6 grid">
           {topSections.map((s) => (
             <ExpandableDrawer id={s.id} title={s.title} short={drawerShort[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
           ))}
@@ -229,21 +225,20 @@ const topicalRows = topicalGroup?.sections
     </section>
 
     <!-- ════════════ MAIN CONTENT (benefits, boost-it, safety, FAQ) ════════════ -->
-    <section class="bg-white border-y border-ink/5">
-      <div class="max-w-6xl mx-auto px-6 py-12">
+    <section>
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
 
-        <div class="mb-10 pt-4">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
-          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Collagen — what the evidence says</h2>
+        <div class="mb-10 pt-7 border-t-2 border-ink">
+          <p class="eyebrow">The full breakdown</p>
+          <h2 class="text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Collagen — what the evidence says</h2>
         </div>
 
         <div id="guide-body" class="min-w-0">
           {evidenceGroups.map((g) => (
           <>
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
-            <h2 class="font-display text-3xl md:text-4xl mt-2">{titleFor(g)}</h2>
-            {introFor(g) && <p class="mt-3 text-ink/70 max-w-2xl">{introFor(g)}</p>}
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{titleFor(g)}</h2>
 
             {/* Featured media for high-impact sections */}
             {g.id === 'boost-clinical' && (
@@ -253,14 +248,13 @@ const topicalRows = topicalGroup?.sections
               </div>
             )}
 
-            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+            <div class="chart mt-8">
+              <div class="chart-cols" aria-hidden="true"><span>Evidence · 0–4</span><span>Treatment</span><span></span></div>
                 {orderedSections(g).map((s) => (
                   <EvidenceRow
                     s={s}
-                    variant="bar"
                     open={openByDefault.has(s.id)}
-                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
-                    mediaTone={g.id === 'boost-clinical' ? 'rose' : g.id === 'boost-topical' ? 'gold' : undefined}
+                    figure={g.id === 'boost-clinical' || g.id === 'boost-topical'}
                   />
                 ))}
             </div>
@@ -270,19 +264,18 @@ const topicalRows = topicalGroup?.sections
               section so users have just finished reading about treatments
               and supplements. Affiliate slots per README brief. */}
           {g.id === 'boost-clinical' && (
-            <div id="picks" class="mb-16 scroll-mt-32">
-              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
-              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+            <div id="picks" class="band bleed scroll-mt-32 mb-16 py-12 md:py-14">
+              <p class="eyebrow">Editor's choice</p>
+              <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Our picks</h2>
               <p class="mt-3 text-ink/70 max-w-2xl">Four interventions our team consistently recommends — one supplement, one topical, and two clinical treatments.</p>
 
-              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   {
                     id: 'supplement-collagen',
                     kind: 'Supplement',
                     title: 'Hydrolyzed collagen peptides',
                     blurb: '10 g/day for 8–12 weeks — the most studied way to nudge skin, joints, and bone.',
-                    tone: 'sage' as const,
                     image: { src: aeterna('1e62623a558d455dbb34d101b5c40a20~mv2.png', 1200, 900), alt: 'Aeterna COLLAGEN MAX PRO tub on a mint background' },
                     href: PRODUCT_PATH,
                     cta: 'See the product',
@@ -292,7 +285,6 @@ const topicalRows = topicalGroup?.sections
                     kind: 'Topical',
                     title: 'Peptide serum (Matrixyl / copper)',
                     blurb: 'Signal peptides that tell skin to build more of its own collagen — pairs well with retinol.',
-                    tone: 'gold' as const,
                     image: { src: pexels(8054400, 900), alt: 'An amber serum bottle with a dropper on a glass surface' },
                   },
                   {
@@ -300,7 +292,6 @@ const topicalRows = topicalGroup?.sections
                     kind: 'Treatment',
                     title: 'Sculptra (poly-L-lactic acid)',
                     blurb: 'Injectable biostimulator that rebuilds volume over months — results last ~2 years.',
-                    tone: 'rose' as const,
                     image: { src: pexels(37663096, 900), alt: 'A clinician injecting a biostimulator near the cheekbone' },
                   },
                   {
@@ -308,20 +299,19 @@ const topicalRows = topicalGroup?.sections
                     kind: 'Treatment',
                     title: 'Microneedling + PRP',
                     blurb: 'Controlled micro-injury plus your own growth factors — for texture, tone and scars.',
-                    tone: 'bone' as const,
                     image: { src: pexels(39303923, 900), alt: 'Close-up of a microneedling pen on the forehead' },
                   },
                 ].map((pick) => (
                   <a
                     href={'href' in pick ? pick.href : `#${pick.id}`}
-                    class="pick-card group flex flex-col bg-white border border-ink/10 overflow-hidden hover:border-rose transition"
+                    class="pick-card tile tile--flush group overflow-hidden"
                   >
                     <img src={pick.image.src} alt={pick.image.alt} loading="lazy" class="w-full aspect-[4/3] object-cover" />
                     <div class="p-5 flex flex-col flex-1">
-                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
-                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="eyebrow">{pick.kind}</p>
+                      <h3 class="text-xl leading-tight mt-1 transition-colors">{pick.title}</h3>
                       <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
-                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                      <span class="cta mt-4 self-start">
                         {'cta' in pick ? pick.cta : 'View details'}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -341,16 +331,15 @@ const topicalRows = topicalGroup?.sections
     </section>
 
     <!-- ════════════ SAFETY / FAQ TAIL + ROUTINE / PICKS / REFERENCES ════════════ -->
-    <div class="max-w-6xl mx-auto px-6 py-12">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
 
         {/* Side-effects & FAQ — back on the bone background so the plain
             white ExpandableDrawers float, matching the basics/loss batch. */}
         {tailInfoGroups.map((g) => (
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
-            <h2 class="font-display text-3xl md:text-4xl mt-2">{titleFor(g)}</h2>
-            {introFor(g) && <p class="mt-3 text-ink/70 max-w-2xl">{introFor(g)}</p>}
-            <div class="mt-8 grid gap-2">
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{titleFor(g)}</h2>
+            <div class="mt-8 grid">
               {orderedSections(g).map((s) => (
                 <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
               ))}
@@ -359,9 +348,9 @@ const topicalRows = topicalGroup?.sections
         ))}
 
         <!-- ════════════ BUILD-A-ROUTINE ════════════ -->
-        <section id="routine" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 p-6 md:p-10 border border-ink/5">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">Build your collagen routine</h2>
+        <section id="routine" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">Interactive</p>
+          <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Build your collagen routine</h2>
           <p class="mt-2 text-ink/70 max-w-2xl">Pick one option from each row. Your daily stack appears below. Saved to your browser only.</p>
 
           <div class="mt-8 space-y-6" id="routine-builder">
@@ -379,33 +368,33 @@ const topicalRows = topicalGroup?.sections
                 </div>
                 <div class="flex flex-wrap gap-2">
                   {row.opts.map((opt) => (
-                    <button type="button" data-opt={opt} class="routine-opt text-sm px-3 py-1.5 border border-ink/15 bg-white hover:border-rose transition">{opt}</button>
+                    <button type="button" data-opt={opt} class="routine-opt text-sm px-3 py-1.5 border border-ink/25 hover:border-accent transition">{opt}</button>
                   ))}
                 </div>
               </div>
             ))}
           </div>
 
-          <div id="routine-summary" class="mt-10 p-6 bg-white border border-ink/10">
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Your stack</p>
+          <div id="routine-summary" class="mt-10 pt-6 border-t border-ink">
+            <p class="eyebrow">Your stack</p>
             <p id="routine-empty" class="mt-3 text-ink/60 italic">Pick at least one option above to see your routine.</p>
             <ul id="routine-list" class="mt-3 space-y-2 hidden text-[15px]"></ul>
           </div>
         </section>
 
         <!-- ════════════ TOPICAL PRODUCT TABLE ════════════ -->
-        <section id="compare-topical" class="scroll-mt-32 mb-16 bg-white border border-ink/5 p-6 md:p-8 overflow-hidden">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">Daily-care picks</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">Topical products by evidence</h2>
+        <section id="compare-topical" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">Daily-care picks</p>
+          <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Topical products by evidence</h2>
           <p class="mt-2 text-ink/65 max-w-2xl">Our editorial picks for each topical category. Not affiliate, not exhaustive — anchors for further reading.</p>
 
-          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="tiles mt-6 sm:grid-cols-2 lg:grid-cols-3">
             {topicalRows.map((r) => (
-              <a href={`#${r.id}`} class="block p-5 bg-bone/40 border border-ink/5 hover:border-rose/40 transition group">
+              <a href={`#${r.id}`} class="tile group">
                 <div class="flex items-center justify-between gap-2 mb-2">
                   <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
                 </div>
-                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.title}</h3>
+                <h3 class="text-xl leading-tight transition-colors">{r.title}</h3>
                 <p class="mt-1 text-sm text-ink/65 leading-snug">{r.tldr}</p>
                 <p class="mt-3 text-xs font-medium text-ink/85">Top pick: {r.product}</p>
               </a>
@@ -414,8 +403,8 @@ const topicalRows = topicalGroup?.sections
         </section>
 
         <!-- ════════════ REFERENCES ════════════ -->
-        <section id="references" class="scroll-mt-32 bg-white p-8 border border-ink/5">
-          <h2 class="font-display text-3xl">References & further reading</h2>
+        <section id="references" class="scroll-mt-32 pt-6 border-t border-ink">
+          <h2 class="text-[32px] leading-none">References & further reading</h2>
           <p class="mt-2 text-ink/70 text-sm">
             All claims cite peer-reviewed studies, major reviews, or clinical-society sources, linked
             inline within each section. Primary sources: PubMed/NIH NCBI, PMC, AAD, Cleveland Clinic,
@@ -437,16 +426,16 @@ const topicalRows = topicalGroup?.sections
     details > summary { list-style: none; }
 
     details > summary:focus-visible {
-      outline: 2px solid var(--color-rose);
+      outline: 2px solid var(--color-accent);
       outline-offset: -2px;
     }
 
-    .card[open] > summary { background: rgba(184,130,109,0.04); }
+    .card[open] > summary { background: rgba(18,18,18,0.03); }
 
     .routine-opt.active {
-      background: var(--color-rose);
+      background: var(--color-accent);
       color: var(--color-bone);
-      border-color: var(--color-rose);
+      border-color: var(--color-accent);
     }
 
     section[id], details[id] {
@@ -510,7 +499,7 @@ const topicalRows = topicalGroup?.sections
         list.innerHTML = items
           .map((i) => {
             const pick = i.key === 'collagen' && !/^skip/i.test(i.choice)
-              ? ' <a href="/products/collagen-max-pro" class="text-rose text-sm underline decoration-rose/40 underline-offset-2 hover:decoration-rose">our pick →</a>'
+              ? ' <a href="/products/collagen-max-pro" class="text-accent text-sm underline decoration-accent/40 underline-offset-2 hover:decoration-accent">our pick →</a>'
               : '';
             return `<li class="flex justify-between gap-3 border-b border-ink/5 py-2 last:border-0"><span class="text-ink/60 text-sm">${i.label}</span><span class="font-medium">${i.choice}${pick}</span></li>`;
           })

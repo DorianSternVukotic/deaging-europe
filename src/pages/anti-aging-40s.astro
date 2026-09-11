@@ -12,7 +12,6 @@ import { DEFAULT_LOCALE } from '../i18n/ui';
 import {
   keyTakeaways,
   groups,
-  focusLabels,
   allSections,
   readingMinutes as guideReadingMinutes,
   type Evidence,
@@ -29,12 +28,12 @@ const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emergin
 
 const evidencePillClass = (e?: Evidence) =>
   e === 'strong'
-    ? 'bg-sage/15 text-sage'
+    ? 'tier-pill tier-strong'
     : e === 'moderate'
-    ? 'bg-gold/15 text-gold'
+    ? 'tier-pill tier-moderate'
     : e === 'emerging'
-    ? 'bg-rose/15 text-rose'
-    : 'bg-ink/10 text-ink/60';
+    ? 'tier-pill tier-emerging'
+    : 'tier-pill tier-none';
 
 const orderedSections = (g: (typeof groups)[number]) =>
   g.sections
@@ -96,35 +95,35 @@ const tierRows = [
 <BaseLayout title={title} description={description} locale={locale} path="anti-aging-40s" type="article">
   <article class="bg-bone">
     <!-- ════════════ HERO ════════════ -->
-    <header class="relative border-b border-ink/10 overflow-hidden">
-      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+    <header class="relative">
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
         <div>
-          <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">By decade · 40–49</p>
+          <p class="eyebrow mb-4">By decade · 40–49</p>
           <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
-            Your 40s, evidence first<span class="text-rose">.</span>
+            Your 40s, evidence first.
           </h1>
           <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
             The transition decade: perimenopause, deflation, and the procedures whose best
             age-matched evidence sits right here &mdash; alongside the overfill trap.
           </p>
-          <p class="mt-3 text-xs text-ink/50">
+          <p class="meta">
             Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
-        <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait — 40s" tone="rose" class="w-full lg:w-72" />
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait — 40s" class="w-full lg:w-72" />
       </div>
     </header>
 
 
     <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
-    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+    <section id="takeaways" class="scroll-mt-32 max-w-[1440px] mx-auto px-5 md:px-14 py-12 space-y-10">
       <div>
-        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
-        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <p class="eyebrow">The case in five lines</p>
+        <h2 class="text-3xl mt-2">If you read nothing else</h2>
         <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
           {keyTakeaways.map((k, i) => (
             <li class="flex gap-3">
-              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span class="font-display text-accent w-6 shrink-0">{i + 1}.</span>
               <span>{k}</span>
             </li>
           ))}
@@ -132,13 +131,13 @@ const tierRows = [
       </div>
 
       <div>
-        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" />
       </div>
 
       {topInfoGroups.map((g) => (
         <section id={g.id} class="scroll-mt-32 pt-2">
-          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
-          <div class="mt-6 grid gap-2">
+          <h2 class="text-[32px] md:text-[44px] leading-none">{g.title}</h2>
+          <div class="mt-6 grid">
             {g.sections.map((s) => (
               <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
             ))}
@@ -148,88 +147,82 @@ const tierRows = [
     </section>
 
     <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
-    <section class="bg-white border-y border-ink/5">
-      <div class="max-w-6xl mx-auto px-6 py-12">
+    <section>
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
 
-        <div class="mb-10 pt-4">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
-          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Your 40s — what the evidence says</h2>
+        <div class="mb-10 pt-7 border-t-2 border-ink">
+          <p class="eyebrow">The full breakdown</p>
+          <h2 class="text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Your 40s — what the evidence says</h2>
         </div>
 
         <div id="guide-body" class="min-w-0">
           {evidenceGroups.map((g) => (
           <>
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
-            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
-            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
 
             {g.id === 'clinic' && (
               <div class="mt-6 grid md:grid-cols-2 gap-4">
-                <MediaPlaceholder kind="video" ratio="16/9" label="Where the face deflates, mapped" tone="rose" />
-                <MediaPlaceholder kind="image" ratio="16/9" label="The SWAN timeline" tone="bone" />
+                <MediaPlaceholder kind="video" ratio="16/9" label="Where the face deflates, mapped" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The SWAN timeline" />
               </div>
             )}
 
-            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+            <div class="chart mt-8">
+              <div class="chart-cols" aria-hidden="true"><span>Evidence · 0–4</span><span>Treatment</span><span></span></div>
                 {orderedSections(g).map((s) => (
                   <EvidenceRow
                     s={s}
-                    variant="bar"
-                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
-                    mediaTone={g.id === 'clinic' ? 'rose' : undefined}
+                    figure={g.id === 'clinic'}
                   />
                 ))}
             </div>
           </section>
 
           {g.id === lastChartGroupId && (
-            <div id="picks" class="mb-16 scroll-mt-32">
-              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
-              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+            <div id="picks" class="band bleed scroll-mt-32 mb-16 py-12 md:py-14">
+              <p class="eyebrow">Editor's choice</p>
+              <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Our picks</h2>
               <p class="mt-3 text-ink/70 max-w-2xl">The four decisions that matter most between 40 and 50.</p>
 
-              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   {
                     id: 'daily-tretinoin',
                     kind: 'The engine',
                     title: 'Low-dose tretinoin, nightly',
                     blurb: 'Two RCTs of 0.02% cream in 43–70-year-olds — the best age-matched evidence you\'ll find.',
-                    tone: 'sage' as const,
                   },
                   {
                     id: 'clinic-toxin',
                     kind: 'The procedure',
                     title: 'Toxin for resting lines',
                     blurb: 'Treat the muscle before the line etches — the one "preventive" use with trial-grade proof.',
-                    tone: 'rose' as const,
                   },
                   {
                     id: 'health-mht',
                     kind: 'The consultation',
                     title: 'A menopause specialist, early',
                     blurb: 'The favourable hormone-therapy window is now and closes with time, not age.',
-                    tone: 'gold' as const,
                   },
                   {
                     id: 'health-strength',
                     kind: 'The body',
                     title: 'Strength before the transition',
                     blurb: 'Lean mass and bone start falling two years before the final period.',
-                    tone: 'bone' as const,
                   },
                 ].map((pick) => (
                   <a
                     href={`#${pick.id}`}
-                    class="pick-card group flex flex-col bg-white border border-ink/10 overflow-hidden hover:border-rose transition"
+                    class="pick-card tile tile--flush group overflow-hidden"
                   >
-                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} />
                     <div class="p-5 flex flex-col flex-1">
-                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
-                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="eyebrow">{pick.kind}</p>
+                      <h3 class="text-xl leading-tight mt-1 transition-colors">{pick.title}</h3>
                       <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
-                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                      <span class="cta mt-4 self-start">
                         View details
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -249,14 +242,13 @@ const tierRows = [
     </section>
 
     <!-- ════════════ SAFETY / FAQ TAIL + PLAN BUILDER / TIERS / REFERENCES ════════════ -->
-    <div class="max-w-6xl mx-auto px-6 py-12">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
 
         {tailInfoGroups.map((g) => (
           <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
-            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
-            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
-            <div class="mt-8 grid gap-2">
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
+            <div class="mt-8 grid">
               {g.sections.map((s) => (
                 <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
               ))}
@@ -265,9 +257,9 @@ const tierRows = [
         ))}
 
         <!-- ════════════ BUILD-YOUR-40s-PLAN ════════════ -->
-        <section id="routine" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 p-6 md:p-10 border border-ink/5">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">Build your 40s plan</h2>
+        <section id="routine" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">Interactive</p>
+          <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Build your 40s plan</h2>
           <p class="mt-2 text-ink/70 max-w-2xl">Pick one option per row. Your plan appears below. Saved to your browser only.</p>
 
           <div class="mt-8 space-y-6" id="routine-builder">
@@ -287,15 +279,15 @@ const tierRows = [
                 </div>
                 <div class="flex flex-wrap gap-2">
                   {row.opts.map((opt) => (
-                    <button type="button" data-opt={opt} class="routine-opt text-sm px-3 py-1.5 border border-ink/15 bg-white hover:border-rose transition">{opt}</button>
+                    <button type="button" data-opt={opt} class="routine-opt text-sm px-3 py-1.5 border border-ink/25 hover:border-accent transition">{opt}</button>
                   ))}
                 </div>
               </div>
             ))}
           </div>
 
-          <div id="routine-summary" class="mt-10 p-6 bg-white border border-ink/10">
-            <p class="text-xs uppercase tracking-[0.3em] text-sage">Your plan</p>
+          <div id="routine-summary" class="mt-10 pt-6 border-t border-ink">
+            <p class="eyebrow">Your plan</p>
             <p id="routine-empty" class="mt-3 text-ink/60 italic">Pick at least one option above to see your plan.</p>
             <ul id="routine-list" class="mt-3 space-y-2 hidden text-[15px]"></ul>
             <p class="mt-4 text-xs text-ink/50">Filler and PLLA in alternate years, never both. Track lifetime midface volume.</p>
@@ -303,18 +295,18 @@ const tierRows = [
         </section>
 
         <!-- ════════════ BUDGET TIERS ════════════ -->
-        <section id="compare" class="scroll-mt-32 mb-16 bg-white border border-ink/5 p-6 md:p-8 overflow-hidden">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">By budget</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">What each tier buys — and what it doesn't</h2>
+        <section id="compare" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">By budget</p>
+          <h2 class="text-[32px] md:text-[44px] leading-none mt-2">What each tier buys — and what it doesn't</h2>
           <p class="mt-2 text-ink/65 max-w-2xl">Indicative Western-European figures. Nothing in the top tier has evidence that it stacks.</p>
 
-          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="tiles mt-6 sm:grid-cols-2 lg:grid-cols-4">
             {tierRows.map((r) => (
-              <a href={`#${r.id}`} class="block p-5 bg-bone/40 border border-ink/5 hover:border-rose/40 transition group">
+              <a href={`#${r.id}`} class="tile group">
                 <div class="flex items-center justify-between gap-2 mb-2">
                   <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
                 </div>
-                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.tier}</h3>
+                <h3 class="text-xl leading-tight transition-colors">{r.tier}</h3>
                 <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
                 <p class="mt-3 text-xs font-medium text-ink/85">{r.price}</p>
               </a>
@@ -323,8 +315,8 @@ const tierRows = [
         </section>
 
         <!-- ════════════ REFERENCES ════════════ -->
-        <section id="references" class="scroll-mt-32 bg-white p-8 border border-ink/5">
-          <h2 class="font-display text-3xl">References & further reading</h2>
+        <section id="references" class="scroll-mt-32 pt-6 border-t border-ink">
+          <h2 class="text-[32px] leading-none">References & further reading</h2>
           <p class="mt-2 text-ink/70 text-sm">
             All claims cite peer-reviewed studies, meta-analyses, cohort reports, or society
             statements, linked inline within each section. Primary sources: SWAN publications,
@@ -346,16 +338,16 @@ const tierRows = [
     details > summary { list-style: none; }
 
     details > summary:focus-visible {
-      outline: 2px solid var(--color-rose);
+      outline: 2px solid var(--color-accent);
       outline-offset: -2px;
     }
 
-    .card[open] > summary { background: rgba(184,130,109,0.04); }
+    .card[open] > summary { background: rgba(18,18,18,0.03); }
 
     .routine-opt.active {
-      background: var(--color-rose);
+      background: var(--color-accent);
       color: var(--color-bone);
-      border-color: var(--color-rose);
+      border-color: var(--color-accent);
     }
 
     section[id], details[id] {

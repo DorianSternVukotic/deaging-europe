@@ -16,11 +16,13 @@ export const evidenceLabels: Record<Evidence, string> = {
 };
 
 /** Saturated tier colours — read better than the muted brand tones at small sizes. */
+// The four tier colours live in src/styles/global.css (@theme --color-tier-*);
+// these are used in inline styles, so they resolve at render time.
 export const evidenceColor: Record<Evidence, string> = {
-  strong: '#16a34a',
-  moderate: '#e0a106',
-  emerging: '#e0673a',
-  limited: '#8c8079',
+  strong: 'var(--color-tier-strong)',
+  moderate: 'var(--color-tier-moderate)',
+  emerging: 'var(--color-tier-emerging)',
+  limited: 'var(--color-tier-limited)',
 };
 
 /** How many graded sections fall in each tier (ungraded sections excluded). */

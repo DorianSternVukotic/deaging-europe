@@ -46,7 +46,7 @@ const priceLine = [
 const main = gallery[0];
 ---
 <section class="product-hero border-b border-ink/5">
-  <div class="max-w-6xl mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-16 grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
+  <div class="max-w-[1440px] mx-auto px-5 md:px-14 pt-8 pb-12 md:pt-12 md:pb-16 grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
 
     <!-- Gallery: cut-outs sit padded on the pale mint of the tub's own label;
          photographs (fit: cover) fill the same 4:5 frame edge to edge. -->
@@ -67,7 +67,7 @@ const main = gallery[0];
           {gallery.map((g, i) => (
             <button
               type="button"
-              class="thumb aspect-square overflow-hidden border border-ink/10 bg-white hover:border-rose/60 transition"
+              class="thumb aspect-square overflow-hidden border border-ink/15 bg-bench hover:border-accent transition"
               data-src={g.src}
               data-alt={g.alt}
               data-fit={g.fit ?? 'contain'}
@@ -88,13 +88,13 @@ const main = gallery[0];
 
     <!-- Buy box -->
     <div class="reveal">
-      <p class="text-xs uppercase tracking-[0.3em] text-sage">{brand}{origin && <span class="text-ink/40"> · {origin}</span>}</p>
+      <p class="eyebrow">{brand}{origin && <span class="text-ink/40"> · {origin}</span>}</p>
       <h1 class="font-display text-4xl md:text-5xl mt-2 leading-[1.05]">{title}</h1>
       {whatItIs && <p class="mt-4 text-ink/75 leading-relaxed">{whatItIs}</p>}
 
       {actives.length > 0 && (
-        <div class="mt-6 border border-ink/10 bg-white p-5">
-          <p class="text-[10px] uppercase tracking-[0.25em] text-sage">{t(locale, 'product.ledger')}</p>
+        <div class="mt-6 border-y border-ink py-4">
+          <p class="eyebrow">{t(locale, 'product.ledger')}</p>
           <ul class="mt-2 divide-y divide-ink/[0.06]">
             {actives.map((a) => (
               <li class="py-2 flex items-center gap-3">
@@ -118,7 +118,7 @@ const main = gallery[0];
               href={v.url}
               target="_blank"
               rel="sponsored noopener"
-              class="border border-ink/15 bg-white px-3.5 py-1.5 text-sm hover:border-rose hover:text-rose transition"
+              class="border border-ink/25 px-3.5 py-1.5 text-sm hover:border-accent hover:text-accent transition"
             >
               {v.short} <span class="text-ink/45">· {symbol}{v.price}</span>
             </a>
@@ -138,7 +138,7 @@ const main = gallery[0];
         href={buyUrl}
         target="_blank"
         rel="sponsored noopener"
-        class="mt-4 inline-flex w-full items-center justify-center gap-2 bg-rose px-8 py-4 text-lg font-semibold text-bone transition hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose"
+        class="btn btn--lg mt-4 w-full justify-center"
       >
         {cta}
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -157,7 +157,7 @@ const main = gallery[0];
         <ul class="mt-6 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] uppercase tracking-wider text-ink/55">
           {badges.map((b) => (
             <li class="flex items-center gap-1.5">
-              <span class="w-1 h-1 bg-sage" aria-hidden="true"></span>{b}
+              <span class="w-1.5 h-1.5 bg-accent" aria-hidden="true"></span>{b}
             </li>
           ))}
         </ul>
@@ -188,7 +188,7 @@ const main = gallery[0];
     background: linear-gradient(180deg, #e3f1ed 0%, #d3eae4 100%);
   }
   .thumb[aria-pressed='true'] {
-    border-color: var(--color-rose);
-    box-shadow: 0 0 0 1px var(--color-rose);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent);
   }
 </style>

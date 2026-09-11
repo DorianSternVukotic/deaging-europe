@@ -11,13 +11,13 @@ const email = 'dorian.sternvukotic@gmail.com';
   locale={locale}
   path="contact"
 >
-  <article class="max-w-6xl mx-auto px-6 pt-20 md:pt-28 pb-24 grid lg:grid-cols-[1fr_1.2fr] gap-14 lg:gap-24 items-start">
+  <article class="max-w-[1440px] mx-auto px-5 md:px-14 pt-20 md:pt-28 pb-24 grid lg:grid-cols-[1fr_1.2fr] gap-14 lg:gap-24 items-start">
     <header>
-      <p class="text-xs uppercase tracking-[0.4em] text-sage">Contact</p>
-      <h1 class="font-display text-5xl md:text-6xl mt-5 leading-[1.05]">Write to us<span class="text-rose">.</span></h1>
+      <p class="eyebrow">Contact</p>
+      <h1 class="font-display text-5xl md:text-6xl mt-5 leading-[1.05]">Write to us.</h1>
       <a
         href={`mailto:${email}`}
-        class="mt-8 inline-flex items-center gap-2 bg-ink px-7 py-4 text-bone font-semibold hover:bg-rose transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose"
+        class="btn btn--outline mt-8"
       >
         {email}
       </a>
@@ -26,9 +26,9 @@ const email = 'dorian.sternvukotic@gmail.com';
       </p>
     </header>
 
-    <section class="bg-white border border-ink/10 p-8 md:p-12">
-      <p class="text-[11px] uppercase tracking-[0.3em] font-semibold text-sage">For brands</p>
-      <h2 class="font-display text-3xl md:text-4xl mt-3 leading-tight">
+    <section class="border-t border-ink pt-8">
+      <p class="eyebrow">For brands</p>
+      <h2 class="text-[32px] md:text-[44px] leading-none mt-3 leading-tight">
         List your product in Europe. We handle everything.
       </h2>
       <p class="mt-6 text-ink/80 leading-relaxed">
@@ -41,7 +41,7 @@ const email = 'dorian.sternvukotic@gmail.com';
       </p>
       <a
         href={`mailto:${email}?subject=${encodeURIComponent('Listing a product in Europe')}`}
-        class="mt-8 inline-flex items-center gap-2 bg-rose px-7 py-3.5 text-bone font-semibold hover:bg-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose"
+        class="btn mt-8"
       >
         Start with an email
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>

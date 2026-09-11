@@ -14,7 +14,7 @@ const { blocks } = Astro.props;
     if (block.type === 'paragraph') {
       return (
         <div class="mb-10">
-          {block.title && <h2 class="font-display text-3xl mb-4">{block.title}</h2>}
+          {block.title && <h2 class="text-3xl mb-4">{block.title}</h2>}
           <p class="text-ink/85">{block.body}</p>
         </div>
       );
@@ -44,8 +44,8 @@ const { blocks } = Astro.props;
     if (block.type === 'table') {
       return (
         <div class="mb-10">
-          {block.title && <h2 class="font-display text-3xl mb-4">{block.title}</h2>}
-          <div class="overflow-x-auto border border-ink/10">
+          {block.title && <h2 class="text-3xl mb-4">{block.title}</h2>}
+          <div class="overflow-x-auto border-y border-ink">
             <table class="w-full text-left text-sm">
               <thead class="bg-bone">
                 <tr>{block.headers.map((h) => <th class="px-4 py-3 font-semibold">{h}</th>)}</tr>
@@ -65,10 +65,10 @@ const { blocks } = Astro.props;
     if (block.type === 'list') {
       return (
         <div class="mb-10">
-          {block.title && <h2 class="font-display text-3xl mb-4">{block.title}</h2>}
+          {block.title && <h2 class="text-3xl mb-4">{block.title}</h2>}
           <ul class="space-y-2">
             {block.items.map((i) => (
-              <li class="flex gap-3"><span class="text-rose mt-1 text-[0.6em]">■</span><span>{i}</span></li>
+              <li class="flex gap-3"><span class="text-accent mt-1 text-[0.6em]">■</span><span>{i}</span></li>
             ))}
           </ul>
         </div>

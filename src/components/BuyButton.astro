@@ -8,19 +8,15 @@ interface Props {
   variant?: 'primary' | 'outline';
 }
 const { href, locale, size = 'md', variant = 'primary' } = Astro.props;
-const sizeCls = size === 'lg' ? 'text-lg px-8 py-4' : 'px-6 py-3';
-const variantCls = variant === 'outline'
-  ? 'border border-ink text-ink hover:bg-ink hover:text-bone'
-  : 'bg-rose text-bone hover:bg-ink';
 ---
 <a
   href={href}
   rel="sponsored noopener"
   target="_blank"
-  class={`inline-flex items-center gap-2 font-semibold transition ${sizeCls} ${variantCls}`}
+  class:list={['btn', size === 'lg' && 'btn--lg', variant === 'outline' && 'btn--outline']}
 >
   {t(locale, 'product.buy')}
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
     <path d="M5 12h14M13 5l7 7-7 7" />
   </svg>
 </a>

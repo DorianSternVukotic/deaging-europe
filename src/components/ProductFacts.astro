@@ -21,10 +21,10 @@ const { locale, facts, caveats } = Astro.props;
 ---
 {(facts || caveats.length > 0) && (
   <section id="label" class="scroll-mt-32">
-    <div class="max-w-6xl mx-auto px-6 py-16 md:py-20 grid lg:grid-cols-[minmax(0,420px)_1fr] gap-12 lg:gap-16 items-start">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-16 md:py-20 grid lg:grid-cols-[minmax(0,420px)_1fr] gap-12 lg:gap-16 items-start">
       {facts && (
         <div>
-          <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.facts.title')}</h2>
+          <h2 class="text-[32px] md:text-[44px] leading-none">{t(locale, 'product.facts.title')}</h2>
           <div class="facts-panel mt-6 bg-white border-2 border-ink p-5 font-sans">
             <div class="flex justify-between gap-4 text-sm py-1.5">
               <span>{t(locale, 'product.facts.serving')}</span>
@@ -56,11 +56,11 @@ const { locale, facts, caveats } = Astro.props;
 
       {caveats.length > 0 && (
         <div>
-          <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.caveats.title')}</h2>
+          <h2 class="text-[32px] md:text-[44px] leading-none">{t(locale, 'product.caveats.title')}</h2>
           <ul class="mt-6 divide-y divide-ink/10">
             {caveats.map((c) => (
               <li class="py-5 grid sm:grid-cols-[220px_1fr] gap-2 sm:gap-6">
-                <h3 class="font-display text-xl leading-tight">{c.title}</h3>
+                <h3 class="text-xl leading-tight">{c.title}</h3>
                 <p class="text-sm text-ink/75 leading-relaxed">{c.body}</p>
               </li>
             ))}
