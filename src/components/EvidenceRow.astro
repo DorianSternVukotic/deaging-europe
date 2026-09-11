@@ -55,9 +55,10 @@ const hasRating = !!s.evidence;
 
     {/* ── Evidence indicator ──
          Mobile: a fixed-width block, so weaker ratings don't trail a long
-         empty track. Desktop (md+): a four-segment ruled bar with the tier word
-         beside it, so length still reads as longer = stronger down the sorted list
-         and every row shows all four segments. */}
+         empty track. Desktop (md+): a four-segment ruled bar, each segment wide
+         enough to hold the tier word, which sits in the first one — so the word
+         is the unit of the scale, length reads as longer = stronger down the
+         sorted list, and every row shows all four segments. */}
     {variant === 'bar' ? (
       <>
         {hasRating ? (
@@ -68,19 +69,18 @@ const hasRating = !!s.evidence;
         ) : (
           <span class="md:hidden shrink-0 w-24 inline-flex items-center justify-center py-1 text-xs uppercase tracking-widest font-semibold bg-ink/10 text-ink/50">info</span>
         )}
-        <div class="hidden md:flex shrink-0 items-center gap-2.5">
-          <div class:list={['relative w-36 h-4 bg-ink/[0.07]', hasRating && 'scale-track']} aria-hidden="true">
-            {hasRating && (
-              <div
-                class="absolute inset-y-0 left-0"
-                style={`width: ${evidenceWidth[evidence]}%; background: ${evidenceColor[evidence]};`}
-              ></div>
-            )}
-          </div>
+        <div class:list={['hidden md:block shrink-0 relative w-72 h-5 bg-ink/[0.07]', hasRating && 'scale-track']}>
           {hasRating ? (
-            <span class="w-16 text-[10px] uppercase tracking-widest font-semibold whitespace-nowrap" style={`color: ${evidenceColor[evidence]};`}>{evidence}</span>
+            <div
+              class="absolute inset-y-0 left-0 flex items-center px-2"
+              style={`width: ${evidenceWidth[evidence]}%; background: ${evidenceColor[evidence]};`}
+            >
+              <span class="text-[10px] uppercase tracking-wider font-semibold text-white whitespace-nowrap">{evidence}</span>
+            </div>
           ) : (
-            <span class="w-16 text-[10px] uppercase tracking-widest font-semibold text-ink/45">info</span>
+            <div class="absolute inset-0 flex items-center px-2">
+              <span class="text-[10px] uppercase tracking-wider font-semibold text-ink/45">info</span>
+            </div>
           )}
         </div>
       </>
@@ -105,14 +105,14 @@ const hasRating = !!s.evidence;
     )}
 
     {/* ── Summary preview, fills the reclaimed space (desktop only) ── */}
-    <p class="hidden md:block flex-1 min-w-0 truncate text-sm text-ink/55 leading-snug">{s.tldr}</p>
+    <p class="hidden lg:block flex-1 min-w-0 truncate text-sm text-ink/55 leading-snug">{s.tldr}</p>
 
     {tag && (
       <span class="hidden lg:inline-flex shrink-0 text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 bg-bone text-ink/60 border border-ink/10 whitespace-nowrap">
         {tag}
       </span>
     )}
-    <span class="caret shrink-0 w-9 h-9 flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+    <span class="caret shrink-0 ml-auto w-9 h-9 flex items-center justify-center text-rose bg-rose/10 group-hover:bg-rose group-hover:text-white group-open:bg-rose group-open:text-white transition" aria-hidden="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
         <polyline points="6 9 12 15 18 9"></polyline>
       </svg>
@@ -164,8 +164,9 @@ const hasRating = !!s.evidence;
   /* The bar is a ruled scale: a hairline tick at each of the four tiers
      (limited 25 · emerging 50 · moderate 75 · strong 100), drawn over the
      whole track including the fill, so every rating shows all four segments
-     and how many are filled. The tier word sits beside the bar, never under
-     a tick. Unrated rows get the plain track without the scale. */
+     and how many are filled. Each segment is wide enough for the tier word,
+     which sits inside the first one, so no tick runs through text. Unrated
+     rows get the plain track without the scale. */
   .scale-track::after {
     content: '';
     position: absolute;
