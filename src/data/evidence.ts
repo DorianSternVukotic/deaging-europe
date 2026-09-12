@@ -15,7 +15,7 @@ export const evidenceLabels: Record<Evidence, string> = {
   limited: 'Limited evidence',
 };
 
-/** Saturated tier colours — read better than the muted brand tones at small sizes. */
+/** Tier colours: a green-to-yellow ramp, strongest darkest — never red. */
 // The four tier colours live in src/styles/global.css (@theme --color-tier-*);
 // these are used in inline styles, so they resolve at render time.
 export const evidenceColor: Record<Evidence, string> = {

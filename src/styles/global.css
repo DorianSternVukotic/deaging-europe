@@ -16,13 +16,14 @@
   --color-accent: #2e5e8c;     /* eyebrows, links, openers, hover */
   --color-sky: #a9c6e0;        /* button fill; eyebrows and CTAs on the dark band */
   --color-sky-hover: #9dbad6;
-  /* Evidence tiers: kept saturated and distinct (the lab's single-hue scale
-     lost moderate vs emerging at a glance). `evidenceColor` in
+  /* Evidence tiers: four distinct steps on one green-to-yellow ramp (deep
+     green → leaf green → gold → pale straw). No red or grey: a lower tier
+     means thinner evidence, not "doesn't work". `evidenceColor` in
      src/data/evidence.ts points at these. */
-  --color-tier-strong: #16a34a;
-  --color-tier-moderate: #e0a106;
-  --color-tier-emerging: #e0673a;
-  --color-tier-limited: #8c8079;
+  --color-tier-strong: #1b7f3b;
+  --color-tier-moderate: #6aa32a;
+  --color-tier-emerging: #d4a821;
+  --color-tier-limited: #cdb44f;
 
   --font-serif: "Cormorant Garamond", Georgia, serif;   /* page titles only */
   --font-display: "Archivo", system-ui, sans-serif;     /* every other heading, labels, buttons */
@@ -159,23 +160,14 @@ summary:focus-visible { outline: 1px solid var(--color-ink); outline-offset: 4px
    scrollbar's half-width.) */
 .bleed { margin-inline: calc(50% - 50vw); padding-inline: calc(50vw - 50%); }
 
-/* The graded chart's column heads (desktop only); rows are EvidenceRow. */
-.chart-cols {
-  display: none;
-  grid-template-columns: 200px minmax(0, 1fr) 44px;
-  gap: 32px;
-  padding: 8px 0;
-  border-top: 1px solid var(--color-ink);
-  border-bottom: 1px solid var(--color-ink);
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-steel);
-}
-@media (min-width: 768px) { .chart-cols { display: grid; } }
-@media (max-width: 767px) { .chart > details:first-of-type { border-top: 1px solid var(--color-ink); } }
+/* The graded chart: EvidenceRows stacked on hairlines, no column heads (the
+   scale and tier word explain themselves; the head row was dropped 2026-09-11).
+   Each row draws its bottom rule; the first draws the top one too. */
+.chart > details:first-of-type { border-top: 1px solid var(--color-ink); }
+
+/* The mint field Aeterna's product cut-outs sit on (homepage card, the
+   /collagen "our pick" block). ProductHero draws the same gradient itself. */
+.product-ground { background: linear-gradient(180deg, #e3f1ed 0%, #d3eae4 100%); }
 
 /* Tier pills (routine builders, comparison grids): the tier colour at 14%
    behind itself. */

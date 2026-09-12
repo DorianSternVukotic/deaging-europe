@@ -85,13 +85,12 @@ Body, in order (all inside `<article class="bg-bone">`; section `id`s are the an
 4. **The chart** `<section>` — a `<div class="mb-10 pt-7 border-t-2 border-ink">` head with eyebrow "The full breakdown" and `<h2>Topic — what the evidence says</h2>`, then `<div id="guide-body">` with one `<section id={g.id} class="group-section …" data-group={g.id}>` per chart group: `Part 0X` eyebrow, h2 (no intro), optional featured `MediaPlaceholder` pair for the hero group, and
    ```astro
    <div class="chart mt-8">
-     <div class="chart-cols" aria-hidden="true"><span>Evidence · 0–4</span><span>Treatment</span><span></span></div>
      {orderedSections(g).map((s) => (
        <EvidenceRow s={s} figure={g.id === 'boost-clinical' || g.id === 'boost-topical'} />
      ))}
    </div>
    ```
-   `EvidenceRow` props: `s` (structural — any object with id/title/tldr/bodyHtml[/evidence/note/sessions/downtime/cost]), `figure` (adds the 4:5 photo/placeholder beside the expanded body), `open`. The row is rating-first (four-cell scale, tier word, "n / 4"), then title + one-line summary, then the chevron; there are no tags. Rows without `evidence` render an empty scale and "Information" — only use that deliberately.
+   `EvidenceRow` props: `s` (structural — any object with id/title/tldr/bodyHtml[/evidence/note/sessions/downtime/cost]), `figure` (adds the 4:5 photo/placeholder beside the expanded body), `open`. The row is rating-first (four-cell scale, tier word), then title + one-line summary, then the chevron; there are no tags. Rows without `evidence` render an empty scale and "Information" — only use that deliberately.
 5. **`#picks` "Our picks"** — rendered right after the *last* chart group (`g.id === 'boost-clinical'` / `'surgical'`) as the page's one dark band: `<div id="picks" class="band bleed scroll-mt-32 mb-16 py-12 md:py-14">` with a `<div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">` of 4 inline `{id, kind, title, blurb}` `tile tile--flush` cards (`eyebrow` kind, `.cta` link) linking to `#<section id>`; ids must exist. One daily-care, one supplement/topical, two treatments is the pattern.
 6. **Tail (back on bone)** — tail info groups as drawers with `short={faqAnswer[s.id] ?? s.tldr}`.
 7. **Interactive block** — a hairline section (`scroll-mt-32 mb-16 pt-8 border-t border-ink`), eyebrow "Interactive": routine builder (supplement; tier pills via `evidencePillClass` → `tier-pill tier-*`) or cause matcher (problem; `details.matcher-item` on hairlines with numbered `label label--steel` paths). Keep it one widget; JS lives in the page's `<script is:inline>`.

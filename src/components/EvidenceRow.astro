@@ -3,9 +3,9 @@
  * EvidenceRow — one collapsible row in the "what the evidence says" chart,
  * rating first.
  *
- * Closed: a four-cell scale (one cell per tier, filled in the tier's colour),
- * the tier word and a small "n / 4" under it, then the title with its
- * one-line summary, then a chevron. The summary stays visible so a skimmer
+ * Closed: a four-cell scale (one cell per tier, filled in the tier's colour)
+ * with the tier word under it, then the title with its one-line summary,
+ * then a chevron. The summary stays visible so a skimmer
  * gets the gist without opening anything.
  *
  * Open: the summary as a lead, the body, the key/value fields (best for,
@@ -69,10 +69,7 @@ const subject = s.title.split(/[:(—]/)[0].trim().toLowerCase();
           <span class="block h-full bg-bench" style={tier && i <= n ? `background: ${evidenceColor[tier]};` : undefined}></span>
         ))}
       </div>
-      <div class="flex items-baseline justify-between gap-2">
-        <span class="label">{tier ? word[tier] : 'Information'}</span>
-        <span class="mono whitespace-nowrap">{tier ? <><b class="font-display font-semibold text-[13px] text-ink not-italic">{n}</b> / 4</> : '– / 4'}</span>
-      </div>
+      <span class="label">{tier ? word[tier] : 'Information'}</span>
     </div>
 
     {/* ── Title + summary ── */}
