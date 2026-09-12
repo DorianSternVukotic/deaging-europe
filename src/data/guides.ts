@@ -246,4 +246,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Pigment, vessels or shadow — the thirty-second self-check, and the creams, peels, lasers, injected vitamins, tear-trough filler and surgery graded on the trials that enrolled each type.',
     kind: 'problem',
   },
+  {
+    path: 'cellulite',
+    title: 'Cellulite',
+    tagline: 'Bands, fat or laxity — the two-minute self-check, and the creams, shockwave, radiofrequency, subcision, the laser and the biostimulators graded on the component each one reaches.',
+    kind: 'problem',
+  },
 ];

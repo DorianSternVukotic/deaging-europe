@@ -1,0 +1,450 @@
+---
+/**
+ * The cellulite guide (/cellulite) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video,
+ * the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/cellulite';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Cellulite — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Cellulite is architecture, not fat: fibrous bands tethering the skin down, fat lobules pressing up between them, and a dermis that thins until the mattress shows through. The two-minute self-check that sorts dimples from laxity from bulk, and weight and muscle, retinol, the creams, collagen peptides, massage, compression, shockwave, radiofrequency, ultrasound, acoustic subcision, carboxytherapy, the massage machines, vacuum-guided and targeted subcision, the collagenase injection, the subdermal laser, poly-L-lactic acid and surgery graded on the component each one reaches — with the cream and machine claims read for what they actually measured.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-fat': 'No — bands, with fat between',
+  'faq-men': 'Different architecture',
+  'faq-weight': 'Most improve; lax skin can worsen',
+  'faq-exercise': 'Indirectly, modestly',
+  'faq-creams': 'A retinoid, judged at 6 months',
+  'faq-best': 'Cut the band; tighten the lax',
+  'faq-how-long': 'Weeks, months, or 1–3 years',
+  'faq-cost-ladder': 'Free to €8,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Distinct dimples on firm skin, unchanged by weight, since my twenties',
+    paths: [
+      { id: 'type-dimpled', title: 'The dimpled type', why: 'a taut band under each pit — the anatomy the subcision devices were built for' },
+      { id: 'home-exercise-weight', title: 'Muscle and a stable weight first', why: 'the base every trial built on, and what keeps the result' },
+      { id: 'clinic-eswt', title: 'A shockwave course if you want to start without a blade', why: '2.5 points against sham; months of softening' },
+      { id: 'inj-subcision-tsgs', title: 'Vacuum-guided subcision', why: '3.4 to 1.3 in one session, 93% improved, still measurable at three years' },
+      { id: 'inj-subcision-tvs', title: 'Or targeted verifiable subcision', why: 'the same idea, band by band, with six-month data so far' },
+    ],
+  },
+  {
+    concern: 'A soft, wavy, mattress surface — worse since I lost weight or turned 45',
+    paths: [
+      { id: 'type-lax', title: 'The lax type', why: 'thin dermis over ordinary architecture; cutting bands here can loosen it further' },
+      { id: 'home-retinol', title: 'A retinoid over the whole area', why: 'elasticity +10.7% against placebo in six months; the only cream with a mechanism' },
+      { id: 'clinic-eswt', title: 'Shockwave', why: 'the best-evidenced non-invasive course; laxity improves with the score' },
+      { id: 'clinic-rf', title: 'Radiofrequency or ultrasound for the envelope', why: 'a grade for a season; repeat as maintenance' },
+      { id: 'inj-plla', title: 'Poly-L-lactic acid, with or after subcision', why: 'the one placebo-controlled injectable still on sale — for thin, lax skin' },
+    ],
+  },
+  {
+    concern: 'Heavy, swollen thighs where it is everywhere',
+    paths: [
+      { id: 'type-fat', title: 'The bulky type', why: 'full lobules and fluid; the bands are secondary until the volume drops' },
+      { id: 'home-exercise-weight', title: 'Weight loss, slowly, with resistance training', why: 'most women improve — and lifting protects the skin that would otherwise loosen' },
+      { id: 'home-compression', title: 'Compression on long days', why: 'the fluid component, while it is on' },
+      { id: 'clinic-eswt', title: 'Shockwave once the weight is stable', why: 'fat thinned on MRI and 3 cm off the hips in the Brazilian series' },
+      { id: 'workup', title: 'Then re-check', why: 'the dimples and the laxity that remain belong to the other two paths' },
+    ],
+  },
+  {
+    concern: 'Mild — it only shows when I pinch or in certain light',
+    paths: [
+      { id: 'grades', title: 'Grade 1', why: 'dimpling only on the pinch test; rarely needs a needle' },
+      { id: 'home-exercise-weight', title: 'The base', why: 'muscle under, stable weight above' },
+      { id: 'home-retinol', title: 'A retinoid nightly', why: 'the thicker curtain that hides grade 1' },
+      { id: 'home-collagen-peptides', title: 'Collagen peptides, if the budget tolerates one trial', why: 'less waviness in normal-weight women over six months' },
+      { id: 'safety-claims', title: 'And a filter for the rest', why: 'before the wrap, the brush and the machine package' },
+    ],
+  },
+  {
+    concern: 'I want a clinic course with no downtime',
+    paths: [
+      { id: 'clinic-eswt', title: 'Shockwave, six to eight sessions', why: 'sham-controlled trial, meta-analysis, the standout of the 2025 review' },
+      { id: 'clinic-rf', title: 'Radiofrequency for the lax type', why: 'a grade for weeks to months' },
+      { id: 'clinic-acoustic-subcision', title: 'Rapid acoustic pulse for dimples plus laxity', why: 'one session, no anaesthetic, a 30% drop at 12 weeks' },
+      { id: 'safety-devices', title: 'Who is holding the handpiece', why: 'burns and fat changes in the device database, mostly from untrained operators' },
+    ],
+  },
+  {
+    concern: 'I want one treatment that lasts',
+    paths: [
+      { id: 'inj-subcision-tsgs', title: 'Vacuum-guided subcision', why: 'the longest follow-up in the field: one and three years' },
+      { id: 'inj-laser-1440', title: 'The subdermal 1,440 nm laser', why: 'bands, fat and dermis in one session; 91% still identifiable at a year' },
+      { id: 'safety-subcision', title: 'The bruised fortnight and the exclusions', why: 'bruising in 99%; firm skin and discrete dimples only' },
+      { id: 'safety-expectations', title: 'What "lasts" means', why: 'until the next weight gain, and never against new dimples forming' },
+    ],
+  },
+  {
+    concern: 'Do the creams, brushes, wraps and supplements do anything?',
+    paths: [
+      { id: 'home-caffeine-creams', title: 'The caffeine creams', why: 'measured on thigh circumference; 3 of 35 women noticed aminophylline' },
+      { id: 'home-retinol', title: 'Retinol', why: 'the exception: firmer skin on a controlled trial, dimples unchanged' },
+      { id: 'home-collagen-peptides', title: 'Collagen peptides', why: 'one industry trial, normal-weight women, six months' },
+      { id: 'home-massage', title: 'Brushes, massage and drainage', why: 'fluid moves for a day; bands do not' },
+      { id: 'safety-claims', title: 'How the box gets its number', why: 'circumference, a flash, three weeks and no control' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: stand, pinch, lie, lift — grade it and photograph it',
+    when: 'Before anything',
+    blurb: 'Dimples counted standing in overhead light; the pinch for grade 1 and for recoil; lying down for grade 2; the lift for laxity; weight history, cycle and family noted; a standing photograph without flash, repeated monthly at the same point in the cycle.',
+  },
+  {
+    id: 'home-exercise-weight',
+    step: 'Day 1 onward: strength twice a week, a stable weight, a retinoid at night',
+    when: 'Every week, for good',
+    blurb: 'Squats, hinges and lunges twice a week; weight held steady rather than cycled, lost slowly if it must be lost; cigarettes gone; a retinoid over the thighs and buttocks nightly and a sunscreen when they see the sun; compression on the long days if the thighs swell.',
+  },
+  {
+    id: 'clinic-eswt',
+    step: 'Months 1–3: a shockwave course, plus heat for the lax type',
+    when: 'Judged at 12 weeks',
+    blurb: 'Six to eight shockwave sessions over six to eight weeks — the best-evidenced course without a needle; radiofrequency or ultrasound added for the thin, wavy envelope; carboxytherapy and the massage machines skipped. Photographed standing at the twelve-week mark, not the day after.',
+  },
+  {
+    id: 'inj-subcision-tsgs',
+    step: 'Month 3 onward: the band cut, once, for the dimples that remain',
+    when: 'Weight stable, type clear',
+    blurb: 'Vacuum-guided or targeted subcision for discrete tethered dimples on firm skin, or the subdermal laser where the dermis is thin as well; poly-L-lactic acid for the lax thigh after the tethers are released; one procedure at a time, from a surgeon who shows a year of their own results; then back to the weekly work that keeps it.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="cellulite" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Cellulite</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Cellulite, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          Cellulite is architecture, not fat &mdash; collagen bands tethering the skin to the fascia beneath, fat
+          lobules pressing up between them, and a dermis that thins with the decades until the mattress shows
+          through. It is in 80&ndash;90% of women after puberty, thin ones included, and in almost no men. Below,
+          the two-minute self-check that sorts dimples from laxity from bulk, and every treatment graded on the
+          component it actually reaches &mdash; from the strength training and the retinoid to the shockwave
+          course and the blade that cuts the band &mdash; with the cream and machine claims read for what they
+          measured.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 13 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Cellulite — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'clinic' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The self-check on camera: standing, pinching, lying and lifting on three different thighs" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Ultrasound of a dimple: the band from skin to fascia, and the lobules either side" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' || g.id === 'inj' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per type — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'inj-subcision-tsgs',
+                    kind: 'For the dimple',
+                    title: 'Vacuum-guided subcision, once',
+                    blurb: 'The longest data in the field: severity 3.4 to 1.3 at three months and 1.4 at a year in 55 women, 93% improved, 94% satisfied, benefit still supported at three years, and 112 Italian women all satisfied at twelve months. A bruised fortnight for years of result — on firm skin with discrete dimples.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'clinic-eswt',
+                    kind: 'Without a needle',
+                    title: 'A shockwave course',
+                    blurb: 'A 2.5-point severity improvement against sham in a double-blind trial, a meta-analysis of eleven studies in 297 women, and the "standout intervention" of the 2025 review of 24 randomised trials. Six to eight sessions, no downtime, months of effect, repeated yearly.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'inj-laser-1440',
+                    kind: 'For all three at once',
+                    title: 'The subdermal 1,440 nm laser',
+                    blurb: 'Band, fat and dermis treated in one anaesthetised session: blinded evaluators rated 96% of 57 patients improved at six months and still identified 91% of baseline photographs at a year. More invasive than the blade, and ranked with subcision and shockwave by every review.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'inj-plla',
+                    kind: 'For the lax thigh',
+                    title: 'Poly-L-lactic acid with subcision',
+                    blurb: 'The one injectable with a placebo-controlled trial still on the market: 31 women randomised to subcision plus PLLA or saline, with better blinded improvement, severity and satisfaction at three and six months. For the thin, wavy envelope — off-label, irreversible, by the vial.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your thighs</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Sort the type, build the muscle and hold the weight every week, run the shockwave course for the surface, and spend on a band-releasing procedure only once the weight is stable and the dimples that remain are the tethered kind.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, randomised trials, systematic reviews, meta-analyses or clinic
+            series, linked inline within each section. Primary sources: PubMed/PMC, Dermatologic Surgery, Aesthetic
+            Surgery Journal, Aesthetic Plastic Surgery, Plastic and Reconstructive Surgery, the Journal of the European
+            Academy of Dermatology and Venereology, Lasers in Medical Science, Lasers in Surgery and Medicine, the
+            Journal of Cosmetic Dermatology, the American Journal of Clinical Dermatology, the International Journal of
+            Dermatology and the Journal of Medicinal Food.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Every injection, energy device and subcision on this page is a
+          medical procedure with its own risks; the biostimulators are off-label on the body; the collagenase injection
+          is not available in Europe; retinoids are stopped in pregnancy; device availability changes by country and
+          year; and prices are indicative private rates, not quotes.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
