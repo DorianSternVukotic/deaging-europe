@@ -240,4 +240,10 @@ export const guides: GuideMeta[] = [
   },
   { path: 'aging-hands', title: 'Aging hands: veins, tendons, spots & crepe', tagline: 'Two problems in one hand — the fat that thins until veins and tendons show, and the sun that spots, thins and bruises the skin — sorted by a self-check and graded on the hand trials: daily sunscreen measured on the back of the hand itself, the retinoid, the Q-switched laser that beat liquid nitrogen, IPL, cryotherapy, peels, fractional lasers, the two fillers with a regulatory hand indication, skin boosters, fat grafting and the biostimulators, with the vein removal a careful clinician talks you out of.', kind: 'problem' },
   { path: 'collagen-loss', title: 'Collagen loss & loss of firmness', tagline: 'Firmness is the dermis, lost at 1% a year and 1–2% more after menopause — the self-check that sorts time from sun from estrogen, and sunscreen, tretinoin, vitamin C, the acids, oral collagen, hormone therapy, the lasers, microneedling, radiofrequency, ultrasound, red light and the biostimulators graded on what measures firmness: collagen on a biopsy, recoil on a cutometer, thickness on ultrasound — with the collagen jar, the exosome vial and the "collagen bank" that measure nothing.', kind: 'problem' },
+  {
+    path: 'dark-circles',
+    title: 'Dark circles',
+    tagline: 'Pigment, vessels or shadow — the thirty-second self-check, and the creams, peels, lasers, injected vitamins, tear-trough filler and surgery graded on the trials that enrolled each type.',
+    kind: 'problem',
+  },
 ];

@@ -1,0 +1,445 @@
+---
+/**
+ * The dark-circles guide (/dark-circles) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video,
+ * the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/dark-circles';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Dark circles — every treatment graded by evidence | DeAging Europe';
+const description =
+  'Dark circles are three problems with one name — melanin in the thinnest skin on the body, blood showing through it, and a shadow cast by the tear trough or a bag — and most people have a mix. The thirty-second self-check that sorts pigment from vessels from shadow, and sunscreen, vitamin C, vitamin K, retinoids, hydroquinone, the brightening serums, allergy control, peels, the pigment lasers, carboxytherapy, PRP, the injected vitamins, tear-trough filler, fat grafting and blepharoplasty graded on the trials that enrolled each type — with the eye-cream claims read for what they measure.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-sleep': 'Less than you think',
+  'faq-hereditary': 'Yes, with lower expectations',
+  'faq-concealer': 'Colour-correct, then conceal',
+  'faq-filler-age': 'Groove without a bag, 30–50',
+  'faq-children': 'Think allergy first',
+  'faq-how-long': 'Filler now; courses in months',
+  'faq-iron': 'Rarely; test, don\'t guess',
+  'faq-cost-ladder': 'Free to €6,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Brown, and it stays brown when I stretch the skin',
+    paths: [
+      { id: 'type-pigment', title: 'The pigmented circle', why: 'inherited or post-inflammatory melanin; a Wood\'s lamp says epidermal or dermal' },
+      { id: 'home-sun', title: 'Sunscreen to the lash line and real sunglasses', why: 'the only way it stops getting darker every summer' },
+      { id: 'home-retinoid', title: 'A retinoid, gently, at night', why: 'the standard lightener class, adapted to eyelid skin' },
+      { id: 'clinic-peels', title: 'A course of light peels', why: '47.6% good and 38% excellent against a PRP comparator in 42 patients' },
+      { id: 'clinic-qs-laser', title: 'A low-fluence 1,064 nm laser course', why: 'for the dermal pigment creams cannot reach — with a test spot first' },
+    ],
+  },
+  {
+    concern: 'Blue or purple, worse in the morning and with a blocked nose',
+    paths: [
+      { id: 'type-vascular', title: 'The vascular circle', why: 'the commonest type in every clinic series; it blanches when pressed' },
+      { id: 'home-allergy', title: 'Treat the allergy and stop the rubbing', why: 'the closest thing this page has to a cure, for €5 a month' },
+      { id: 'home-vitc', title: 'Vitamin C for six months', why: 'the one cream with a split-face trial — a slightly thicker curtain over the vessels' },
+      { id: 'home-vitk', title: 'A vitamin K-retinol gel for eight weeks', why: 'the bluish component reduced in 47% of 57; a cheap experiment' },
+      { id: 'clinic-carboxy', title: 'Carboxytherapy, six weekly sessions', why: 'beat a laser and microneedling in randomised trials; safe in darker skin' },
+    ],
+  },
+  {
+    concern: 'A hollow that disappears when I tilt my head back or use a flash',
+    paths: [
+      { id: 'type-structural', title: 'The shadow', why: 'a tear-trough groove — nothing that lightens skin will touch it' },
+      { id: 'inj-filler', title: 'Hyaluronic-acid filler in the trough', why: '87% improved at three months against 18% untreated in 333 patients; a year of effect' },
+      { id: 'safety-filler', title: 'Read the complications first', why: 'the blue tint, the late puffiness and the nodule — and who should be turned away' },
+      { id: 'inj-fat', title: 'Fat, later, if you want permanence', why: '91% satisfied across 4,046 cases, and no eraser' },
+    ],
+  },
+  {
+    concern: 'A bag, with the dark shadow underneath it',
+    paths: [
+      { id: 'type-structural', title: 'Bag plus groove', why: 'the hill makes the valley deeper; filler under a bag makes a bigger bag' },
+      { id: 'inj-blepharoplasty', title: 'Lower blepharoplasty with fat repositioning', why: '175 of 176 to grade zero, 96.6% satisfied, 2.4% reoperated across 4,671' },
+      { id: 'safety-surgery', title: 'Choosing the surgeon', why: 'move the fat, do not remove it; an eyelid specialist with a year of results' },
+    ],
+  },
+  {
+    concern: 'A mix, and I honestly do not know which',
+    paths: [
+      { id: 'workup', title: 'The self-check', why: 'stretch, press, tilt — most people get two positives, which is the answer' },
+      { id: 'home-sun', title: 'Sunscreen and sunglasses from tomorrow', why: 'protects every type and makes the rest hold' },
+      { id: 'home-allergy', title: 'The allergy and rubbing audit', why: 'a third of clinic patients rub, a third are atopic' },
+      { id: 'clinic-meso', title: 'The injected vitamin C-tranexamic acid course', why: 'the largest controlled trial for colour: 120 patients, 96.7% satisfied' },
+      { id: 'inj-filler', title: 'Then the groove, if one is left', why: 'the colour treatments first, so the filler is judged on the shadow alone' },
+    ],
+  },
+  {
+    concern: 'I have darker skin and I am worried about marks',
+    paths: [
+      { id: 'safety-pih', title: 'Post-inflammatory pigment: the risk to avoid', why: 'a picosecond and a thulium laser made 12 darker-skinned women worse' },
+      { id: 'home-sun', title: 'Sunscreen and a retinoid first', why: 'the base that every clinic treatment in darker skin depends on' },
+      { id: 'clinic-carboxy', title: 'Carboxytherapy before any laser', why: 'less redness and post-inflammatory darkening than the laser it was compared with' },
+      { id: 'clinic-qs-laser', title: 'If a laser, 1,064 nm at low fluence with a test spot', why: 'the wavelength and setting the successful series used' },
+    ],
+  },
+  {
+    concern: 'Do eye creams do anything at all?',
+    paths: [
+      { id: 'home-vitc', title: 'Vitamin C', why: 'a six-month split-face trial, a small effect on the vessel component' },
+      { id: 'home-vitk', title: 'Vitamin K with retinol', why: 'open-label, 47% for the bluish type, nothing for pigment' },
+      { id: 'home-brighteners', title: 'The brightening serums', why: 'open-label instrument readings in a condition that fluctuates on its own' },
+      { id: 'safety-claims', title: 'How to read the claim', why: 'measured how, against what, by whom, in how many' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: stretch, press, tilt, the history and the photograph',
+    when: 'Before anything',
+    blurb: 'The three tests at a mirror; morning-versus-evening and hay-fever season noted; a parent asked; the eczema, rubbing, sleep, alcohol and glasses written down honestly; a photograph in the same window at the same hour; a Wood\'s lamp at a dermatologist if it is brown.',
+  },
+  {
+    id: 'home-sun',
+    step: 'Day 1 onward: sunscreen to the lash line, sunglasses, the allergy treated, hands off',
+    when: 'Every day, for good',
+    blurb: 'A mineral SPF 30–50 on the lower lid every morning and UV400 sunglasses; an antihistamine and nasal spray through the season; eczema treated the day it flares; make-up removed with oil and a soft cloth; cold compresses for the itch instead of knuckles.',
+  },
+  {
+    id: 'home-vitc',
+    step: 'Months 1–6: the actives, matched to the type',
+    when: 'Judged at 3 and 6 months',
+    blurb: 'Vitamin C 10–15% nightly for the vascular tint; a retinoid built up every third night for pigment and thickness; a vitamin K gel for eight weeks as the cheap experiment; a prescription lightener in a twelve-week course for post-inflammatory brown; a brightening serum only as the vehicle for the rest.',
+  },
+  {
+    id: 'clinic-peels',
+    step: 'Month 3 onward: the clinic course for colour — then the filler for the shadow',
+    when: 'After the daily work, no tan',
+    blurb: 'For pigment, four to six light peels or a course of low-fluence 1,064 nm laser with a test spot; for vessels, six carboxytherapy sessions; for the mix, the injected vitamin C-tranexamic acid course; and only then, on a face whose colour has been treated, 0.5–1 ml of a low-swelling filler per side for the groove — or the surgeon for the bag.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="dark-circles" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · Dark circles</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          Dark circles, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          &ldquo;Dark circles&rdquo; is three problems with one name &mdash; melanin in the thinnest skin on the
+          body, blood showing through it, and a shadow thrown by the tear trough or a bag above it &mdash; and
+          most people have a mix. Below, the thirty-second self-check that sorts pigment from vessels from
+          shadow, and every treatment graded on the trials that enrolled each type: the creams and the allergy
+          control, the peels, lasers, gas and injected vitamins for colour, and the filler and surgery for the
+          shadow &mdash; with the eye-cream claims read for what they actually measured.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 13 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Dark circles — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'clinic' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The self-check on camera: stretch, press and tilt on three different faces" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The same under-eye under overhead light, front flash and a Wood's lamp" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'clinic' || g.id === 'inj' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per type — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'inj-filler',
+                    kind: 'For the shadow',
+                    title: 'Tear-trough filler, from a specialist',
+                    blurb: 'The only large randomised trials on the page: 87% of 333 patients improved at three months against 18% untreated, four in five looked less tired, and it held a year. Low-swelling gel, small volumes, a cannula, hyaluronidase in the room — and the bag turned away.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'clinic-peels',
+                    kind: 'For the pigment',
+                    title: 'A course of light peels',
+                    blurb: 'The most consistent performer for brown circles: 47.6% good and 38% excellent improvement against 4.8% and none for PRP in a 42-patient randomised trial, and a draw with carboxytherapy and mesotherapy in another. Low strengths, an eyelid hand, sunscreen after.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'clinic-meso',
+                    kind: 'For the mix',
+                    title: 'The injected vitamin C-tranexamic acid course',
+                    blurb: 'The largest controlled trial for colour in this subject: 120 patients, two sessions, the pigment gap to normal skin narrowed from 23 to 14 units and 96.7% satisfied, while controls did not change. Two or three sessions, repeated when it fades.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'home-allergy',
+                    kind: 'For the vessels',
+                    title: 'Treat the allergy, stop the rubbing',
+                    blurb: 'The commonest type in every clinic series is a congested plexus under thin skin, and a third of patients are atopic and a third rub. An antihistamine, a nasal spray, prompt eczema treatment and cold compresses instead of knuckles — for €5 a month, before any clinic.',
+                    tone: 'bone' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your circles</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Sort the type, protect and decongest every day, run the actives for the type for three to six months, and spend on the clinic only once the daily work is in place &mdash; with the shadow filled last, on a face whose colour has already been treated.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, randomised trials, systematic reviews, meta-analyses or clinic
+            series, linked inline within each section. Primary sources: PubMed/PMC, Dermatologic Surgery, the
+            Journal of Cosmetic Dermatology, Lasers in Medical Science, Skin Research and Technology, Aesthetic
+            Surgery Journal, Aesthetic Plastic Surgery, Plastic and Reconstructive Surgery, the Journal of Allergy
+            and Clinical Immunology, the Journal of Sleep Research, the British Medical Journal and PLoS One.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Every injection, peel and laser near the eye is a medical
+          procedure with its own risks and belongs with a clinician who treats eyelids regularly; hydroquinone is
+          prescription-only in the EU; retinoids and hydroquinone are stopped in pregnancy; and prices are indicative
+          private rates, not quotes.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
