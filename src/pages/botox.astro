@@ -1,0 +1,470 @@
+---
+/**
+ * The Botox & neuromodulators guide (/botox) — built on the fillers guide's
+ * layout: evidence strength as the primary visual signal, all content in the
+ * DOM, one interactive block (concern matcher).
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/botox';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Botox & neuromodulators — the complete guide | DeAging Europe';
+const description =
+  'Where botulinum toxin works — frown, forehead, crow\'s feet, jaw, neck and beyond — how long each area really lasts, what it costs in Europe, the brands compared and the risks the consult skips, graded by clinical evidence.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-onset': '3–14 days',
+  'faq-how-often': 'Every 3–4 months',
+  'faq-units': '20 / 24 / 10–20',
+  'faq-brands': 'No winner',
+  'faq-frozen': 'Only if dosed that way',
+  'faq-aftercare': 'Mostly tradition',
+  'faq-pregnancy': 'Reassuring; defer',
+  'faq-stopped-working': 'Probably not',
+  'faq-worse-after': 'No',
+  'faq-cost': '€150–350 per area',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'The "11s" between my brows',
+    paths: [
+      { id: 'use-glabellar', title: 'Frown lines', why: 'the most-trialled indication in aesthetics — 70–95% responders in every brand\'s trials' },
+      { id: 'combo-filler', title: 'Toxin plus filler', why: 'if the lines are etched at rest, one split-face trial found the combination did more at six months' },
+    ],
+  },
+  {
+    concern: 'Lines at my eyes when I smile',
+    paths: [
+      { id: 'use-crows-feet', title: 'Crow\'s feet', why: 'three phase 3 trials; lasts about four months' },
+      { id: 'use-brow-lift', title: 'The chemical brow lift', why: 'the same muscle — releasing it opens the outer eye by a millimetre or two' },
+    ],
+  },
+  {
+    concern: 'Horizontal forehead lines',
+    paths: [
+      { id: 'use-forehead', title: 'Forehead lines', why: '91% responders when treated with the glabella — never alone' },
+      { id: 'safety-ptosis', title: 'The heavy brow', why: 'read this first if your brows already sit low or your lids feel heavy' },
+    ],
+  },
+  {
+    concern: 'A square jaw, or I clench and grind',
+    paths: [
+      { id: 'use-masseter', title: 'Masseter (jaw slimming)', why: 'phase 3 trial plus a meta-analysis of five randomized trials; bone density checked by CT' },
+      { id: 'beyond-bruxism', title: 'Bruxism', why: 'the medical side of the same injection — less bite force and pain for about three months' },
+    ],
+  },
+  {
+    concern: 'Neck bands and a soft jawline',
+    paths: [
+      { id: 'use-platysma', title: 'Platysma', why: 'the newest approved indication: 912 adults in three randomized trials' },
+      { id: 'can-and-cant', title: 'What it cannot fix', why: 'it softens bands and sharpens the angle; it does not lift loose skin' },
+    ],
+  },
+  {
+    concern: 'Too much gum when I smile',
+    paths: [{ id: 'use-gummy-smile', title: 'Gummy smile', why: '3.4 mm less gum on show in a meta-analysis of 17 studies; start low' }],
+  },
+  {
+    concern: 'A thin upper lip, or lines around the mouth',
+    paths: [
+      { id: 'use-lip-flip', title: 'The lip flip', why: 'a millimetre of eversion for two to three months — honest expectations' },
+      { id: 'use-perioral', title: 'Lip lines', why: 'micro-doses soften the pucker; resurfacing does more for etched lines' },
+    ],
+  },
+  {
+    concern: 'Mouth corners that turn down',
+    paths: [{ id: 'use-mouth-corners', title: 'Depressor anguli oris', why: 'series and anatomical studies, no trial; usually paired with filler' }],
+  },
+  {
+    concern: 'Sweaty underarms',
+    paths: [{ id: 'beyond-hyperhidrosis', title: 'Hyperhidrosis', why: 'a dozen randomized trials, a licensed medical indication, six months or more per treatment' }],
+  },
+  {
+    concern: 'Oily skin, large pores or persistent redness',
+    paths: [
+      { id: 'beyond-microbotox', title: 'Microbotox', why: 'less oil and smaller pores in ten small, underpowered studies' },
+      { id: 'beyond-rosacea', title: 'Rosacea flushing', why: 'a split-face randomized trial and 17 studies; three to six months per treatment' },
+    ],
+  },
+  {
+    concern: 'I am in my 20s — should I start now?',
+    paths: [
+      { id: 'hype-preventive', title: '"Preventive Botox"', why: 'one twin case report and a review that calls the data unestablished' },
+      { id: 'safety-antibodies', title: 'Antibodies', why: 'cumulative dose is the one known risk factor for resistance' },
+    ],
+  },
+];
+
+// Brand comparison cards.
+const brandRows = [
+  {
+    id: 'use-glabellar',
+    brand: 'Botox / Vistabel (AbbVie)',
+    evidence: 'strong' as Evidence,
+    blurb: 'The original and the reference product — most trials, most indications, the only one with phase 3 data in the masseter and platysma. 100 U vials; the unit everyone else is measured against.',
+    knownFor: 'Every area; 20 U glabella standard',
+  },
+  {
+    id: 'faq-brands',
+    brand: 'Dysport / Azzalure (Ipsen · Galderma)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Second to market; roughly 2.5–3 units per Botox unit. Slightly wider spread — a plus across the forehead and crow\'s feet, a caution near the eyelid. Liquid version (Alluzience) in the EU.',
+    knownFor: 'Forehead, crow\'s feet; 50 U glabella',
+  },
+  {
+    id: 'safety-antibodies',
+    brand: 'Xeomin / Bocouture (Merz)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Purified neurotoxin without complexing proteins; equivalent to Botox unit-for-unit in a 250-woman trial, with the earliest onset in the head-to-head study. Stores at room temperature.',
+    knownFor: 'Those worried about antibodies; 1:1 units',
+  },
+  {
+    id: 'use-glabellar',
+    brand: 'Jeuveau / Nuceiva (Evolus)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Non-inferior to Botox at the same 20 U dose in 540 patients and indistinguishable side-by-side on the same faces; aesthetic-only positioning, often priced below Botox.',
+    knownFor: 'Value; 1:1 units with Botox',
+  },
+  {
+    id: 'use-glabellar',
+    brand: 'Letybo (Hugel)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Korea\'s market leader, EU-authorised since 2022 and US-approved in 2024 on the BLESS phase 3 programme (1,272 subjects). Dosed like Botox.',
+    knownFor: 'Newest 1:1 competitor',
+  },
+  {
+    id: 'new-liquid-toxins',
+    brand: 'Relfydess (Galderma)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Ready-to-use liquid without complexing proteins; 96% "none or mild" at one month in READY-1 and a six-month response tail. 50 U for the glabella. Daxxify, the long-acting US product, is the one to watch for EU authorisation.',
+    knownFor: 'Liquid; long-duration claims',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="botox" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Botox, without the freeze<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            Where botulinum toxin genuinely works &mdash; frown to jawline to underarms &mdash; how long each
+            area really lasts, what it costs in Europe, and the brands and risks the consult skips.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 13 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Botulinum toxin — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Inside a three-area treatment" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Muscle map: what each injection point relaxes" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">Where the evidence, the duration and the safety margins line up best.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'use-glabellar',
+                    kind: 'Best evidence',
+                    title: 'The frown, done properly',
+                    blurb: 'Twenty units, five points, four months — the most-trialled procedure in aesthetics, with a 1–3% risk of a temporary droopy lid.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'use-masseter',
+                    kind: 'Most under-rated',
+                    title: 'The jaw',
+                    blurb: 'Slims a square lower face and ends clenching in one treatment; phase 3 evidence and a CT study that cleared the bone question.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'use-platysma',
+                    kind: 'Newest approval',
+                    title: 'Neck bands',
+                    blurb: 'Three randomized trials in 912 adults and a 2024 approval: quieter bands and a cleaner jawline for four months.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'beyond-hyperhidrosis',
+                    kind: 'Beyond wrinkles',
+                    title: 'Dry underarms',
+                    blurb: 'Most patients halve their sweating for six months or more — the treatment people describe as life-changing.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / BRANDS / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a treatment to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points — each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ BRAND FAMILIES ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The product landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The toxins compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Six licensed products, one molecule. All are effective and interchangeable in trials once the units are converted — the differences are onset, spread, formulation and price.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {brandRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References & further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, pivotal-trial reports, meta-analyses or public-health
+            sources, linked inline within each section. Primary sources: PubMed/PMC, Dermatologic Surgery,
+            Aesthetic Surgery Journal, Plastic and Reconstructive Surgery, JAAD, Eurosurveillance, UK legislation.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Botulinum toxin is a prescription medicine — consult a
+          qualified prescriber, disclose your full medical history, and defer treatment during pregnancy or
+          breastfeeding. Prices are indicative private rates, not quotes; licensing status varies by country.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

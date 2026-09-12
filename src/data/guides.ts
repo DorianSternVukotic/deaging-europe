@@ -35,6 +35,12 @@ export const guides: GuideMeta[] = [
     kind: 'clinic',
   },
   {
+    path: 'botox',
+    title: 'Botox & neuromodulators',
+    tagline: 'Frown to jawline to underarms: where botulinum toxin works, how long each area lasts, the brands compared and the risks the consult skips.',
+    kind: 'clinic',
+  },
+  {
     path: 'sauna',
     title: 'Saunas',
     tagline: 'Finnish-cohort longevity data, blood pressure, mood — and the detox myth.',
