@@ -59,14 +59,14 @@
 .lab-h1 { font-family: var(--font-display); font-weight: 600; font-size: 76px; line-height: .96; letter-spacing: -.03em; }
 .lab-h2 { font-family: var(--font-display); font-weight: 600; font-size: 44px; line-height: 1; letter-spacing: -.03em; color: var(--ink); }
 /* Drawer, row, driver and tile titles stay ink; hover takes the accent. Section h2s carry the accent. */
-.lab-title-24 { font-family: var(--font-display); font-weight: 500; font-size: 24px; line-height: 1.18; letter-spacing: -.02em; color: var(--ink); }
+.lab-title-24 { font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 1.2; letter-spacing: -.015em; color: var(--ink); }
 .lab-title-20 { font-family: var(--font-display); font-weight: 500; font-size: 20px; line-height: 1.2; letter-spacing: -.015em; color: var(--ink); }
 .lab-body-18 { font-size: 18px; line-height: 1.6; }
 .lab-body-16 { font-size: 16px; line-height: 1.6; }
 .lab-body-15 { font-size: 15px; line-height: 1.6; }
 .lab-body-14 { font-size: 14px; line-height: 1.5; }
 .lab-muted { color: var(--body-muted); }
-.lab-lead { font-family: var(--font-display); font-weight: 500; font-size: 20px; line-height: 1.3; letter-spacing: -.015em; margin-bottom: 14px; }
+.lab-lead { font-family: var(--font-display); font-weight: 400; font-size: 18px; line-height: 1.4; letter-spacing: -.01em; margin-bottom: 14px; }
 .lab-cta { font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--sky-deep); border-bottom: 1px solid currentColor; padding-bottom: 3px; display: inline-block; line-height: 1.2; }
 .lab-cta:hover { color: var(--ink); }
 
@@ -112,6 +112,8 @@
 .lab-meta { width: 100%; max-width: 760px; margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--ink); display: flex; justify-content: space-between; gap: 24px; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; color: var(--steel); letter-spacing: .02em; line-height: 1.5; }
 .lab-meta a { color: var(--sky-deep); white-space: nowrap; }
 .lab-meta a:hover { color: var(--ink); }
+/* With no intro paragraph, the meta strip follows the video directly; the video's own bottom margin is the gap. */
+.lab-hero__video + .lab-meta { margin-top: 0; }
 
 /* ── Dark band (Our picks): ink ground, everything inverted ── */
 .lab-dark { background: var(--ink); color: #ffffff; margin-top: 56px; padding: 48px 0 56px; }
@@ -234,7 +236,7 @@ details[open] > summary .lab-toggle { transform: rotate(180deg); color: var(--sk
   .lab-chart-head { margin-top: 40px; padding-top: 20px; }
   .lab-title-24 { font-size: 19px; }
   .lab-title-20 { font-size: 18px; }
-  .lab-lead { font-size: 18px; }
+  .lab-lead { font-size: 16px; }
   .lab-body-18 { font-size: 16px; }
   .lab-caption { font-size: 16px; }
   .lab-fig__cap { top: 10px; left: 12px; right: 12px; font-size: 10px; }
@@ -310,9 +312,15 @@ details[open] > summary .lab-toggle { transform: rotate(180deg); color: var(--sk
 .lab--round .lab-drawer__sum, .lab--round .lab-row__sum { border-radius: var(--radius-sm); margin: 0 -12px; padding-left: 12px; padding-right: 12px; transition: background-color .15s ease; }
 .lab--round .lab-drawer__sum:hover, .lab--round .lab-row__sum:hover { background: var(--bench); }
 
+/* The round variant keeps the earlier, heavier drawer titles; the straight version was slimmed to 21px/400 on 2026-09-12. */
+.lab--round .lab-title-24 { font-weight: 500; font-size: 24px; line-height: 1.18; letter-spacing: -.02em; }
+.lab--round .lab-lead { font-weight: 500; font-size: 20px; line-height: 1.3; letter-spacing: -.015em; }
+
 @media (max-width: 900px) {
   .lab--round { --radius-lg: 10px; --radius-md: 10px; --radius-sm: 6px; }
   .lab--round .lab-tiles { gap: 10px; }
   .lab--round .lab-toggle { font-size: 30px; }
+  .lab--round .lab-title-24 { font-size: 19px; }
+  .lab--round .lab-lead { font-size: 18px; }
   .lab--round .lab-drawer__sum, .lab--round .lab-row__sum { margin: 0 -8px; padding-left: 8px; padding-right: 8px; }
 }
