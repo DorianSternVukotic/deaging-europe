@@ -7,6 +7,7 @@ import react from '@astrojs/react';
 import wix from '@wix/astro';
 import wixPages from '@wix/astro-pages';
 import wixHostingAdapter from '@wix/astro-wix-hosting-adapter';
+import { guides, latestUpdate } from './src/data/guides.ts';
 
 // Production canonical origin (Wix-managed headless site on the custom domain).
 // Override with SITE_URL for previews. Drives canonical/hreflang/sitemap.
@@ -56,8 +57,20 @@ export default defineConfig({
     sitemap({
       customPages: dynamicPages(),
       filter: (page) => !/\/404$/.test(page),
+      // lastmod only where we track it honestly: each guide's `updated` date
+      // from the registry, and the newest of those for the homepage.
+      serialize(item) {
+        const path = new URL(item.url).pathname.replace(/^\//, '');
+        const guide = guides.find((g) => g.path === path);
+        if (guide) item.lastmod = guide.updated;
+        else if (path === '') item.lastmod = latestUpdate();
+        return item;
+      },
     }),
     react(),
+    // Wix's edge serves the dashboard's robots.txt on the live domain whatever
+    // we do here (tested with `robots: false` on a preview, 2026-09-12), so
+    // public/robots.txt is only the text to paste into the Robots.txt Editor.
     wix(),
     wixPages(),
   ],

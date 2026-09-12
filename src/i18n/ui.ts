@@ -24,6 +24,8 @@ export const ui: Record<Locale, Dict> = {
     'problem.bodyArea': 'Body area',
     'product.buy': 'Buy now',
     'product.affiliate': 'This page contains affiliate links. We may earn a commission at no extra cost to you.',
+    'guide.affiliate':
+      'Commercial note: Aeterna COLLAGEN MAX PRO is a partner product — we may earn a commission when you buy it through our links, at no extra cost to you. That has no bearing on how the evidence is graded.',
     'product.doctor.title': 'Reviewed by',
     'product.studies.title': 'The science',
     'product.testimonials.title': 'What people say',

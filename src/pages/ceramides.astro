@@ -9,6 +9,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   keyTakeaways,
   groups,
@@ -18,6 +19,7 @@ import {
 } from '../data/ceramides';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('ceramides');
 const title = 'Ceramides — creams, capsules & boosters, graded | DeAging Europe';
 const description =
   'Topical ceramides, pseudo-ceramides, oral phytoceramides and ceramide boosters graded by clinical evidence — plus why blood ceramides are a different story entirely.';
@@ -86,7 +88,7 @@ const compareRows = allSections()
             what trials actually show, and why blood ceramides are a different story.
           </p>
           <p class="meta">
-            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+            Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
         <MediaPlaceholder kind="image" ratio="4/5" label="Hero — lamellar close-up" class="w-full lg:w-72" />

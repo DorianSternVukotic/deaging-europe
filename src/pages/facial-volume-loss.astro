@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/facial-volume-loss';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('facial-volume-loss');
 const title = 'Hollow temples and cheeks (facial volume loss) — every treatment graded by evidence | DeAging Europe';
 const description =
   'The face deflates before it sags: fat pads empty and slide, the skull recedes, and weight and hormones set the pace. The recline test that separates deflation from descent, hyaluronic acid, poly-L-lactic acid, calcium hydroxylapatite and fat grafting graded by trial evidence, and the temple’s arteries and the overfilled face in numbers.';
@@ -162,7 +164,7 @@ const planRows = [
           overfilled face in numbers.
         </p>
         <p class="meta">
-          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

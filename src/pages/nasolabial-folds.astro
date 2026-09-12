@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/nasolabial-folds';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('nasolabial-folds');
 const title = 'Nasolabial folds (smile lines) — every treatment graded by evidence | DeAging Europe';
 const description =
   'A nasolabial fold is a seam, not a wrinkle: it deepens as the cheek descends, the bone beside the nose recedes and the skin thins. The recline test that sorts folds, filler, collagen stimulators, threads, devices and surgery graded by trial evidence, and the artery under the fold in numbers.';
@@ -164,7 +166,7 @@ const planRows = [
           fold in numbers.
         </p>
         <p class="meta">
-          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

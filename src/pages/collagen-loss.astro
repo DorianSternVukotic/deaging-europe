@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/collagen-loss';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('collagen-loss');
 const title = 'Collagen loss and loss of firmness — every treatment graded by evidence | DeAging Europe';
 const description =
   'Firmness is the dermis: collagen under tension, elastin that recoils, water and the cells that hold it taut — lost at 1% a year, 1–2% a year more after menopause, faster under sun and smoke. The self-check that sorts time from sun from estrogen, and sunscreen, tretinoin, vitamin C, the acids, oral collagen, hormone therapy, the lasers, microneedling, radiofrequency, ultrasound, red light, PLLA, calcium hydroxylapatite, skin boosters and the rest graded on what actually measures firmness — collagen on a biopsy, recoil on a cutometer, thickness on ultrasound — with the collagen jar, the exosome vial and the "collagen bank" that measure nothing.';
@@ -171,7 +173,7 @@ const planRows = [
           rebuilds it, with the jar, the vial and the &ldquo;collagen bank&rdquo; that measure nothing.
         </p>
         <p class="meta">
-          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

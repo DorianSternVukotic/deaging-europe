@@ -26,6 +26,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { t } from '../i18n/utils';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   groups,
   allSections,
@@ -35,6 +37,7 @@ import {
 } from '../data/collagen';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('collagen');
 const title = 'Collagen — the complete guide | DeAging Europe';
 const description =
   'Skim it in 3 minutes, dig into a specific concern, or read every page. Evidence-graded, with comparison tables for products and clinical treatments.';
@@ -157,7 +160,17 @@ const topicalRows = topicalGroup?.sections
   })) ?? [];
 ---
 
-<BaseLayout title={title} description={description} locale={locale} path="collagen" type="article" image={media.hero.src}>
+<BaseLayout
+  title={title}
+  description={description}
+  locale={locale}
+  path="collagen"
+  type="article"
+  image={media.hero.src}
+  imageAlt={media.hero.alt}
+  imageWidth={800}
+  imageHeight={1200}
+>
   <article class="bg-bone">
     <!-- ════════════ HERO ════════════ -->
     <header class="relative">
@@ -171,8 +184,10 @@ const topicalRows = topicalGroup?.sections
             collagen.
           </p>
           <p class="meta">
-            Updated 10 May 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+            Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
+          {/* Commercial-relationship disclosure, visible before the first product link. */}
+          <p class="mt-4 max-w-2xl text-xs leading-relaxed text-ink/55">{t(locale, 'guide.affiliate')}</p>
         </div>
         <img
           src={media.hero.src}

@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/forehead-lines';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('forehead-lines');
 const title = 'Forehead lines — every treatment graded by evidence | DeAging Europe';
 const description =
   'Forehead lines are folded by the only muscle that lifts your brows — and in many foreheads that muscle is holding heavy lids up. The eyelid test that tells you which forehead you have, toxin, filler, ultrasound, eyelid surgery and the brow lift graded by trial evidence, and the dropped brow in numbers.';
@@ -165,7 +167,7 @@ const planRows = [
           from toxin to the brow lift graded by the trials behind it, and the dropped brow in numbers.
         </p>
         <p class="meta">
-          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

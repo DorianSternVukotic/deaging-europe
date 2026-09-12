@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/facial-redness';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('facial-redness');
 const title = 'Facial redness, rosacea and broken capillaries — every treatment graded by evidence | DeAging Europe';
 const description =
   'A red face is four things sharing one disease — flushing that hardens into fixed redness, capillaries that have opened for good, bumps that are not acne, and a nose that thickens — plus the eyes. The self-check that sorts them, and sunscreen, barrier repair, azelaic acid, ivermectin, metronidazole, doxycycline, isotretinoin, the brimonidine and oxymetazoline redness switches, pulsed-dye laser, IPL, KTP, toxin, paroxetine and the rest graded by 152 randomised trials, with the steroid cream and the rebound gel that make it worse.';
@@ -161,7 +163,7 @@ const planRows = [
           that caused it and the redness gel that rebounds.
         </p>
         <p class="meta">
-          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

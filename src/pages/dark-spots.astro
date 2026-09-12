@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/dark-spots';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('dark-spots');
 const title = 'Dark spots, sun spots & hyperpigmentation — every treatment graded by evidence | DeAging Europe';
 const description =
   'Sun spots, melasma and post-inflammatory marks are three different problems. Which one you have, every brightener, prescription and laser graded by trial evidence, the hydroquinone rules in Europe, and the spot that needs a biopsy before a laser.';
@@ -159,7 +161,7 @@ const planRows = [
           trials behind it, the hydroquinone rules in Europe, and the spot that needs a biopsy before a laser.
         </p>
         <p class="meta">
-          Updated 6 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

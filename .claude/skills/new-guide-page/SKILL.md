@@ -79,7 +79,7 @@ the data module), `title`/`description`, then the **override maps** — keep the
   `homeRows` (jowls: explicit `homeCardIds` list from the `home` group).
 
 Body, in order (all inside `<article class="bg-bone">`; section `id`s are the anchor contract):
-1. **Hero** `<header>` — eyebrow (problem template only: `Problem · Jowls`), `<h1 class="font-display …">Topic, end&#8209;to&#8209;end.</h1>` (the `h1` renders in the serif via the global element rule), one-sentence sub, `<p class="meta">Updated … · ~{readingMinutes} min full read · {allSections().length} sections</p>`, `<MediaPlaceholder kind="image" ratio="4/5" label="…" class="w-full lg:w-72" />`.
+1. **Hero** `<header>` — eyebrow (problem template only: `Problem · Jowls`), `<h1 class="font-display …">Topic, end&#8209;to&#8209;end.</h1>` (the `h1` renders in the serif via the global element rule), one-sentence sub, `<p class="meta">Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections</p>` (with `const guide = guideMeta('<topic>');` in the frontmatter, imported from `../data/guides` — the date is never typed into the page), `<MediaPlaceholder kind="image" ratio="4/5" label="…" class="w-full lg:w-72" />`.
 2. **`#takeaways`** — eyebrow "The case in five lines", `<h2>If you read nothing else</h2>`, `<ol>` of `keyTakeaways` with accent `font-display` numerals; then `<MediaPlaceholder kind="video" ratio="16/9" label="…" />`.
 3. **Top info groups** (still on bone) — per group `<section id={g.id}>` h2 (no intro on first sight) + a gapless `<div class="mt-6 grid">` of `<ExpandableDrawer id={s.id} title={s.title} short={shortFor(s)} bodyHtml={s.bodyHtml} />`.
 4. **The chart** `<section>` — a `<div class="mb-10 pt-7 border-t-2 border-ink">` head with eyebrow "The full breakdown" and `<h2>Topic — what the evidence says</h2>`, then `<div id="guide-body">` with one `<section id={g.id} class="group-section …" data-group={g.id}>` per chart group: `Part 0X` eyebrow, h2 (no intro), optional featured `MediaPlaceholder` pair for the hero group, and
@@ -101,7 +101,8 @@ Body, in order (all inside `<article class="bg-bone">`; section `id`s are the an
 
 ## 4. Wiring
 
-- `<BaseLayout title={title} description={description} locale={locale} path="<topic>" type="article">` — `path` has no leading slash; it feeds canonical/hreflang and the language switcher.
+- `<BaseLayout title={title} description={description} locale={locale} path="<topic>" type="article">` — `path` has no leading slash; it feeds canonical/hreflang, and BaseLayout looks the guide up in `src/data/guides.ts` by it to emit the Article/MedicalWebPage schema with the registry's dates. Pass `image`/`imageAlt`/`imageWidth`/`imageHeight` once the guide has a real hero photo (otherwise `og-default.png` is used).
+- **Register the guide** in `src/data/guides.ts` (`path`, `title`, `tagline`, `kind`, `published`, `updated` as ISO dates) — the homepage grid, the Article schema, the hero `<time>` and the sitemap `lastmod` all read it; `guideMeta()` throws at build time if the entry is missing. Bump `updated` only for substantive content changes.
 - Route = filename: `src/pages/<topic>.astro` → `/<topic>`. Sitemap is automatic (`@astrojs/sitemap`).
 - Nav: add/adjust the link in `src/components/Header.astro` (guides are hard-coded hrefs, not `localePath`).
 - Homepage: the hero CTA row and the flagship card live in `src/pages/index.astro`; the card reads `evidenceCounts()`/`readingMinutes()` from the data module — point it at the new module if the new guide becomes the flagship, otherwise add a secondary CTA only.
@@ -125,5 +126,5 @@ Authoritative *and* converting: every section states the evidence tier first, th
 - Shared evidence helpers + colours sit in `collagen.ts` and `EvidenceRow` imports from there, so every guide depends on collagen's module; `jowls.astro` still computes reading time locally. A neutral `src/data/evidence.ts` would be the right home — do that refactor only if asked.
 - `Evidence` is re-declared in each data module and in `EvidenceRow` (structural match); keep the four literals identical.
 - `heroFacts` in `collagen.ts` is exported but not rendered anywhere (optional content; don't treat it as required).
-- "Updated <date>" in each hero is hand-typed; the clinician CTA `href="#"` is a placeholder.
+- The hero date comes from the registry (`guide.updated`), not the page; the clinician CTA `href="#"` is a placeholder.
 - Content-collection `problems` only allow `strong|moderate|emerging` — no `limited` tier there.

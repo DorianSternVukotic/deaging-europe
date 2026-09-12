@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/hooded-eyes';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('hooded-eyes');
 const title = 'Hooded eyelids and drooping brows — every treatment graded by evidence | DeAging Europe';
 const description =
   '"Hooded" is one word for three problems — surplus eyelid skin, a brow that has descended, and a lid margin that has slipped over the eye — and each has a different fix. The finger-and-photograph self-check that sorts them, and eye drops, the toxin brow lift, ultrasound, radiofrequency, filler, blepharoplasty, ptosis repair, browpexy and the brow lift graded by trial evidence, with the millimetres each actually moves and the droop that needs a doctor today.';
@@ -161,7 +163,7 @@ const planRows = [
           the millimetres each one actually moves, and the droop that needs a doctor today rather than a clinic.
         </p>
         <p class="meta">
-          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

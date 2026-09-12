@@ -10,6 +10,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -19,6 +20,7 @@ import {
 } from '../data/jowls';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('jowls');
 const title = 'Sagging jowls — every fix graded by evidence | DeAging Europe';
 const description =
   'Jowls are bone, fat, ligament and skin at once. Which one is yours (the pinch test), every treatment from filler to facelift graded by trial evidence, and when only surgery answers.';
@@ -156,7 +158,7 @@ const planRows = [
           graded by the trials behind it, and when only surgery answers.
         </p>
         <p class="meta">
-          Updated 6 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/dry-skin';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('dry-skin');
 const title = 'Dry, dehydrated skin — every treatment graded by evidence | DeAging Europe';
 const description =
   'Dry skin is a barrier problem in two currencies — the lipid mortar between the outer cells and the water they hold — and age, menopause, hot water, soap, heated air and over-exfoliation take both. The self-checks that sort dry from dehydrated from medical, urea to ceramides to petrolatum, supplements, hormones and skin boosters graded by trial evidence, and the red flags that mean a blood test, not a third cream.';
@@ -164,7 +166,7 @@ const planRows = [
           the trials behind it, and the red flags that mean a blood test rather than a third cream.
         </p>
         <p class="meta">
-          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

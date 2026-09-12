@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/decolletage';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('decolletage');
 const title = 'Crepey chest and décolletage lines — every treatment graded by evidence | DeAging Europe';
 const description =
   'The chest ages like the face with less to age with: a thinner, gland-poor dermis, decades of sun on the V that sunscreen forgets, and a fold pressed into it every night. The self-checks that sort red-brown mottling from crepe from cleavage lines, and sunscreen, retinoids, light, lasers, ultrasound and the collagen stimulators graded by trial evidence — including the one chest treatment with a randomised trial and the settings that scar.';
@@ -166,7 +168,7 @@ const planRows = [
           by the trials behind it, and the settings that scar this skin where they would not scar a face.
         </p>
         <p class="meta">
-          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

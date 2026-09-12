@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/thin-lips';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('thin-lips');
 const title = 'Thinning lips and lost definition — every treatment graded by evidence | DeAging Europe';
 const description =
   'The ageing lip lengthens, rolls inward, fades and loses its support more than it shrinks — MRI shows the upper lip growing 2.5 mm while total volume stays the same. The ruler-and-profile self-check that sorts length from volume from contrast, and lip colour, hyaluronic filler, the toxin flip, fat, implants, the lip lift and the dentist graded by trial evidence, with the overfilled lip treated as a problem of its own.';
@@ -165,7 +167,7 @@ const planRows = [
           lip treated as the problem it has become.
         </p>
         <p class="meta">
-          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

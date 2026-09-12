@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/marionette-lines';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('marionette-lines');
 const title = 'Marionette lines (downturned mouth corners) — every treatment graded by evidence | DeAging Europe';
 const description =
   'A marionette line is a trench between a muscle that pulls the corner down and a ligament that pins the skin to the jaw, with the jowl heaping into it and the chin shrinking underneath. The "e" test that sorts them, toxin, filler, chin support, threads, devices and surgery graded by trial evidence, and the lopsided smile in numbers.';
@@ -160,7 +162,7 @@ const planRows = [
           from a few units of toxin to a facelift graded by the trials behind it, and the lopsided smile in numbers.
         </p>
         <p class="meta">
-          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

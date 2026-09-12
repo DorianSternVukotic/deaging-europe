@@ -10,6 +10,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -19,6 +20,7 @@ import {
 } from '../data/wrinkles';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('wrinkles');
 const title = 'Fine lines & wrinkles — every treatment graded by evidence | DeAging Europe';
 const description =
   'Fine lines, expression lines, deep folds and lip lines are different problems. What causes each, every treatment from sunscreen to a deep peel graded by trial evidence, and a plan by wrinkle type.';
@@ -158,7 +160,7 @@ const planRows = [
           behind it, and a plan by wrinkle type.
         </p>
         <p class="meta">
-          Updated 6 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

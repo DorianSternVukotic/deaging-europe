@@ -10,6 +10,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -19,6 +20,7 @@ import {
 } from '../data/eye-bags';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('eye-bags');
 const title = 'Under-eye bags & puffy eyes — every fix graded by evidence | DeAging Europe';
 const description =
   'An eye bag is fat, fluid or a shadow — three tests tell you which. Every fix from a cold spoon to lower blepharoplasty graded by trial evidence, the under-eye filler risks in numbers, and when puffy eyes are a medical problem.';
@@ -164,7 +166,7 @@ const planRows = [
           under-eye filler risks nobody quotes.
         </p>
         <p class="meta">
-          Updated 6 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

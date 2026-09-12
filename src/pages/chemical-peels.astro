@@ -9,6 +9,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   keyTakeaways,
   groups,
@@ -18,6 +19,7 @@ import {
 } from '../data/chemical-peels';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('chemical-peels');
 const title = 'Chemical peels — the evidence guide | DeAging Europe';
 const description =
   'From glycolic glow series to phenol deep resurfacing — every peel depth and agent graded by clinical evidence, with darker-skin guidance and the DIY red lines.';
@@ -159,7 +161,7 @@ const depthRows = [
             phenol renovation, with the darker-skin map and the DIY red lines.
           </p>
           <p class="meta">
-            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+            Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
         <MediaPlaceholder kind="image" ratio="4/5" label="Hero — peel application" class="w-full lg:w-72" />

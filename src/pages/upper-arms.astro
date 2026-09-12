@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/upper-arms';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('upper-arms');
 const title = 'Loose upper-arm skin — every treatment graded by evidence | DeAging Europe';
 const description =
   'A hanging upper arm is skin that has lost its recoil, fat that is too much or has left, and a triceps that fills but never shrinks the sleeve. The ruler-and-pinch self-check that sorts them, and resistance training, retinoids, collagen stimulators, ultrasound, cryolipolysis, energy-assisted liposuction and the arm lift graded by trial evidence — with the honest percentages, the scar, and the weight-stable clock.';
@@ -163,7 +165,7 @@ const planRows = [
           honest percentages the devices actually measured, and the scar and the clock that decide the rest.
         </p>
         <p class="meta">
-          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

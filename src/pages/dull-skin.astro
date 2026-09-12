@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/dull-skin';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('dull-skin');
 const title = 'Dull, uneven skin — every treatment graded by evidence | DeAging Europe';
 const description =
   'Glow is light reflected evenly off a smooth, hydrated, evenly coloured surface; dullness is what slowed turnover, dehydration, uneven colour, stretched pores and a stripped barrier do to it. The self-checks that sort them, sunscreen to retinoids to peels, boosters, micro-toxin and lasers graded by trial evidence, and the habits with experiments that measure the face the next morning.';
@@ -163,7 +165,7 @@ const planRows = [
           the habits with experiments that measure the face the next morning.
         </p>
         <p class="meta">
-          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

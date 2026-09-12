@@ -9,6 +9,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   keyTakeaways,
   groups,
@@ -18,6 +19,7 @@ import {
 } from '../data/anti-aging-40s';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('anti-aging-40s');
 const title = 'Anti-aging in your 40s — the evidence guide | DeAging Europe';
 const description =
   'Perimenopause, deflation and the decade where in-office treatments earn their keep — skincare, procedures, hormones and the body, every option graded by age-matched evidence.';
@@ -107,7 +109,7 @@ const tierRows = [
             age-matched evidence sits right here &mdash; alongside the overfill trap.
           </p>
           <p class="meta">
-            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+            Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
         <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait — 40s" class="w-full lg:w-72" />

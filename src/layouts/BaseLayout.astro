@@ -1,36 +1,138 @@
 ---
+/**
+ * The one layout every page uses. Besides the chrome it owns the structured
+ * data that doesn't depend on page content:
+ *
+ * - Organization on every page (with the logo, so the publisher resolves);
+ * - WebSite on the homepage (Google reads the site name from it);
+ * - Article (+ MedicalWebPage as the page type) on every guide, with the
+ *   dates from src/data/guides.ts — the page only has to pass its `path`;
+ * - BreadcrumbList (Home → page) plus the visible trail, from the guide's
+ *   registry title or the page's `breadcrumb` prop.
+ *
+ * Page-level schema (the Product page) comes in through `jsonLd`.
+ */
 import '../styles/global.css';
 import SEO from '../components/SEO.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import type { Locale } from '../i18n/ui';
+import { localePath } from '../i18n/utils';
+import { guides } from '../data/guides';
+import { SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE, LOGO } from '../data/site';
 
 interface Props {
   title: string;
   description: string;
   locale: Locale;
+  /** Route without the leading slash ("collagen"). Guides are looked up in the registry by it. */
   path?: string;
   image?: string;
+  imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   type?: 'website' | 'article' | 'product';
+  /** Short page name for the breadcrumb (Home → name). Guides take theirs from the registry. */
+  breadcrumb?: string;
+  noindex?: boolean;
   jsonLd?: object | object[];
 }
 
-const { title, description, locale, path, image, type, jsonLd } = Astro.props;
+const { title, description, locale, path, image, imageAlt, imageWidth, imageHeight, type, breadcrumb, noindex, jsonLd } =
+  Astro.props;
+
+const site = (Astro.site ?? new URL('https://deagingeurope.example')).toString(); // trailing slash
+const orgId = `${site}#organization`;
+const logoUrl = new URL(LOGO.src, site).toString();
+const canonical = new URL(localePath(locale, path ?? ''), site).toString();
+const ogImage = new URL(image ?? DEFAULT_OG_IMAGE.src, site).toString();
 
 const orgJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'DeAging Europe',
-  url: (Astro.site ?? new URL('https://deagingeurope.example')).toString(),
-  description: 'Evidence-based anti-aging information and products for Europe.',
+  '@id': orgId,
+  name: SITE_NAME,
+  url: site,
+  description: SITE_DESCRIPTION,
+  logo: { '@type': 'ImageObject', url: logoUrl, width: LOGO.width, height: LOGO.height },
 };
+
+const websiteJsonLd =
+  Astro.url.pathname === '/'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        '@id': `${site}#website`,
+        url: site,
+        name: SITE_NAME,
+        description,
+        inLanguage: 'en',
+        publisher: { '@id': orgId },
+      }
+    : undefined;
+
+// Guides carry their dates in the registry; that also gates the Article schema.
+const guide = path ? guides.find((g) => g.path === path) : undefined;
+const articleJsonLd =
+  guide && type === 'article'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        '@id': `${canonical}#article`,
+        headline: title.replace(/\s*\|\s*DeAging Europe\s*$/, ''),
+        description,
+        datePublished: guide.published,
+        dateModified: guide.updated,
+        inLanguage: 'en',
+        image: [ogImage],
+        author: { '@type': 'Organization', name: SITE_NAME, url: site },
+        publisher: {
+          '@type': 'Organization',
+          '@id': orgId,
+          name: SITE_NAME,
+          logo: { '@type': 'ImageObject', url: logoUrl, width: LOGO.width, height: LOGO.height },
+        },
+        mainEntityOfPage: { '@type': 'MedicalWebPage', '@id': canonical },
+      }
+    : undefined;
+
+// Breadcrumb trail: Home → this page. Two levels are enough for a flat site;
+// nothing on the homepage or on noindex pages.
+const crumbName = guide?.title ?? breadcrumb;
+const crumbs =
+  crumbName && path && !noindex
+    ? [
+        { name: 'Home', href: localePath(locale, '') },
+        { name: crumbName, href: localePath(locale, path) },
+      ]
+    : [];
+const breadcrumbJsonLd =
+  crumbs.length > 1
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: crumbs.map((c, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: c.name,
+          item: new URL(c.href, site).toString(),
+        })),
+      }
+    : undefined;
+
+const pageJsonLd = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const allJsonLd = [orgJsonLd, websiteJsonLd, articleJsonLd, breadcrumbJsonLd, ...pageJsonLd].filter(Boolean) as object[];
 ---
 <!doctype html>
 <html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/icon-96.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#fbfaf7" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -43,13 +145,20 @@ const orgJsonLd = {
       locale={locale}
       path={path}
       image={image}
+      imageAlt={imageAlt}
+      imageWidth={imageWidth}
+      imageHeight={imageHeight}
       type={type}
-      jsonLd={[orgJsonLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])]}
+      published={guide?.published}
+      updated={guide?.updated}
+      noindex={noindex}
+      jsonLd={allJsonLd}
     />
   </head>
   <body class="min-h-screen flex flex-col">
     <Header locale={locale} />
     <main class="flex-1">
+      <Breadcrumbs items={crumbs} />
       <slot />
     </main>
     <Footer locale={locale} />

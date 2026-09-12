@@ -10,6 +10,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -19,6 +20,7 @@ import {
 } from '../data/lip-lines';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('lip-lines');
 const title = 'Lip lines (barcode / smoker’s lines) — every treatment graded by evidence | DeAging Europe';
 const description =
   'Lip lines are a pursing muscle, thin sun-exposed skin and a deflating lip at once. The pucker test that sorts them, toxin, filler, lasers, dermabrasion and the phenol peel graded by trial evidence, and the mouth’s own risks in numbers.';
@@ -157,7 +159,7 @@ const planRows = [
           from toxin to the phenol peel graded by the trials behind it, and the mouth's own risks in numbers.
         </p>
         <p class="meta">
-          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

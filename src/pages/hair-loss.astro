@@ -10,6 +10,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -19,6 +20,7 @@ import {
 } from '../data/hair-loss';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('hair-loss');
 const title = 'Hair loss — every treatment graded by evidence | DeAging Europe';
 const description =
   'Thinning, shedding, a widening part or receding temples — why it happens, every treatment from minoxidil to transplant graded by trial evidence, and a plan matched to your type of hair loss.';
@@ -163,7 +165,7 @@ const planRows = [
           trials behind it, then matched to your type of loss.
         </p>
         <p class="meta">
-          Updated 5 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

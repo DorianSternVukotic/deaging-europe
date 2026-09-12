@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/sagging-skin';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('sagging-skin');
 const title = 'Sagging skin (skin laxity) — every treatment graded by evidence | DeAging Europe';
 const description =
   'Sagging is two problems: skin that has lost its recoil, and a frame of fat and bone that has shrunk beneath it. The pinch and recline tests that sort them, sunscreen to hormone therapy to every tightening device and the facelift graded by trial evidence, and what "lift" really means in millimetres.';
@@ -163,7 +165,7 @@ const planRows = [
           millimetres.
         </p>
         <p class="meta">
-          Updated 7 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">

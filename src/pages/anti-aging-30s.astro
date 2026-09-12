@@ -9,6 +9,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   keyTakeaways,
   groups,
@@ -18,6 +19,7 @@ import {
 } from '../data/anti-aging-30s';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('anti-aging-30s');
 const title = 'Anti-aging in your 30s — the evidence guide | DeAging Europe';
 const description =
   'What actually changes at 30–39, the prevention core with trial-grade proof, and the "prejuvenation" treatments sold on a single case report — every option graded.';
@@ -107,7 +109,7 @@ const tierRows = [
             industry running on one case report.
           </p>
           <p class="meta">
-            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+            Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
         <MediaPlaceholder kind="image" ratio="4/5" label="Hero portrait — 30s" class="w-full lg:w-72" />

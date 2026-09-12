@@ -11,6 +11,7 @@ import MediaPlaceholder from '../components/MediaPlaceholder.astro';
 import ExpandableDrawer from '../components/ExpandableDrawer.astro';
 import EvidenceRow from '../components/EvidenceRow.astro';
 import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
 import {
   drivers,
   groups,
@@ -20,6 +21,7 @@ import {
 } from '../data/aging-hands';
 
 const locale = DEFAULT_LOCALE;
+const guide = guideMeta('aging-hands');
 const title = 'Aging hands — every treatment graded by evidence | DeAging Europe';
 const description =
   'An old-looking hand is two problems: the fat that thins until veins, tendons and knuckles show, and a lifetime of sun that leaves spots, crepe and bruises from nothing. The self-check that sorts them, and daily sunscreen (measured on the back of the hand), the retinoid, the lighteners, the Q-switched laser that beat liquid nitrogen, IPL, cryotherapy, peels, fractional lasers, the two fillers with a regulatory hand indication, skin boosters, fat grafting, the biostimulators and the vein treatments graded by the hand trials — with the vein removal a careful clinician talks you out of, the steroid cream that thins the skin, and the biotin that fools a blood test.';
@@ -166,7 +168,7 @@ const planRows = [
           and the cream that promises what the filler does.
         </p>
         <p class="meta">
-          Updated 8 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
         </p>
 
         <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
