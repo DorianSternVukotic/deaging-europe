@@ -65,6 +65,12 @@ export const guides: GuideMeta[] = [
     kind: 'clinic',
   },
   {
+    path: 'skin-boosters',
+    title: 'Skin boosters',
+    tagline: 'Profhilo, Restylane Skinboosters, Volite / Skinvive, Belotero Revive, NCTF and the rest graded on their own trials — hydration and glow for a season, and what the saline-controlled trials say about remodelling.',
+    kind: 'clinic',
+  },
+  {
     path: 'laser-ipl',
     title: 'Laser & IPL',
     tagline: 'From gentle IPL to full resurfacing — matched to your skin and downtime budget.',

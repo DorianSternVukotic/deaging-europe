@@ -286,14 +286,14 @@ const boosters: Section[] = [
     id: 'booster-volite',
     category: 'booster',
     title: 'Juvéderm Volite',
-    tldr: 'Prospective but uncontrolled studies: real measured gains that fade substantially by month 6.',
-    evidence: 'emerging',
+    tldr: 'A 2023 randomised, evaluator-blind trial against untreated controls: 58% cheek-smoothness responders versus 4.5%, holding six months; single-arm studies show the gains fading by month 6.',
+    evidence: 'moderate',
     focus: 'skin-quality',
     sessions: '1, repeat ~6-monthly',
     downtime: '1–3 days',
     cost: '€300–500',
     bodyHtml: `
-      <p>Volite (VYC-12) is Allergan's skin-quality injectable. Prospective single-arm studies show a <a href="https://pubmed.ncbi.nlm.nih.gov/31749628/" rel="noopener nofollow" target="_blank">96% skin-roughness responder rate at month 1 that falls to 35% by month 6</a>, with hydration gains persisting somewhat longer. No randomized sham-controlled trial exists.</p>
+      <p>Volite (VYC-12) is Allergan's skin-quality injectable. Prospective single-arm studies show a <a href="https://pubmed.ncbi.nlm.nih.gov/31749628/" rel="noopener nofollow" target="_blank">96% skin-roughness responder rate at month 1 that falls to 35% by month 6</a>, with hydration gains persisting somewhat longer. The 2023 randomised, evaluator-blind, multicentre trial found 57.9% cheek-smoothness responders at month 1 against 4.5% in untreated controls, sustained through six months (<a href="https://pubmed.ncbi.nlm.nih.gov/37163665/" rel="noopener nofollow" target="_blank">Alexiades 2023</a>) — the control was no treatment, not a sham injection. The <a href="/skin-boosters">skin boosters guide</a> compares it with the rest of the shelf.</p>
       <p>Read that decay curve before booking: this is a treatment you repeat twice a year to hold, or accept as a several-month effect.</p>
     `,
   },
@@ -301,16 +301,16 @@ const boosters: Section[] = [
     id: 'booster-profhilo',
     category: 'booster',
     title: 'Profhilo ("bioremodelling")',
-    tldr: 'The only blinded, saline-controlled trial found no advantage over placebo on its objective endpoint.',
-    evidence: 'limited',
+    tldr: 'The only blinded, saline-controlled trial found no advantage over placebo on its objective endpoint; hydration and glow are real and equal to a cheaper booster, "remodelling" is not shown.',
+    evidence: 'emerging',
     focus: 'skin-quality',
     sessions: '2, a month apart',
     downtime: '1–2 days (bumps)',
     cost: '€300–500/session',
     bodyHtml: `
       <p>Profhilo is the most heavily marketed skin injectable in Europe, and the gap between marketing and evidence is the widest in this guide. Supporting studies are open-label and sponsor-linked — e.g. a <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9509274/" rel="noopener nofollow" target="_blank">23-person neck study</a> with manufacturer-employed authors reporting modest laxity-scale gains (and bruising in ~50%).</p>
-      <p>The decisive datapoint: the first <a href="https://link.springer.com/article/10.1007/s00266-026-05634-4" rel="noopener nofollow" target="_blank">randomized, triple-blind, saline-controlled split-face trial</a> found dermal thickness increased on <strong>both</strong> the Profhilo and the placebo side — no significant advantage over saline on the objective endpoint, and over half of participants dissatisfied.</p>
-      <p>Plenty of people enjoy the post-treatment glow; the honest description is "temporary hydration with a strong placebo component", not "remodelled skin".</p>
+      <p>The decisive datapoint: the first <a href="https://pubmed.ncbi.nlm.nih.gov/41731228/" rel="noopener nofollow" target="_blank">randomized, triple-blind, saline-controlled split-face trial</a> found dermal thickness increased on <strong>both</strong> the Profhilo and the placebo side — no significant advantage over saline on the objective endpoint, and over half of participants dissatisfied.</p>
+      <p>Plenty of people enjoy the post-treatment glow; the honest description is "temporary hydration with a strong placebo component", not "remodelled skin". A split-face comparison found it indistinguishable from Belotero Revive on every measured property (<a href="https://pubmed.ncbi.nlm.nih.gov/35699361/" rel="noopener nofollow" target="_blank">de Wit 2022</a>); the <a href="/skin-boosters">skin boosters guide</a> grades the whole category product by product.</p>
     `,
   },
 ];
