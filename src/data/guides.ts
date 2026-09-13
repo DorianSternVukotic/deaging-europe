@@ -71,6 +71,12 @@ export const guides: GuideMeta[] = [
     kind: 'clinic',
   },
   {
+    path: 'mesotherapy',
+    title: 'Mesotherapy',
+    tagline: 'A technique, not a treatment: deoxycholic acid, tranexamic acid, hyaluronic-acid cocktails, dutasteride, fat-dissolvers, vitamin meso-glow, cellulite and whitening cocktails graded on their trials — with the outbreaks and the licences.',
+    kind: 'clinic',
+  },
+  {
     path: 'laser-ipl',
     title: 'Laser & IPL',
     tagline: 'From gentle IPL to full resurfacing — matched to your skin and downtime budget.',

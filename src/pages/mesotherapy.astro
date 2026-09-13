@@ -1,0 +1,487 @@
+---
+/**
+ * The mesotherapy guide (/mesotherapy) — in-clinic layout: evidence strength
+ * as the primary visual signal, all content in the DOM, one interactive block
+ * (concern matcher), and the cocktails compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/mesotherapy';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Mesotherapy — every cocktail graded by evidence | DeAging Europe';
+const description =
+  'Mesotherapy is a technique, not a treatment: what it does depends on the syringe. Deoxycholic acid for the chin, tranexamic acid for melasma, hyaluronic-acid cocktails, dutasteride for hair, fat-dissolving injections, vitamin "meso-glow", cellulite and whitening cocktails graded on their trials — with the mycobacterial outbreaks, the bans and the licences the clinic does not mention.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-same-as-boosters': 'Same needle, different syringe',
+  'faq-face-vitamins': 'No — two negative biopsy studies',
+  'faq-fat-dissolving': 'Only the licensed one, only the chin',
+  'faq-hair': 'Tablet first; injection as adjunct',
+  'faq-melasma': 'Tablets, on the meta-analyses',
+  'faq-infections': 'Contaminated vials and salons',
+  'faq-sessions': '2–6; never ten',
+  'faq-cost': '€100–1,200 per session',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'A double chin',
+    paths: [
+      { id: 'use-chin-dca', title: 'Deoxycholic acid', why: 'phase 3 trials, three-year follow-up, a licence — the one strong row on this page' },
+      { id: 'safety-lipolytics', title: 'What can go wrong', why: 'nerve weakness, weeks of swelling, and why the injector must know the anatomy' },
+    ],
+  },
+  {
+    concern: 'Melasma or brown patches',
+    paths: [
+      { id: 'use-melasma-txa', title: 'Intradermal tranexamic acid', why: 'matched the tablet and hydroquinone in small trials; not better than the pill in the pooled data' },
+      { id: 'faq-melasma', title: 'Injections or tablets?', why: 'tablets first, injections if you cannot take them' },
+    ],
+  },
+  {
+    concern: 'Dark circles',
+    paths: [
+      { id: 'use-dark-circles', title: 'The under-eye cocktail', why: 'the largest controlled trial in this guide — for pigment-type circles only' },
+      { id: 'use-whitening', title: 'Not the whitening drip', why: 'the intravenous route is described as contraindicated' },
+    ],
+  },
+  {
+    concern: 'Thinning hair',
+    paths: [
+      { id: 'use-hair-dutasteride', title: 'Dutasteride mesotherapy', why: 'one randomised trial, a 541-patient series, and a meta-analysis asking for more' },
+      { id: 'use-hair-cocktails', title: 'Vitamin "hair boosters"', why: 'one small positive and one negative trial against minoxidil' },
+    ],
+  },
+  {
+    concern: 'A stubborn fat pocket on the body',
+    paths: [
+      { id: 'use-body-fat', title: 'Lipolytic injections', why: 'the fat dissolves; 38% of studies reached significance; costlier than liposuction' },
+      { id: 'prod-pcdc', title: 'The cocktails and their record', why: 'no licence anywhere, a ban, and the necrosis case reports' },
+    ],
+  },
+  {
+    concern: 'Dull skin — I was offered a "meso-glow" facial',
+    paths: [
+      { id: 'use-face-vitamins', title: 'Vitamin mesotherapy', why: 'two controlled biopsy studies, both negative' },
+      { id: 'use-face-ha', title: 'If the syringe holds hyaluronic acid', why: 'then it is a skin booster, with that evidence' },
+    ],
+  },
+  {
+    concern: 'Cellulite',
+    paths: [
+      { id: 'use-cellulite', title: 'Cellulite cocktails', why: 'no clinical evidence, and the lidocaine in them blocks the lipolysis' },
+    ],
+  },
+  {
+    concern: 'I was offered a whitening drip or injection',
+    paths: [
+      { id: 'use-whitening', title: 'Glutathione', why: 'intravenous: one negative placebo-controlled study and a verdict of contraindicated' },
+      { id: 'safety-who-not', title: 'Choose something else', why: 'and note what the offer tells you about the clinic' },
+    ],
+  },
+  {
+    concern: 'A red lump appeared weeks after my mesotherapy',
+    paths: [
+      { id: 'safety-infections', title: 'The mesotherapy infection', why: 'rapidly growing mycobacteria — a doctor, a biopsy and a culture, not a compress' },
+      { id: 'safety-granulomas', title: 'Or a granuloma', why: 'a lump that is not infected still needs the product name' },
+    ],
+  },
+];
+
+// The cocktails compared, as cards.
+const productRows = [
+  {
+    id: 'prod-dca',
+    brand: 'Deoxycholic acid (Kybella / Belkyra)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Licensed for the chin on two phase 3 trials with three-year follow-up: 66.5% vs 22.2% improved. Weeks of swelling; jaw-nerve weakness in a few percent; every trial industry-funded.',
+    knownFor: 'The chin; the only licence',
+  },
+  {
+    id: 'prod-txa',
+    brand: 'Tranexamic acid, intradermal',
+    evidence: 'moderate' as Evidence,
+    blurb: 'A licensed antifibrinolytic in an off-label syringe: equal to the tablet and to hydroquinone in small trials, better than the cream, not better than adjuvant care in the meta-analyses. Not with a clotting history.',
+    knownFor: 'Melasma when the pill is out',
+  },
+  {
+    id: 'prod-ha-cocktails',
+    brand: 'Hyaluronic-acid cocktails (NCTF, Redensity, amino-acid HA)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Mesotherapy with HA is a skin booster: saline-controlled and untreated-control trials, hydration and radiance for months. HA alone outperformed the cocktails. CE devices with a lot number.',
+    knownFor: 'The respectable end',
+  },
+  {
+    id: 'prod-dutasteride',
+    brand: 'Dutasteride for the scalp',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A compounded 5-alpha-reductase inhibitor fanned into the scalp: one placebo-controlled trial, a 541-patient series, a meta-analysis of heterogeneous studies. Pain in half; not near a pregnancy.',
+    knownFor: 'Hair, without the tablet',
+  },
+  {
+    id: 'prod-pcdc',
+    brand: 'Phosphatidylcholine-deoxycholate (Lipodissolve, Aqualyx)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'The detergent that dissolves fat, unlicensed for the purpose anywhere, banned in Brazil, sold as a CE "device" in Europe; 38% of studies significant; ulcers and nodules when placed wrong.',
+    knownFor: 'Body fat pockets, at a price',
+  },
+  {
+    id: 'prod-vitamin-cocktails',
+    brand: 'Vitamin, mineral and amino-acid cocktails',
+    evidence: 'limited' as Evidence,
+    blurb: 'The traditional syringe: two negative biopsy studies on the face, two commercial solutions that killed fibroblasts, mixed results on the scalp, and the outbreaks when drawn from multi-dose vials.',
+    knownFor: 'The "meso-glow" — for a fortnight',
+  },
+  {
+    id: 'prod-lipolytic-stimulators',
+    brand: 'Caffeine, aminophylline, L-carnitine, plant extracts',
+    evidence: 'limited' as Evidence,
+    blurb: 'Make fat cells release fat in a dish; refill in people. The aminophylline randomised comparison was negative for cellulite, and the lidocaine mixed in blocks the effect.',
+    knownFor: 'Cellulite cocktails; nothing measured',
+  },
+  {
+    id: 'prod-glutathione',
+    brand: 'Glutathione and whitening drips',
+    evidence: 'limited' as Evidence,
+    blurb: 'One negative placebo-controlled study of the drip and a 2025 systematic-review verdict of "contraindicated"; oral glutathione has small positive trials; injected whitening cocktails have none.',
+    knownFor: 'A red flag for the clinic',
+  },
+  {
+    id: 'prod-homeopathic-needlefree',
+    brand: 'Homeopathic vials and "needle-free" mesotherapy',
+    evidence: 'limited' as Evidence,
+    blurb: 'Dilutions with no dose that delivered an M. abscessus outbreak to 17 of 77 patients; and electroporation or jet devices with no controlled cosmetic trial under any name.',
+    knownFor: 'The most avoidable risk',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="mesotherapy" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Mesotherapy, cocktail by cocktail<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            A French technique for pain that became a cosmetic delivery system &mdash; every use and every
+            syringe graded on its trials, from the one licensed fat-dissolver to the vitamin cocktails with
+            negative biopsies, and the outbreaks the industry does not mention.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 13 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — a row of ampoules" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Mesotherapy — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The technique: nappage, depth, and what a single-dose ampoule looks like" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Four syringes, four legal categories: licensed drug, off-label drug, CE device, house cocktail" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The few syringes on this page worth paying for &mdash; and the one to walk away from.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'use-chin-dca',
+                    kind: 'Best evidence',
+                    title: 'Deoxycholic acid for the chin',
+                    blurb: 'Two phase 3 placebo-controlled trials and three years of follow-up: 66.5% improved against 22.2%, most within two to four sessions, held at three years in 82%. The one licensed, trial-backed mesotherapy-style injection in existence.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'use-dark-circles',
+                    kind: 'Most under-rated',
+                    title: 'The under-eye cocktail',
+                    blurb: 'Vitamin C, tranexamic acid and hyaluronate, two injections, in a 120-patient controlled trial: pigment gap halved, 96.7% satisfied, controls unchanged. The one vitamin-containing cocktail that earned a tier — for pigmented circles only.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'use-melasma-txa',
+                    kind: 'When the tablet is out',
+                    title: 'Intradermal tranexamic acid',
+                    blurb: 'Equal to hydroquinone and to the oral tablet in small randomised trials, better than the cream, cents per ampoule. Not better than the pill in the meta-analyses — but for someone who cannot swallow it, a real option with sunscreen alongside.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'use-face-vitamins',
+                    kind: 'Walk away',
+                    title: 'The vitamin "meso-glow"',
+                    blurb: 'Two controlled biopsy studies, both negative: no clinical or histological change, thinner collagen fibres in one, and two commercial solutions that killed fibroblasts in culture. The glow is the needling and the water. Spend it on a retinoid.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / COCKTAILS / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a syringe to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE COCKTAILS COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The product landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The cocktails compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Nine things that go through the same needle, from a licensed medicine with phase 3 trials to homeopathic dilutions with an outbreak to their name. Each card is graded on its own evidence, not on the technique.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised trials, systematic reviews, meta-analyses, biopsy studies,
+            outbreak investigations or case series, linked inline within each section. Primary sources:
+            PubMed/PMC, JAAD, Dermatologic Surgery, the Aesthetic Surgery Journal, the Journal of Cosmetic
+            Dermatology, the Journal of Dermatological Treatment, Plastic and Reconstructive Surgery, JEADV,
+            the International Journal of Women&rsquo;s Dermatology and the Canada Communicable Disease Report.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Every injection here is a medical procedure &mdash; consult a
+          registered clinician, disclose your full medical history, and defer treatment during pregnancy or
+          breastfeeding. Product names are examples, not endorsements; licensing status varies by country and is
+          stated as of September 2026. Prices are indicative private rates, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
