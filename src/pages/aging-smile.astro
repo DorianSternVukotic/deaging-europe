@@ -1,0 +1,445 @@
+---
+/**
+ * The aging-smile guide (/aging-smile) — problem-template variant of the
+ * collagen-guide layout: title, description, a full-width explainer video,
+ * the three drivers as cards, evidence strength as the primary visual
+ * signal, one interactive block (situation matcher) and a month-by-month
+ * action plan. Dental and perioral rows are graded side by side.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  drivers,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/aging-smile';
+
+const locale = DEFAULT_LOCALE;
+const title = 'The aging smile — every treatment graded by evidence | DeAging Europe';
+const description =
+  'A smile ages in three places: an upper lip that lengthens by 5 mm and hides the teeth, teeth that darken, shorten and lose their gum, and a maxilla and jaw that recede behind them. The ruler-and-phone self-check, and whitening, bonding, veneers, aligners, gum grafts, black-triangle repair, implants, lip filler, the lip lift, toxin, resurfacing and the support fillers graded dental and aesthetic side by side — with the smile-makeover before-and-afters read for what they hide.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+const faqAnswer: Record<string, string> = {
+  'faq-teeth-gone': 'Longer lip, shorter teeth',
+  'faq-how-white': 'No whiter than your eyes',
+  'faq-bonding-veneers': 'Bonding first',
+  'faq-filler-or-lift': 'Measure the philtrum',
+  'faq-order': 'Dentist first',
+  'faq-men': 'Yes — more so',
+  'faq-how-long': 'Years dental; months aesthetic',
+  'faq-cost-ladder': '€80 to €30,000',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows, in order.
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'My upper teeth have disappeared when I talk, and my lip looks long and thin',
+    paths: [
+      { id: 'type-lip', title: 'The long lip', why: 'a philtrum over 18 mm and no tooth show at rest — length and ptosis, not deflation' },
+      { id: 'home-wear', title: 'Check the edges first', why: 'a flat, worn incisor hides under the lip as surely as the lip lengthens' },
+      { id: 'dental-bonding', title: 'Bonding to lengthen the incisors', why: 'one visit, no enamel removed, 92% at ten years' },
+      { id: 'peri-lip-lift', title: 'The subnasal lip lift', why: 'the only treatment that shortens the philtrum; series holding one to five years' },
+      { id: 'peri-filler-lips', title: 'Filler only at the border', why: 'half a millilitre for the roll and the show — never a millilitre for the length' },
+    ],
+  },
+  {
+    concern: 'My teeth have gone yellow and dull',
+    paths: [
+      { id: 'home-stain', title: 'The hygienist and a whitening toothpaste', why: 'surface stain first, in a meta-analysis of 21 trials' },
+      { id: 'dental-whitening', title: 'Peroxide whitening in dentist-made trays', why: 'every protocol works; holds one to 2.5 years; the cheapest large change' },
+      { id: 'safety-whitening', title: 'What it will not change', why: 'fillings, crowns and veneers keep their shade; match the whites of your eyes' },
+      { id: 'dental-veneers', title: 'Veneers only if colour, shape and wear all need changing', why: '96% at ten years, irreversibly' },
+    ],
+  },
+  {
+    concern: 'My front teeth look short, flat and chipped',
+    paths: [
+      { id: 'type-teeth', title: 'The worn edge', why: 'erosive wear in 98% of Europeans; the reversed smile line' },
+      { id: 'home-wear', title: 'Acid, grinding, a night guard', why: 'the bonding will not survive a grinder' },
+      { id: 'dental-bonding', title: 'Composite bonding', why: 'rebuilds the curve of a young edge in a visit' },
+      { id: 'dental-veneers', title: 'Veneers if the whole face of the tooth has gone', why: 'lithium disilicate on enamel, on the teeth that show' },
+    ],
+  },
+  {
+    concern: 'My gums have receded — the teeth look long and there are dark triangles between them',
+    paths: [
+      { id: 'dental-recession', title: 'A connective-tissue gum graft', why: 'the most-randomised repair in periodontics — 13 trials in one meta-analysis, 24 in another' },
+      { id: 'dental-black-triangles', title: 'The papilla: HA for weeks, a graft for years', why: '45 studies, insufficient for a recommendation, but the options are real' },
+      { id: 'dental-aligners', title: 'Aligning the teeth', why: 'one of the four treatments that closes triangles — after the gum is assessed' },
+      { id: 'home-stain', title: 'Stop what moved the gum', why: 'smoking doubles the odds; so does the hard brush' },
+    ],
+  },
+  {
+    concern: 'The corners of my mouth turn down and I look stern or sad',
+    paths: [
+      { id: 'type-dynamic', title: 'The tired mouth', why: 'the corner depressor unopposed by a thinner lip, over a receding frame' },
+      { id: 'peri-neuromodulator', title: 'A few units of toxin in the corners', why: 'reversible, a hundred euros, and a preview of the surgical result' },
+      { id: 'peri-support', title: 'Support at the chin and marionette', why: 'the base the corners rest on; graded in the filler and marionette guides' },
+      { id: 'peri-resurfacing', title: 'Resurfacing for the etched lines', why: 'a small edge to the CO2 laser in split-face trials' },
+    ],
+  },
+  {
+    concern: 'My lips have thinned and lipstick bleeds into the lines',
+    paths: [
+      { id: 'home-lip-care', title: 'SPF balm and a retinoid above the lip', why: 'the surface stage, slowed' },
+      { id: 'peri-filler-lips', title: 'A border filler with the lines treated', why: '76% success against 12% untreated when lips and lines are done together' },
+      { id: 'peri-resurfacing', title: 'Resurfacing for what is etched', why: 'the lines the muscle and the border cannot reach' },
+      { id: 'safety-lips', title: 'The overfilled lip', why: 'volume on a long lip lowers the curtain — the "blown-up" look the MRI study warned of' },
+    ],
+  },
+  {
+    concern: 'I have lost teeth and my lower face has caved in',
+    paths: [
+      { id: 'type-frame', title: 'The receding frame', why: 'missing teeth remove lip support; the maxilla recedes behind them' },
+      { id: 'dental-implants', title: 'Implants, or a well-made prosthesis', why: '96% at ten years; dentures restore part of the height' },
+      { id: 'peri-support', title: 'Then the base under the lip', why: 'HA for the collapse a prosthesis leaves behind' },
+      { id: 'faq-order', title: 'In that order', why: 'nothing done to the lip fixes a missing frame' },
+    ],
+  },
+];
+
+// The action plan, month by month.
+const planRows = [
+  {
+    id: 'workup',
+    step: 'Week 0: the ruler, the four expressions, the photographs — and a dentist',
+    when: 'Before anything',
+    blurb: 'Tooth show at rest measured; philtrum measured; speech, posed smile and a real laugh filmed on a phone; colour against the whites of the eyes, edges, gum line and triangles checked; a hygienist and a periodontal chart booked; photographs at rest, speaking, smiling and in profile, same light, no flash.',
+  },
+  {
+    id: 'home-stain',
+    step: 'Month 1: stain off, edges protected, lip surface cared for',
+    when: 'Every day, for good',
+    blurb: 'A scale and polish; a whitening toothpaste; the cigarettes gone; acidic drinks with meals and through a straw; a night guard if the edges are flat; an SPF balm by day and a retinoid on the white lip by night; a toxin trial of the corners or the gum if either bothers you.',
+  },
+  {
+    id: 'dental-whitening',
+    step: 'Months 2–6: the dental frame — whiten, rebuild, cover, align, replace',
+    when: 'Teeth before lips',
+    blurb: 'Peroxide whitening in dentist-made trays; bonded edges for the worn incisors; a gum graft for the roots on show and the triangles that warrant it; aligners for the crowded lower or drifted upper teeth; implants for the gaps. Veneers only where colour, shape and wear all need changing, on the teeth that show.',
+  },
+  {
+    id: 'peri-lip-lift',
+    step: 'Month 6 onward: the lip and its base, on a frame worth revealing',
+    when: 'After the dental work',
+    blurb: 'Support at the chin, pyriform and marionette where the bone has receded; resurfacing for the etched lines; a border filler for the roll and the vermilion show; and, for the philtrum over 18 mm with no tooth show, the lip lift from a surgeon — the one treatment that shortens the curtain rather than padding it.',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="aging-smile" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO: title, description, the explainer video ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 pt-14 md:pt-20 pb-12">
+        <p class="text-xs uppercase tracking-[0.3em] text-sage mb-4">Problem · The aging smile</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+          The aging smile, honestly<span class="text-rose">.</span>
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg md:text-xl text-ink/75 leading-relaxed">
+          A smile ages in three places at once: an upper lip that lengthens by about five millimetres and thins
+          until it curtains the teeth, teeth that darken, shorten and lose their gum, and a maxilla and jaw that
+          recede behind them. The youthful signature &mdash; upper teeth on show, lower teeth hidden &mdash;
+          reverses. Below, the ruler-and-phone self-check that says which part has aged, and every treatment
+          graded on the component it reaches, dental and aesthetic side by side &mdash; from the hygienist and the
+          night guard to the gum graft, the lip lift and the filler that most people reach for first and that
+          treats none of the three causes.
+        </p>
+        <p class="mt-3 text-xs text-ink/50">
+          Updated 13 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+        </p>
+
+        <div id="intro" class="scroll-mt-32 mt-10 md:mt-12">
+          <MediaPlaceholder kind="video" ratio="16/9" label="The whole guide in two minutes" tone="sage" />
+        </div>
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ WHAT'S HAPPENING (three drivers + drawers) · WHICH TYPE ════════════ -->
+    <section id="overview" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-12">
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+          {g.id === 'basics' && (
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+              {drivers.map((d) => (
+                <a href={`#${d.id}`} class="group block p-5 bg-white rounded-2xl border border-ink/10 hover:border-rose/40 hover:shadow-md transition">
+                  <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{d.kind}</p>
+                  <h3 class="font-display text-xl leading-tight mt-1 group-hover:text-rose transition">{d.title}</h3>
+                  <p class="mt-2 text-sm text-ink/65 leading-snug">{d.blurb}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          <div class={g.id === 'basics' ? 'mt-4 grid gap-2' : 'mt-6 grid gap-2'}>
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">The aging smile — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'dental' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The four expressions on camera: rest, speech, posed smile and a real laugh at 25 and at 60" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The same mouth in profile: philtrum length, tooth show at rest and the incisal edge, young and aged" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'dental' || g.id === 'perioral' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">One per component — where the evidence is actually good.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'dental-whitening',
+                    kind: 'For the colour',
+                    title: 'Peroxide whitening, in dentist-made trays',
+                    blurb: 'The cheapest large change on the page: every protocol works in the systematic reviews, colour holds one to 2.5 years, the at-home carbamide trays relapse least, and the white diet turned out to be unnecessary. Legally a dentist\'s treatment in the EU above 0.1%; matched to the whites of your eyes, not the television.',
+                    tone: 'gold' as const,
+                  },
+                  {
+                    id: 'dental-bonding',
+                    kind: 'For the edge',
+                    title: 'Composite bonding on the worn incisors',
+                    blurb: 'The 1–2 mm of edge that wear removed and the lip no longer reveals, rebuilt in one visit without drilling: 667 front-tooth build-ups survived 91.7% at ten years and 98.5% functionally at fifteen because a chip is a twenty-minute repair. The treatment to try before any veneer, and often the last one needed.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'dental-recession',
+                    kind: 'For the gum',
+                    title: 'The connective-tissue gum graft',
+                    blurb: 'The "long in the tooth" of age is a gum that moved, and it moves back: the coronally advanced flap with a connective-tissue graft is the repair periodontists have randomised most — 13 trials in one meta-analysis, a donor-free matrix matching it in 24 more — and the one most likely to cover the root completely. It rejuvenates the smile and protects the tooth at once.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'peri-filler-lips',
+                    kind: 'For the lip — conservatively',
+                    title: 'A border filler, half a millilitre',
+                    blurb: 'Randomised trials behind it — 93% responders at eight weeks against 29% untreated, 76% when the lines are treated with the lip — and one MRI study against the way it is usually used: the aging lip is long, not empty. Restore the roll, the bow and the vermilion show; add no length; and have the teeth done first.',
+                    tone: 'rose' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PLAN / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a plan to your smile</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section, in the order to try them.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p, i) => (
+                    <a href={`#${p.id}`} class="flex gap-3 p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-display text-rose w-5 shrink-0">{i + 1}.</span>
+                      <span>
+                        <span class="font-medium text-ink/90">{p.title}</span>
+                        <span class="text-ink/60"> — {p.why}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PLAN, MONTH BY MONTH ════════════ -->
+        <section id="plan" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The action plan</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The plan, month by month</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">What happens in which order &mdash; and when it is fair to judge it. Measure first, clean and protect from day one, rebuild the dental frame over the following months, and only then treat the lip and its base &mdash; because a lifted or filled lip reveals the teeth behind it.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {planRows.map((r, i) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="font-display text-2xl text-rose leading-none">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-sage/15 text-sage">{r.when}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.step}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed studies, randomised trials, systematic reviews, meta-analyses, survival
+            cohorts or clinic series, linked inline within each section. Primary sources: PubMed/PMC, the American
+            Journal of Orthodontics and Dentofacial Orthopedics, the Angle Orthodontist, the Journal of Prosthetic
+            Dentistry, the Journal of Dentistry, Clinical Oral Investigations, the Journal of Esthetic and Restorative
+            Dentistry, the Journal of Periodontal Research, Plastic and Reconstructive Surgery, Aesthetic Plastic
+            Surgery, Dermatologic Surgery, JPRAS, Gerodontology and Oral Radiology.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical or dental advice. Whitening above 0.1% hydrogen peroxide is restricted to
+          dental practitioners in the EU; veneers, crowns and lip lifts are irreversible; every injection near the
+          mouth is a medical procedure with a vascular risk; and prices are indicative private rates, not quotes.
+        </p>
+    </div>
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

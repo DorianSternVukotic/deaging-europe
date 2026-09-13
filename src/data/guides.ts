@@ -252,4 +252,10 @@ export const guides: GuideMeta[] = [
     tagline: 'Bands, fat or laxity — the two-minute self-check, and the creams, shockwave, radiofrequency, subcision, the laser and the biostimulators graded on the component each one reaches.',
     kind: 'problem',
   },
+  {
+    path: 'aging-smile',
+    title: 'Aging smile',
+    tagline: 'A lip that lengthens and hides the teeth, teeth that darken, shorten and lose their gum, a frame that recedes — the ruler-and-phone self-check, and whitening, bonding, veneers, gum grafts, implants, lip filler, the lip lift and toxin graded dental and aesthetic side by side.',
+    kind: 'problem',
+  },
 ];
