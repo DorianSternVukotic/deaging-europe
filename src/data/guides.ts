@@ -89,6 +89,12 @@ export const guides: GuideMeta[] = [
     kind: 'foundation',
   },
   {
+    path: 'retinoids',
+    title: 'Retinoids',
+    tagline: 'Tretinoin, tazarotene, adapalene, retinal, retinol, the esters, granactive retinoid and bakuchiol graded on their own trials — what each fixes, how to start without the peeling, and the EU retinol cap of 2025.',
+    kind: 'foundation',
+  },
+  {
     path: 'neck',
     title: 'Crepey neck & neck lines',
     tagline: 'Texture, necklace lines, platysmal bands and laxity — every fix graded, home to surgery.',

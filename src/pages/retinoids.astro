@@ -1,0 +1,496 @@
+---
+/**
+ * The retinoids guide (/retinoids) — foundation guide on the in-clinic
+ * layout: evidence strength as the primary visual signal, all content in the
+ * DOM, one interactive block (skin-and-situation matcher), and the ladder of
+ * retinoid forms compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/retinoids';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Retinoids — retinol to tretinoin, every form graded | DeAging Europe';
+const description =
+  'The best-evidenced anti-aging topical there is: tretinoin, tazarotene, adapalene, retinaldehyde, retinol, the esters, granactive retinoid, bakuchiol and low-dose isotretinoin graded on their own trials — what each fixes, how to start without the peeling, the EU retinol cap of November 2025, and the myths about thin skin, summers and eyes.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-how-long': '4 weeks to 2 years',
+  'faq-which-first': 'Tretinoin 0.025% or retinal 0.05%',
+  'faq-how-often': '2×/week → nightly → 3×/week',
+  'faq-combine': 'Mostly yes; alternate acids',
+  'faq-eu-ban': 'Capped at 0.3%, not banned',
+  'faq-retinol-vs-tretinoin': 'Weaker, gentler, still works',
+  'faq-eyes': 'Yes, on the bone',
+  'faq-cost': '€8–90',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'First fine lines in my 30s — where do I start?',
+    paths: [
+      { id: 'faq-which-first', title: 'Which rung', why: 'tretinoin 0.025% on prescription, or retinal 0.05% without one' },
+      { id: 'how-to-start', title: 'The twelve-week ramp', why: 'two nights a week, on dry skin, under moisturiser, with sunscreen' },
+      { id: 'use-fine-lines', title: 'What to expect', why: 'a grade on the fine-wrinkle scale by six months; still improving at two years' },
+    ],
+  },
+  {
+    concern: 'Sun spots and uneven tone',
+    paths: [
+      { id: 'use-pigment', title: 'Pigment', why: '83% versus 29% lighter at ten months in the NEJM trial; first change at four weeks' },
+      { id: 'prod-tretinoin', title: 'Tretinoin', why: 'the molecule the pigment trials used; 0.025–0.05%' },
+      { id: 'safety-who-careful', title: 'Darker skin', why: 'retinoids treat post-inflammatory pigment and irritation causes it — ramp slowly' },
+    ],
+  },
+  {
+    concern: 'Deep wrinkles and leathery, sun-damaged skin',
+    paths: [
+      { id: 'use-coarse-wrinkles', title: 'Coarse wrinkles', why: 'a grade of improvement over a year; tazarotene ranked first, at the cost of irritation' },
+      { id: 'prod-tazarotene', title: 'Tazarotene', why: '67% success versus 55% on tretinoin and 22% on vehicle, still improving at week 52' },
+      { id: 'can-and-cant', title: 'What it cannot do', why: 'etched lines and folds need resurfacing, toxin or filler' },
+    ],
+  },
+  {
+    concern: 'Sensitive, reactive or rosacea-prone skin',
+    paths: [
+      { id: 'safety-who-careful', title: 'Going slowly', why: 'a lower rung, once or twice a week, under moisturiser' },
+      { id: 'prod-adapalene', title: 'Adapalene', why: 'non-inferior to tretinoin 0.05% at 24 weeks and better tolerated' },
+      { id: 'prod-retinol', title: 'Stabilised 0.1% retinol', why: 'a handful of mild irritation events in 237 people' },
+    ],
+  },
+  {
+    concern: 'Pregnant, breastfeeding or trying',
+    paths: [
+      { id: 'safety-pregnancy', title: 'The rule and the reassurance', why: 'stop; the meta-analysis of 654 exposed pregnancies found no rise in malformations' },
+      { id: 'prod-bakuchiol', title: 'Bakuchiol meanwhile', why: 'matched 0.5% retinol in one 44-person trial; no known teratogenic signal' },
+    ],
+  },
+  {
+    concern: 'Adult acne, congestion and pores',
+    paths: [
+      { id: 'use-acne-pores', title: 'Acne and pores', why: 'the original licence, dozens of trials, and smaller apparent pores as a side benefit' },
+      { id: 'prod-adapalene', title: 'Adapalene', why: 'the acne retinoid that also improved photoaging' },
+      { id: 'faq-combine', title: 'With benzoyl peroxide', why: 'not tretinoin at the same time; adapalene is fine' },
+    ],
+  },
+  {
+    concern: 'Neck, chest and hands',
+    paths: [
+      { id: 'use-neck-chest-hands', title: 'Off the face', why: 'pigment responds; the one chest trial found no difference from vehicle' },
+      { id: 'rules-and-access', title: 'The body-lotion cap', why: 'EU body products are limited to 0.05% retinol equivalents' },
+    ],
+  },
+  {
+    concern: 'I want the strongest thing that works',
+    paths: [
+      { id: 'prod-tretinoin', title: 'Tretinoin', why: 'the reference — but 0.025% matched 0.1% for results' },
+      { id: 'prod-tazarotene', title: 'Tazarotene', why: 'the strongest rung, and the most irritating' },
+      { id: 'safety-myths', title: 'Burning is not working', why: 'irritation tracks dose; results track time' },
+    ],
+  },
+  {
+    concern: 'Which cosmetic can I actually buy in the EU now?',
+    paths: [
+      { id: 'rules-and-access', title: 'The 2025 cap', why: '0.3% retinol equivalents on the face; retinal not covered' },
+      { id: 'prod-retinal', title: 'Retinaldehyde', why: 'matched 0.05% tretinoin at 18 weeks in a 125-person trial' },
+      { id: 'what-good-product', title: 'The packaging', why: 'airless, opaque, a stated percentage — content fell by up to 80% in six months on a shelf' },
+    ],
+  },
+];
+
+// The ladder, compared as cards.
+const ladderRows = [
+  {
+    id: 'prod-tretinoin',
+    brand: 'Tretinoin (retinoic acid)',
+    evidence: 'strong' as Evidence,
+    blurb: 'The active molecule itself; every pivotal trial, the two-year placebo-controlled trial and the collagen biopsies. Prescription-only in Europe, off-label for aging, €8–25 a tube. 0.025% does what 0.1% does with less irritation.',
+    knownFor: 'The reference; start at 0.025%',
+  },
+  {
+    id: 'prod-tazarotene',
+    brand: 'Tazarotene 0.1%',
+    evidence: 'strong' as Evidence,
+    blurb: 'Synthetic; 1,400 patients in three trials, beat tretinoin 0.05% head-to-head, ranked first for coarse wrinkles and among the most irritating. Licensed for photoaging in the US, imported in Europe.',
+    knownFor: 'Coarse wrinkles; heavy sun damage',
+  },
+  {
+    id: 'prod-adapalene',
+    brand: 'Adapalene 0.1–0.3%',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Synthetic and light-stable; 0.3% gel non-inferior to tretinoin 0.05% at 24 weeks; lightened sun spots in 57–59% versus 36%. Gentler; prescription-only in the EU and UK, over the counter in the US.',
+    knownFor: 'Sensitive and acne-prone skin',
+  },
+  {
+    id: 'prod-retinal',
+    brand: 'Retinaldehyde 0.05–0.1%',
+    evidence: 'moderate' as Evidence,
+    blurb: 'One step from retinoic acid; 0.05% matched 0.05% tretinoin at 18 weeks in 125 patients with better tolerance; three years of tolerance data. Not covered by the EU retinol cap — the strongest cosmetic rung.',
+    knownFor: 'Best without a prescription',
+  },
+  {
+    id: 'prod-retinol',
+    brand: 'Retinol 0.1–0.3%',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Two steps from retinoic acid; a 52-week 0.1% trial (crow\'s feet −44%, pigment −84%), a pooled analysis of 471 people, and one independent nursing-home trial with biopsies. Capped at 0.3% in the EU from November 2025.',
+    knownFor: 'The well-trialled cosmetic',
+  },
+  {
+    id: 'prod-esters',
+    brand: 'Retinyl palmitate / acetate / propionate',
+    evidence: 'limited' as Evidence,
+    blurb: 'The storage esters; need about twenty times the concentration of retinol, and the one independent placebo-controlled trial found nothing at 48 weeks. Count toward the EU cap. A moisturiser wearing a retinol label.',
+    knownFor: 'Marketing, mostly',
+  },
+  {
+    id: 'prod-hpr',
+    brand: 'Hydroxypinacolone retinoate',
+    evidence: 'limited' as Evidence,
+    blurb: 'The "granactive retinoid": the most stable retinoid on the shelf and the least tested — a manufacturer programme with no vehicle arm, no independent trial, no biopsy. Plausible; unproven.',
+    knownFor: 'Stability; comfort; no trial',
+  },
+  {
+    id: 'prod-bakuchiol',
+    brand: 'Bakuchiol 0.5–1%',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Not a retinoid; a plant compound that switches on similar genes. Matched 0.5% retinol in one 44-person, 12-week trial with less stinging. The substitute for pregnancy and intolerance, not the upgrade.',
+    knownFor: 'Pregnancy; intolerant skin',
+  },
+  {
+    id: 'prod-isotretinoin',
+    brand: 'Oral isotretinoin, low dose',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Six studies, 251 patients, "insufficient evidence"; not superior to 0.05% tretinoin cream in the one randomised comparison. A teratogen with monitoring, for a result a cream gives. Specialist only.',
+    knownFor: 'Not for aging alone',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="retinoids" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Retinoids, retinol to tretinoin<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            The one anti-aging topical with decades of randomised trials behind it &mdash; every form graded on
+            its own evidence, what each fixes and what none of them can, how to start without the peeling, and
+            the EU rules that changed in 2025.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 13 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — the ladder of tubes" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Retinoids — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The twelve-week ramp, night by night" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Biopsy pair: photodamaged dermis before and after a year of tretinoin" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">Where the trials, the tolerability and the price line up best.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'prod-tretinoin',
+                    kind: 'Best evidence',
+                    title: 'Tretinoin 0.025%, on prescription',
+                    blurb: 'The molecule every trial used, at the strength that matched 0.1% with a fraction of the irritation. A €12 generic tube, two to three months a pea a night, and the best anti-aging purchase in this library.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'prod-retinal',
+                    kind: 'Best without a prescription',
+                    title: 'Retinaldehyde 0.05–0.1%',
+                    blurb: 'One step from the active molecule, matched 0.05% tretinoin at 18 weeks in 125 patients with far better tolerance, and untouched by the EU retinol cap. Medik8 Crystal Retinal or Avène RetrinAL, in an airless tube.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'prod-retinol',
+                    kind: 'Gentlest with data',
+                    title: 'Stabilised 0.1–0.3% retinol',
+                    blurb: 'Crow\'s feet 44% better and pigment 84% better over a year at 0.1%, improvement from week 4 in a pooled analysis of 471 people, almost no irritation — and legal at 0.3% on every EU shelf.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'use-pigment',
+                    kind: 'Most under-rated use',
+                    title: 'Sun spots and uneven tone',
+                    blurb: 'Liver spots lighter in 83% versus 29% on vehicle in the NEJM trial, with the first change at four weeks; melasma and post-inflammatory marks in every skin type. Faster and cheaper than any laser, and what the laser needs afterwards.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / LADDER / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a retinoid to your skin</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the situation that is yours &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE LADDER COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The product landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The ladder compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Nine ways to put vitamin A on skin, from the molecule with two-year placebo-controlled trials to the esters with none. Each card is graded on its own evidence, not on tretinoin&rsquo;s.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ladderRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised trials, systematic reviews, meta-analyses, biopsy studies or
+            regulatory texts, linked inline within each section. Primary sources: PubMed/PMC, JAMA, the New England
+            Journal of Medicine, Archives of Dermatology / JAMA Dermatology, the Journal of the American Academy of
+            Dermatology, the British Journal of Dermatology, the Journal of Investigative Dermatology, the Journal of
+            Drugs in Dermatology, the Journal of Cosmetic Dermatology, Scientific Reports and EUR-Lex.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Tretinoin, adapalene, tazarotene and isotretinoin are prescription
+          medicines &mdash; use them under a prescriber, disclose your medical history, and stop topical retinoids when
+          pregnant, trying or breastfeeding. Product names are examples, not endorsements; formulations are changing
+          under the 2025 EU vitamin A rules. Prices are indicative private rates, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
