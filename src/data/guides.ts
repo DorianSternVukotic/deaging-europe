@@ -60,8 +60,8 @@ export const guides: GuideMeta[] = [
   },
   {
     path: 'regenerative-aesthetics',
-    title: 'PRP & regenerative aesthetics',
-    tagline: 'PRP, PRF, exosomes and polynucleotides — evidence vs the injectable frontier.',
+    title: 'Biostimulators & regenerative injectables',
+    tagline: 'Sculptra, Radiesse, Ellansé, Profhilo, polynucleotides, PRP, nanofat, exosomes and stem cells graded on their own trials — what each can do, how long it lasts, and which the law actually allows.',
     kind: 'clinic',
   },
   {

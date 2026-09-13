@@ -1,8 +1,9 @@
 ---
 /**
- * The regenerative-aesthetics guide (/regenerative-aesthetics) — collagen-guide
- * layout: evidence strength as the primary visual signal, one interactive
- * block (concern matcher).
+ * The biostimulator guide (/regenerative-aesthetics) — in-clinic layout:
+ * evidence strength as the primary visual signal, all content in the DOM,
+ * one interactive block (concern matcher), and the injectables compared as
+ * cards. The path is kept because 35 guides link here.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import MediaPlaceholder from '../components/MediaPlaceholder.astro';
@@ -19,9 +20,9 @@ import {
 } from '../data/regenerative-aesthetics';
 
 const locale = DEFAULT_LOCALE;
-const title = 'PRP, exosomes & regenerative aesthetics | DeAging Europe';
+const title = 'Biostimulators & regenerative injectables — every product graded | DeAging Europe';
 const description =
-  'PRP, PRF, exosomes, polynucleotides and "stem-cell" treatments graded by evidence and by regulation — what works, what\'s fashionable, and what to walk away from.';
+  'Sculptra, Radiesse, Ellansé, Profhilo and the HA boosters, polynucleotides, PRP and PRF, nanofat, exosomes and "stem cells" graded on their own trials — what each can do, how long it lasts, what it costs in Europe, which are CE-marked devices and which have no licence at all, and the nodule, vascular and hygiene risks the consult skips.';
 
 const readingMinutes = guideReadingMinutes();
 
@@ -41,13 +42,16 @@ const orderedSections = (g: (typeof groups)[number]) =>
     .slice()
     .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
 
+// Bottom-line answer shown in the collapsed FAQ card.
 const faqAnswer: Record<string, string> = {
-  'faq-hair': 'Modestly',
-  'faq-vampire': 'For scars, yes',
+  'faq-longest': 'PCL, then PLLA, then CaHA',
+  'faq-sessions': '2–3; judge at 3–6 months',
+  'faq-sculptra-vs-radiesse': 'Diffuse vs contour',
+  'faq-profhilo': 'For glow, yes; for lift, no',
+  'faq-under-eye': 'Neither beat placebo',
   'faq-exosomes-legal': 'Topical only',
-  'faq-pn-vs-prp': 'Neither proven',
-  'faq-prf-upgrade': 'No',
-  'faq-variance': 'Kit lottery',
+  'faq-replace-filler': 'Sometimes; not reversibly',
+  'faq-cost': '€250–5,000',
 };
 
 const topInfoIds = new Set(['basics', 'context']);
@@ -59,69 +63,140 @@ const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
 const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
 const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
 
-// Interactive matcher — concern → recommended rows.
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
 const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
   {
+    concern: 'Hollow temples or flattened cheeks',
+    paths: [
+      { id: 'use-folds-volume', title: 'Volume with a biostimulator', why: '97% of temples improved against none untreated; cheek wrinkles 72% against 26% at a year' },
+      { id: 'prod-plla', title: 'Poly-L-lactic acid', why: 'the best-trialled biostimulator — slow, diffuse, two years' },
+      { id: 'faq-replace-filler', title: 'Or filler?', why: 'HA where shape and reversibility matter' },
+    ],
+  },
+  {
+    concern: 'A softening jawline and chin',
+    paths: [
+      { id: 'prod-caha', title: 'Calcium hydroxylapatite', why: 'contour with immediate effect, a jawline consensus protocol and three-year safety data' },
+      { id: 'use-laxity', title: 'The "tightening" claim', why: 'hyperdiluted use has guidelines, not randomised trials' },
+      { id: 'safety-vascular', title: 'Not dissolvable', why: 'why the injector matters more with CaHA than with HA' },
+    ],
+  },
+  {
+    concern: 'Crepey neck or chest',
+    paths: [
+      { id: 'use-neck-decolletage', title: 'Neck and décolletage', why: 'the first randomised trial of diluted CaHA on the chest: 73.5% responders' },
+      { id: 'safety-nodules', title: 'Nodules', why: 'the neck is where superficial PLLA caused them' },
+    ],
+  },
+  {
+    concern: 'Dull, dehydrated skin — I want "glow"',
+    paths: [
+      { id: 'use-skin-quality', title: 'Skin quality, measured', why: 'firmness, hydration and pores on instruments for about six months; one sham-controlled trial found nothing' },
+      { id: 'prod-ha-boosters', title: 'HA boosters and Profhilo', why: 'the safest product in the guide — 0.034% adverse events in a million patients' },
+      { id: 'prod-pn', title: 'Polynucleotides', why: 'the fashionable alternative, graded honestly' },
+    ],
+  },
+  {
+    concern: 'Veiny, bony hands',
+    paths: [
+      { id: 'use-hands', title: 'Hands', why: '75% improved at three months in a randomised blinded trial, holding to twelve' },
+      { id: 'prod-caha', title: 'Calcium hydroxylapatite', why: 'the only filler licensed for hands in the US' },
+    ],
+  },
+  {
     concern: 'Thinning hair',
-    paths: [{ id: 'prp-hair', title: 'PRP for pattern hair loss', why: 'the best-evidenced use — three monthly sessions, kept up with minoxidil' }],
+    paths: [
+      { id: 'use-hair', title: 'PRP for pattern hair loss', why: 'about 26–28 extra hairs per cm² in meta-analyses; add it to minoxidil, do not replace it' },
+      { id: 'prod-prp', title: 'What is in the syringe', why: 'platelet dose varies more than twofold between kits' },
+    ],
   },
   {
     concern: 'Acne scars',
-    paths: [{ id: 'prp-scars', title: 'Microneedling + PRP', why: 'the combination triples the odds of a big improvement' }],
-  },
-  {
-    concern: 'Dull, tired-looking skin',
     paths: [
-      { id: 'prp-face', title: 'PRP facial', why: 'glow and texture over 2–3 sessions — honest expectations required' },
-      { id: 'frontier-nctf', title: 'Mesotherapy cocktails', why: 'pleasant hydration; the trial couldn\'t separate cocktail from needling' },
+      { id: 'use-acne-scars', title: 'Microneedling with PRP', why: 'three times the odds of a large improvement over microneedling alone' },
     ],
   },
   {
-    concern: 'Dark circles / under-eyes',
+    concern: 'Tired under-eyes',
     paths: [
-      { id: 'prp-eyes', title: 'PRP under-eye', why: 'best signal for pigment-type circles — no placebo-controlled proof' },
-      { id: 'frontier-pn', title: 'Polynucleotides', why: 'the fashionable option, graded honestly' },
+      { id: 'use-under-eye', title: 'PRP, PRF and polynucleotides under the eye', why: 'nothing has beaten placebo; sort hollow from pigment from crepe first' },
+      { id: 'faq-under-eye', title: 'Which, if any', why: 'PRP is cheaper and yours; polynucleotides equalled an HA filler' },
     ],
   },
   {
-    concern: 'I was offered exosomes',
-    paths: [{ id: 'frontier-exosomes', title: 'Exosomes', why: 'no approved product anywhere — read this before paying the add-on' }],
-  },
-  {
-    concern: 'I was offered a "stem-cell" treatment',
-    paths: [{ id: 'frontier-stem-cells', title: '"Stem-cell" injections', why: 'documented catastrophic harms and no cosmetic-benefit trials — walk away' }],
+    concern: 'I was offered exosomes or a "stem-cell" treatment',
+    paths: [
+      { id: 'prod-exosomes', title: 'Exosomes', why: 'no authorised product anywhere; trials of 3–60 people; the vial is unverified' },
+      { id: 'prod-stem-cells', title: '"Stem-cell" injections', why: 'three women blinded at one clinic; walk away' },
+      { id: 'safety-biologics', title: 'Ask for the licence number', why: 'there is none — that ends the conversation' },
+    ],
   },
 ];
 
-// Modality comparison cards.
-const modalityRows = [
+// The injectables compared, as cards.
+const productRows = [
   {
-    id: 'prp-hair',
-    name: 'PRP',
+    id: 'prod-plla',
+    brand: 'Poly-L-lactic acid (Sculptra)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Randomised against human collagen with 25-month follow-up; cheek wrinkles 72% vs 26% and temples 97% vs 0% against no treatment. Diffuse volume over months, two years of result, nodules if placed badly. CE and FDA.',
+    knownFor: 'Temples, cheeks, body; the reference',
+  },
+  {
+    id: 'prod-caha',
+    brand: 'Calcium hydroxylapatite (Radiesse)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Immediate contour plus stimulation; three-year follow-up without nodules; a randomised hand trial; non-inferior to Restylane in 2025. The diluted "tightening" use is off-label and largely untrialled. Not dissolvable.',
+    knownFor: 'Jawline, chin, hands',
+  },
+  {
+    id: 'prod-pcl',
+    brand: 'Polycaprolactone (Ellansé)',
     evidence: 'moderate' as Evidence,
-    blurb: 'Your own platelets — the real evidence base: hair density, scar-combo, facial glow.',
-    price: '€250–600/session',
+    blurb: 'The longest-lasting microsphere: 89% vs 24% at twelve months in its randomised trial, safety to 30 months, and a 2025 comparison beating PLLA. Fewer trials, CE only, hardest to undo.',
+    knownFor: 'Longevity; experienced hands',
   },
   {
-    id: 'prf',
-    name: 'PRF / i-PRF',
+    id: 'prod-ha-boosters',
+    brand: 'HA boosters (Profhilo, Skinboosters, Revive, Volite)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Instrument-measured hydration and firmness for about six months in small, manufacturer-run studies; one sham-controlled trial negative; 0.034% adverse events across a million Profhilo patients.',
+    knownFor: 'Glow and hydration; safest',
+  },
+  {
+    id: 'prod-pn',
+    brand: 'Polynucleotides (Rejuran, Plinest, Nucleofill)',
     evidence: 'emerging' as Evidence,
-    blurb: 'Slower-release variant with fewer, smaller studies — no shown superiority over PRP.',
-    price: '€300–650/session',
+    blurb: 'Salmon-DNA fragments as CE-marked devices; nine studies of 219 patients; equalled an HA filler rather than beating it in the phase 3 trial; no placebo-controlled trial. The 2026 boom, on a 2014 evidence base.',
+    knownFor: 'Under-eyes and crepe; fashionable',
   },
   {
-    id: 'frontier-pn',
-    name: 'Polynucleotides',
+    id: 'prod-prp',
+    brand: 'PRP and PRF (your own blood)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Meta-analyses for hair (+26–28 hairs/cm²) and acne scars (OR 2.97 with microneedling); thicker, firmer facial skin in most studies, fewer wrinkles in 40%. Unstandardised kits; the risk is hygiene. PRF: same uses, thinner file.',
+    knownFor: 'Hair, scars, texture; cheapest',
+  },
+  {
+    id: 'prod-nanofat',
+    brand: 'Nanofat (your own fat, emulsified)',
     evidence: 'emerging' as Evidence,
-    blurb: 'Salmon-DNA boosters riding a trend — small industry-adjacent trials, device-route regulation.',
-    price: '€350–1,000/session',
+    blurb: 'Liposuctioned fat processed to its stromal cells and injected for skin quality — a surgeon\'s series showing improvement at six months, reviews asking for controlled data. Surgery, not a facial.',
+    knownFor: 'An adjunct to fat grafting or a lift',
   },
   {
-    id: 'frontier-exosomes',
-    name: 'Exosomes',
+    id: 'prod-exosomes',
+    brand: 'Exosomes',
     evidence: 'limited' as Evidence,
-    blurb: 'Zero approved products, FDA warning on record, topical-only legality. Skip.',
-    price: '€200–600 add-on',
+    blurb: 'No authorised product anywhere, an FDA safety notification, trials of 3–60 people, and retail vials unlike the laboratory exosomes those trials used. One split-face study matched PRP. Topical-only legality. Skip.',
+    knownFor: 'The unverified add-on',
+  },
+  {
+    id: 'prod-stem-cells',
+    brand: '"Stem-cell" injections',
+    evidence: 'limited' as Evidence,
+    blurb: 'Unapproved biologics with documented catastrophes — three women blinded at one clinic — and no cosmetic-benefit trial. In the EU a cell therapy needs central authorisation that none of these has.',
+    knownFor: 'Walk away',
   },
 ];
 ---
@@ -133,17 +208,18 @@ const modalityRows = [
       <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
         <div>
           <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
-            Regenerative, regulated<span class="text-rose">.</span>
+            Biostimulators, PRP to Sculptra<span class="text-rose">.</span>
           </h1>
           <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
-            PRP, PRF, exosomes and polynucleotides &mdash; graded by what trials show and what
-            regulators allow.
+            Collagen stimulators, boosters, polynucleotides, your own blood and fat, and the biologics with no
+            licence &mdash; every regenerative injectable graded on its own trials, what each can do, how long it
+            lasts, and which of them the law actually allows.
           </p>
           <p class="mt-3 text-xs text-ink/50">
-            Updated 3 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+            Updated 13 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
           </p>
         </div>
-        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — centrifuge still" tone="rose" class="w-full lg:w-72" />
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — vials on a tray" tone="rose" class="w-full lg:w-72" />
       </div>
       <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
@@ -185,7 +261,7 @@ const modalityRows = [
 
         <div class="mb-10 pt-4">
           <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
-          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Regenerative aesthetics — what the evidence says</h2>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Regenerative injectables — what the evidence says</h2>
         </div>
 
         <div id="guide-body" class="min-w-0">
@@ -196,10 +272,10 @@ const modalityRows = [
             <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
             {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
 
-            {g.id === 'prp' && (
+            {g.id === 'uses' && (
               <div class="mt-6 grid md:grid-cols-2 gap-4">
-                <MediaPlaceholder kind="video" ratio="16/9" label="From blood draw to injection" tone="rose" />
-                <MediaPlaceholder kind="image" ratio="16/9" label="PRP kit comparison" tone="bone" />
+                <MediaPlaceholder kind="video" ratio="16/9" label="A PLLA session: reconstitution, fanning, massage" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Biopsy pair: microspheres at month 4 and the collagen around them at month 9" tone="bone" />
               </div>
             )}
 
@@ -209,7 +285,7 @@ const modalityRows = [
                     s={s}
                     variant="bar"
                     tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
-                    mediaTone={g.id === 'prp' ? 'rose' : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
                   />
                 ))}
             </div>
@@ -219,37 +295,37 @@ const modalityRows = [
             <div id="picks" class="mb-16 scroll-mt-32">
               <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
               <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
-              <p class="mt-3 text-ink/70 max-w-2xl">Where the platelets actually earn their fee.</p>
+              <p class="mt-3 text-ink/70 max-w-2xl">Where the trials, the duration and the safety margins line up best.</p>
 
               <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                   {
-                    id: 'prp-scars',
-                    kind: 'Best combo',
-                    title: 'Microneedling + PRP',
-                    blurb: 'For acne scars — the one facial use with meta-analytic muscle.',
+                    id: 'prod-plla',
+                    kind: 'Best evidence',
+                    title: 'PLLA for temples and cheeks',
+                    blurb: 'The one biostimulator with randomised, controlled, two-year data: temples 97% improved against none untreated, cheek wrinkles 72% against 26% at a year, folds better than collagen through month 25. Slow, diffuse, and worth the three-month wait.',
                     tone: 'rose' as const,
                   },
                   {
-                    id: 'prp-hair',
-                    kind: 'For hair',
-                    title: 'PRP + minoxidil',
-                    blurb: 'Three monthly sessions on top of the licensed drugs beats either alone.',
+                    id: 'use-hands',
+                    kind: 'Most under-rated',
+                    title: 'CaHA for the hands',
+                    blurb: 'Three-quarters of hands a grade better at three months in a blinded randomised trial, holding through twelve, with no loss of hand function — the body indication with a licence behind it, for the part of you that gives away your age first.',
                     tone: 'sage' as const,
                   },
                   {
-                    id: 'prp-face',
-                    kind: 'The glow',
-                    title: 'A PRP facial course',
-                    blurb: 'Texture and radiance from your own biology — expectations calibrated.',
-                    tone: 'gold' as const,
+                    id: 'prod-ha-boosters',
+                    kind: 'Safest for glow',
+                    title: 'An HA booster, eyes open',
+                    blurb: 'Measurable hydration and firmness for about six months, 371 adverse events across a projected million Profhilo patients, and no foreign body that outstays its welcome. Photograph it in the same light before and after, because the sham-controlled trial saw nothing.',
+                    tone: 'bone' as const,
                   },
                   {
-                    id: 'frontier-pn',
-                    kind: 'The trend, graded',
-                    title: 'Polynucleotides',
-                    blurb: 'If you must try the fashion — read the evidence tier before the price list.',
-                    tone: 'bone' as const,
+                    id: 'use-acne-scars',
+                    kind: 'PRP where it earns its keep',
+                    title: 'Microneedling with PRP for scars',
+                    blurb: 'Fourteen studies and 472 patients: three times the odds of a more-than-50% scar improvement over microneedling alone, from your own blood, with no extra severe side effects. The science behind the "vampire facial", without the trademark.',
+                    tone: 'gold' as const,
                   },
                 ].map((pick) => (
                   <a
@@ -280,7 +356,7 @@ const modalityRows = [
       </div>
     </section>
 
-    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / MODALITIES / REFERENCES ════════════ -->
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PRODUCTS / REFERENCES ════════════ -->
     <div class="max-w-6xl mx-auto px-6 py-12">
 
         {tailInfoGroups.map((g) => (
@@ -299,8 +375,8 @@ const modalityRows = [
         <!-- ════════════ CONCERN MATCHER ════════════ -->
         <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
           <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a treatment to your concern</h2>
-          <p class="mt-2 text-ink/70 max-w-2xl">Open your situation to see where the evidence points — each link jumps to the graded section.</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match an injectable to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points &mdash; each link jumps to the graded section.</p>
 
           <div class="mt-8 grid gap-2">
             {matcher.map((m) => (
@@ -326,21 +402,21 @@ const modalityRows = [
           </div>
         </section>
 
-        <!-- ════════════ MODALITY COMPARISON ════════════ -->
+        <!-- ════════════ THE INJECTABLES COMPARED ════════════ -->
         <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
-          <p class="text-xs uppercase tracking-[0.3em] text-sage">The menu</p>
-          <h2 class="font-display text-3xl md:text-4xl mt-2">Modalities compared</h2>
-          <p class="mt-2 text-ink/65 max-w-2xl">Four injectable philosophies, one evidence scale.</p>
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The product landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The injectables compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Nine things sold as regenerative, from the microspheres with two-year randomised data to the biologics with no licence. Each card is graded on its own evidence, not on the class&rsquo;s claims.</p>
 
-          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {modalityRows.map((r) => (
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
               <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
                 <div class="flex items-center justify-between gap-2 mb-2">
                   <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
                 </div>
-                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.name}</h3>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
                 <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
-                <p class="mt-3 text-xs font-medium text-ink/85">{r.price}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
               </a>
             ))}
           </div>
@@ -348,17 +424,21 @@ const modalityRows = [
 
         <!-- ════════════ REFERENCES ════════════ -->
         <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
-          <h2 class="font-display text-3xl">References & further reading</h2>
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
           <p class="mt-2 text-ink/70 text-sm">
-            All claims cite peer-reviewed studies, meta-analyses, or regulatory notices, linked
-            inline within each section. Primary sources: PubMed/PMC, FDA safety notifications,
-            NEJM, dermatology journals.
+            All claims cite peer-reviewed randomised trials, systematic reviews, meta-analyses, biopsy studies,
+            post-marketing safety reports or regulator notices, linked inline within each section. Primary sources:
+            PubMed/PMC, Dermatologic Surgery, the Aesthetic Surgery Journal, Aesthetic Plastic Surgery, JAAD, the
+            Journal of Drugs in Dermatology, the Journal of Cosmetic Dermatology, the New England Journal of Medicine,
+            CDC MMWR and the US FDA.
           </p>
         </section>
 
         <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
-          Educational content, not medical advice. These are medical procedures — verify your
-          provider's registration, and defer treatment during pregnancy or breastfeeding.
+          Educational content, not medical advice. Every injectable here is a medical procedure &mdash; consult a
+          registered clinician, disclose your full medical history, and defer treatment during pregnancy or
+          breastfeeding. Product names are examples, not endorsements; regulatory status varies by country and is
+          stated as of September 2026. Prices are indicative private rates, not quotes.
         </p>
     </div>
 
