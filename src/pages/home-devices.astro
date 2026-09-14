@@ -1,0 +1,505 @@
+---
+/**
+ * The at-home devices guide (/home-devices) — in-clinic layout: evidence
+ * strength as the primary visual signal, all content in the DOM, one
+ * interactive block (concern matcher), and the technologies compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/home-devices';
+
+const locale = DEFAULT_LOCALE;
+const title = 'At-home beauty devices — every category graded by evidence | DeAging Europe';
+const description =
+  'LED masks, laser caps for hair, home IPL, radiofrequency, microcurrent, home lasers, microneedle patches, dermarollers, gua sha, cleansing brushes and plasma pens graded on their own trials — which two categories have sham-controlled evidence, which one replaces a clinic bill, and which are placebos with a charger.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-led-masks-work': 'Fine lines and acne, modestly',
+  'faq-how-long': '8–26 weeks, by goal',
+  'faq-price': 'Numbers, not price',
+  'faq-with-retinoids': 'Yes; pause around IPL',
+  'faq-sun-after-ipl': 'No amplification; no tanning',
+  'faq-home-vs-clinic': 'A fraction, by design',
+  'faq-microcurrent-vs-botox': 'No — opposite mechanisms',
+  'faq-one-device': 'Cap, mask or IPL — or none',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Thinning hair or a widening parting',
+    paths: [
+      { id: 'use-hair-regrowth', title: 'Laser and LED caps, combs and helmets', why: 'four sham-controlled comb trials, helmet and cap trials, and meta-analyses of 38 studies — the strong row on this page' },
+      { id: 'prod-laser-caps', title: 'Which format to buy', why: 'comb, band or cap; why the schedule matters more than the diode count' },
+    ],
+  },
+  {
+    concern: 'Crow\'s feet and fine lines',
+    paths: [
+      { id: 'use-fine-lines', title: 'Red and near-infrared LED', why: 'one sham-controlled home-mask trial, on the split-face clinic evidence — modest and slow' },
+      { id: 'prod-led-masks', title: 'Choosing a mask', why: 'wavelengths, irradiance and a study on the model, not the price' },
+      { id: 'prod-microneedle-patches', title: 'Microneedle patches', why: 'a plumped crease for the morning after' },
+    ],
+  },
+  {
+    concern: 'Deeper wrinkles or crepey skin around the eyes and mouth',
+    paths: [
+      { id: 'use-wrinkles-laxity', title: 'Home radiofrequency and home lasers', why: 'blinded photographs, no sham arm, and the trial laser no longer sold' },
+      { id: 'prod-home-rf', title: 'The RF handhelds', why: 'emerging around the eyes and mouth; not for the jawline' },
+    ],
+  },
+  {
+    concern: 'Sagging jowls, flattened cheeks or a softening jawline',
+    paths: [
+      { id: 'use-jowls-jawline', title: 'No home device has lifted one', why: 'the trials measured eyes and brows; keep the money for the clinic' },
+      { id: 'use-fullness-exercise', title: 'The facial-exercise pilot', why: 'fuller cheeks in 16 women, nothing else, no control group' },
+      { id: 'prod-plasma-hifu', title: 'The marketplace machines', why: 'plasma pens and "home HIFU" — the walk-away row' },
+    ],
+  },
+  {
+    concern: 'Heavy brows, hooded lids or morning eye bags',
+    paths: [
+      { id: 'use-eye-lift', title: 'Microcurrent and muscle stimulation', why: 'one placebo-controlled brow study and two muscle-measurement pilots — maintenance, not repair' },
+      { id: 'use-puffiness', title: 'Cold', why: 'an hour of less puffiness from a spoon or a roller' },
+    ],
+  },
+  {
+    concern: 'Unwanted hair',
+    paths: [
+      { id: 'use-hair-removal', title: 'Home IPL and diode lasers', why: 'about half the hair gone at six months in the trials, for dark hair on light skin' },
+      { id: 'safety-burns-pigment', title: 'Who burns', why: 'the skin types, tans and patches the device must never see' },
+    ],
+  },
+  {
+    concern: 'Dark spots or melasma',
+    paths: [
+      { id: 'use-pigment', title: 'Nothing at home works', why: 'no controlled trial; heat and light darken melasma' },
+      { id: 'safety-burns-pigment', title: 'The harm runs the other way', why: 'pigment change is a listed side effect of home light devices' },
+    ],
+  },
+  {
+    concern: 'Breakouts and adult acne',
+    paths: [
+      { id: 'use-acne', title: 'Blue and blue-red LED', why: 'double-blind home trials — mild acne, as an add-on to a retinoid' },
+      { id: 'prod-cleansing-brushes', title: 'Not the brush', why: 'an uncontrolled cohort and a consensus panel; a cleanser does the job' },
+    ],
+  },
+  {
+    concern: 'Cellulite or loose skin on the body',
+    paths: [
+      { id: 'use-body-cellulite', title: 'Home body RF and the massage gadgets', why: 'a centimetre off a thigh in one study; no dimple measured anywhere' },
+      { id: 'prod-massage-tools', title: 'Gua sha and rollers', why: 'fluid moves; nothing else does' },
+    ],
+  },
+];
+
+// The technologies compared, as cards.
+const productRows = [
+  {
+    id: 'prod-laser-caps',
+    brand: 'Laser caps, combs and helmets (HairMax, iRestore, Capillus, Theradome)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Sham-controlled randomised trials of the comb (+18–26 hairs/cm² vs +2–9), helmet and cap trials, and meta-analyses of 38 studies. Every trial manufacturer-funded and short; results need the schedule kept.',
+    knownFor: 'Pattern hair loss; the one strong row',
+  },
+  {
+    id: 'prod-led-masks',
+    brand: 'LED masks (Omnilux, CurrentBody, Dr Dennis Gross, Shark, Therabody)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'The claim — fine lines, crow\'s feet, mild acne — is moderate on a sham-controlled home-mask trial and the clinic LED evidence; the masks as sold are emerging until they state a dose and publish a study on their own model.',
+    knownFor: 'Fine lines and acne, if the dose is real',
+  },
+  {
+    id: 'prod-home-ipl',
+    brand: 'Home IPL and diode lasers (Philips Lumea, Braun, Silk\'n, Ulike, Tria)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Seven studies, none randomised: roughly half the hair gone at six months for dark hair on light skin, with blistering and pigment change in the wrong skin. The one device that replaces a clinic bill.',
+    knownFor: 'Hair removal; never "photo-rejuvenation"',
+  },
+  {
+    id: 'prod-home-rf',
+    brand: 'Home radiofrequency (Tripollar, Newa, Silk\'n, Medicube)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Uncontrolled manufacturer trials with blinded photographs: a grade of periorbital wrinkle improvement in most users after a month. No sham arm; no jowl or neck measured.',
+    knownFor: 'Fine lines around the eyes and mouth',
+  },
+  {
+    id: 'prod-home-lasers',
+    brand: 'Home lasers (NIRA, Tria Age-Defying; PaloVia withdrawn)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'The 124-subject home fractional laser trial found 90% improved a grade with no control group, and the device was withdrawn; the lasers now sold have no sham-controlled trial on PubMed.',
+    knownFor: 'Periorbital lines, daily, with redness',
+  },
+  {
+    id: 'prod-microcurrent',
+    brand: 'Microcurrent and muscle stimulation (NuFace, Ziip, Foreo Bear, Medicube)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'One double-blind placebo-controlled brow-lift study, two muscle-thickness pilots, and no sham trial of the best-sellers. Muscle tone: real, small, gone within days of stopping.',
+    knownFor: 'Brows and eyes; not a substitute for toxin',
+  },
+  {
+    id: 'prod-microneedle-patches',
+    brand: 'Dissolving microneedle patches (Acropass, Vice Reversa, Peace Out)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Split-face trials: the HA patch beat the same HA as a serum on crow\'s-feet roughness at eight weeks; an ascorbic-acid patch beat placebo double-blind. Sterile, single-use, shallow. A plumped crease for a day.',
+    knownFor: 'The morning after',
+  },
+  {
+    id: 'prod-dermarollers',
+    brand: 'Dermarollers and home microneedling pens',
+    evidence: 'limited' as Evidence,
+    blurb: 'No controlled trial at home needle lengths; a three-arm hair study that found no significant difference; a 2026 grading of low-quality evidence "associated with infectious complications".',
+    knownFor: 'Serum absorption and infection risk',
+  },
+  {
+    id: 'prod-massage-tools',
+    brand: 'Gua sha, jade rollers, cryo rollers',
+    evidence: 'limited' as Evidence,
+    blurb: 'One randomised comparison of the two tools with no untreated arm: 2–3 mm of contour change after massage, fluid by evening. Emerging only as cold, for an hour of less puffiness.',
+    knownFor: 'The ritual, and a morning de-puff',
+  },
+  {
+    id: 'prod-cleansing-brushes',
+    brand: 'Sonic cleansing brushes (Foreo Luna, PMD; Clarisonic discontinued)',
+    evidence: 'limited' as Evidence,
+    blurb: 'An industry-convened consensus panel and an uncontrolled acne cohort; no controlled trial for anything to do with aging. A cleanser removes what a brush removes; the brush adds friction.',
+    knownFor: 'Nothing a cleanser does not do',
+  },
+  {
+    id: 'prod-plasma-hifu',
+    brand: 'Plasma pens and "home HIFU"',
+    evidence: 'limited' as Evidence,
+    blurb: 'A grid of arc burns sold as non-surgical blepharoplasty by TikTok accounts (61% adverts, 6.5% warnings), and ultrasound machines with no trial that are either inert or unsupervised deep heat. Do not buy.',
+    knownFor: 'The walk-away row',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="home-devices" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            At-home devices, LED mask to laser cap<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            Clinic technology at a fraction of the dose, sold on the clinic&rsquo;s evidence &mdash; every category
+            graded on the trials of the devices themselves, from the laser caps with sham-controlled trials to the
+            plasma pens that are burns in a box.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 15 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — an LED mask, a laser cap and a home IPL on a marble shelf" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">At-home devices — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="A home LED mask against a clinic panel: wavelength, irradiance, and the minutes that make the dose" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Four families of device: light, energy, needles, mechanical" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The three devices on this page worth a shelf &mdash; and the one to walk away from.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'prod-laser-caps',
+                    kind: 'Best evidence',
+                    title: 'A laser cap for thinning hair',
+                    blurb: 'Four sham-controlled comb trials, helmet and cap trials in men and women, and meta-analyses of 38 studies in 3,098 patients: 18–26 more hairs per cm² than the sham at 26 weeks. Every trial short and manufacturer-funded; every result dependent on wearing it every other day for six months and then not stopping.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'use-fine-lines',
+                    kind: 'Most bought, best chosen',
+                    title: 'An LED mask for fine lines — chosen by its numbers',
+                    blurb: 'A multicentre, double-blind, sham-controlled home-mask trial confirmed at home what the split-face clinic trials showed: crow\'s feet softened over 16 weeks. The claim is moderate; the mask is only as good as its stated wavelengths and irradiance, and most do not state them.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'prod-home-ipl',
+                    kind: 'Best value',
+                    title: 'Home IPL for hair removal',
+                    blurb: 'No randomised trial, but seven consistent studies: about half the hair gone at six months after weekly sessions, held with occasional top-ups. €150–500 replaces a recurring clinic bill — for dark hair on light skin, with a skin-tone sensor, and never above the cheekbone.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'prod-plasma-hifu',
+                    kind: 'Walk away',
+                    title: 'Plasma pens and "home HIFU"',
+                    blurb: 'A €40 pen that makes a grid of arc burns, advertised by lay TikTok accounts as non-surgical blepharoplasty with a 6.5% rate of warnings, and ultrasound machines with no trial that are either inert or unsupervised deep heat on a face. The one row on this page that costs skin.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / DEVICES / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a device to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE TECHNOLOGIES COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The device landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The technologies compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Eleven categories that plug into a wall or stick to the skin, from laser caps with sham-controlled trials to plasma pens with warnings from doctors. Each card is graded on the trials attached to the technology, not on the brochure.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised trials, systematic reviews, meta-analyses, professional-society
+            guidelines, biopsy studies or content analyses, linked inline within each section. Primary sources:
+            PubMed/PMC, JAAD, Dermatologic Surgery, Lasers in Surgery and Medicine, Lasers in Medical Science, JEADV,
+            the British Journal of Dermatology, JAMA Dermatology, the Journal of Cosmetic Dermatology, the Journal of
+            Cosmetic and Laser Therapy and Clinical, Cosmetic and Investigational Dermatology.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Home devices are consumer products with manufacturer
+          contraindications &mdash; read them, protect your eyes, and ask a clinician before use if you have an
+          implanted device, a skin condition, a pregnancy or a photosensitising prescription. Product names are
+          examples, not endorsements; regulatory status varies by country and is stated as of September 2026. Prices
+          are indicative retail prices, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

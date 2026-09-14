@@ -53,6 +53,12 @@ export const guides: GuideMeta[] = [
     kind: 'lifestyle',
   },
   {
+    path: 'home-devices',
+    title: 'At-home devices',
+    tagline: 'LED masks, laser caps, home IPL, RF and microcurrent graded on their own trials — two earn it, one pays for itself, the rest are placebos with a charger.',
+    kind: 'lifestyle',
+  },
+  {
     path: 'longevity-clinics',
     title: 'Longevity clinics',
     tagline: 'Which tests and plans change decisions — and which are expensive theater.',
