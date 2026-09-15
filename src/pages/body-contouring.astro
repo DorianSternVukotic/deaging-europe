@@ -1,0 +1,509 @@
+---
+/**
+ * The body contouring guide (/body-contouring) — in-clinic layout: evidence
+ * strength as the primary visual signal, all content in the DOM, one
+ * interactive block (concern matcher), and the technologies compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/body-contouring';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Body contouring — fat freezing, liposuction and body surgery graded by evidence | DeAging Europe';
+const description =
+  'Cryolipolysis, focused ultrasound, the 1060 nm laser, radiofrequency, electromagnetic muscle stimulation, injection lipolysis, liposuction, abdominoplasty, body lifts and the buttock fat transfer graded on their trials — the fifth of a pinch the devices remove, the complication databases behind the operations, the paradoxical fat overgrowth, and the mortality figures that changed the rules.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-permanent': 'Those cells, yes; the rest grow with weight',
+  'faq-how-much': 'A fifth of a pinch (device); the layer (suction)',
+  'faq-noninvasive-vs-lipo': 'Small pocket: freeze; the layer: suction',
+  'faq-emsculpt': 'Millimetres, like training — and lost like it',
+  'faq-weight': 'No',
+  'faq-glp1-timing': '8–12 months in, weight stable',
+  'faq-bbl-safe': 'Safer: 1 in 15,000, with the rules',
+  'faq-cost': '€300 a cycle to €25,000 a lift',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'A belly pocket or love handles that diet does not move',
+    paths: [
+      { id: 'use-abdomen-flanks-noninvasive', title: 'Without surgery', why: 'a fifth to a quarter of the pinch, over months, with the hyperplasia risk attached' },
+      { id: 'use-liposuction-contour', title: 'Liposuction', why: 'the layer removed, 0.7% major complications alone, nine-year satisfaction of 86%' },
+    ],
+  },
+  {
+    concern: 'A firm, round belly that I cannot pinch',
+    paths: [
+      { id: 'use-visceral-fat', title: 'Fat behind the muscle', why: 'no applicator or cannula reaches it; weight loss does' },
+      { id: 'use-weight-loss', title: 'What devices cannot do', why: 'no body-contouring device produces weight loss' },
+    ],
+  },
+  {
+    concern: 'Loose belly skin after pregnancy or weight loss',
+    paths: [
+      { id: 'use-loose-skin-abdomen', title: 'Abdominoplasty', why: 'the only treatment that removes skin; 2–4% major complications across 80,000 patients' },
+      { id: 'safety-surgery', title: 'The clot and the wound', why: 'what to ask before signing' },
+    ],
+  },
+  {
+    concern: 'After massive weight loss, or a year on a weight-loss injection',
+    paths: [
+      { id: 'use-massive-weight-loss', title: 'The staged lifts', why: '70% complications, a re-operation in a tenth, and body image from 24 to 67' },
+      { id: 'vetting', title: 'The weight-loss-drug clock', why: 'weight plateaus at 8–12 months; 63–74% comes back after stopping' },
+    ],
+  },
+  {
+    concern: 'Inner or outer thighs',
+    paths: [
+      { id: 'use-thighs', title: 'Thighs and saddlebags', why: 'cryolipolysis of the inner thigh in 42 patients; skin quality decides' },
+      { id: 'use-cellulite', title: 'If the problem is dimples', why: 'fat removal does not treat cellulite and can unmask it' },
+    ],
+  },
+  {
+    concern: 'Upper arms',
+    paths: [
+      { id: 'use-arms', title: 'The arm rows', why: 'cryolipolysis, stimulation, energy-assisted liposuction and the arm lift, graded in the upper arms guide' },
+    ],
+  },
+  {
+    concern: 'Under my chin',
+    paths: [
+      { id: 'use-double-chin', title: 'The chin', why: 'the one region with a licensed injectable and a pivotal device trial' },
+    ],
+  },
+  {
+    concern: 'A flatter buttock than I want',
+    paths: [
+      { id: 'use-buttock-shape', title: 'Fat transfer, and the electromagnetic alternative', why: 'the shape that works, and the cosmetic operation with a mortality figure' },
+      { id: 'safety-fat-embolism', title: 'The embolism rules', why: 'subcutaneous only, large cannulas, ultrasound' },
+    ],
+  },
+  {
+    concern: 'Abdominal definition, a firmer core',
+    paths: [
+      { id: 'use-muscle-definition', title: 'Electromagnetic stimulation', why: 'a few millimetres of muscle on MRI and one sham-controlled trial; maintenance like a gym' },
+      { id: 'prod-liposuction', title: 'Or sculpting liposuction', why: '"abdominal etching" with 12% contour irregularities and 98% satisfaction' },
+    ],
+  },
+];
+
+// The technologies compared, as cards.
+const productRows = [
+  {
+    id: 'prod-liposuction',
+    brand: 'Liposuction (tumescent, power-, ultrasound-, laser-assisted)',
+    evidence: 'strong' as Evidence,
+    blurb: 'The most performed cosmetic operation: 0.7% major complications alone and 4.8× that combined, none serious in 15,336 tumescent cases, 1 in 5,000 deaths in the 1990s census, 86% recommending it nine years on.',
+    knownFor: 'The layer, once; the reference standard',
+  },
+  {
+    id: 'prod-excisional-surgery',
+    brand: 'Abdominoplasty, body lift, thigh lift, arm lift',
+    evidence: 'strong' as Evidence,
+    blurb: 'The only category that removes skin: 2.1–4.0% major complications across 25,000–56,000 abdominoplasties, the highest clot risk in aesthetic surgery, and 43–70% complications after the post-weight-loss lifts.',
+    knownFor: 'Loose skin; strong for the abdomen',
+  },
+  {
+    id: 'prod-cryolipolysis',
+    brand: 'Cryolipolysis (CoolSculpting, Cooltech, Clatuu)',
+    evidence: 'moderate' as Evidence,
+    blurb: '19 studies, a 518-patient series, a 3D contralateral-control trial, a 30-study meta-analysis with 80% satisfaction — and paradoxical adipose hyperplasia in 1 in 455, seven times the manufacturer\'s figure.',
+    knownFor: 'The best-documented device; the hard-lump risk',
+  },
+  {
+    id: 'prod-hifem',
+    brand: 'Electromagnetic muscle stimulation (Emsculpt, Emsculpt Neo, CoolTone)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'MRI series with 15–21% thicker rectus and 15–20% less fat, one sham-controlled trial of the radiofrequency-combined version, a year of durability in one cohort, and reviews calling the photographs modest.',
+    knownFor: 'Definition that lapses like a gym membership',
+  },
+  {
+    id: 'prod-hifu-fat',
+    brand: 'Focused ultrasound for fat (Liposonix, UltraShape)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'The field\'s best trial — 180 patients against sham, 2.4 cm off the waist — for a device that has largely left the market.',
+    knownFor: 'The waist, where a clinic still runs it',
+  },
+  {
+    id: 'prod-rfal-plasma',
+    brand: 'Energy-assisted liposuction (BodyTite, Renuvion, VASER)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Radiofrequency-assisted liposuction contracted arm skin 13–15% at a year against 8–11% for aggressive liposuction; helium plasma has a 3,508-patient meta-analysis and a regulator\'s safety communication.',
+    knownFor: 'Fat plus mildly loose skin, without a scar',
+  },
+  {
+    id: 'prod-fat-grafting-buttock',
+    brand: 'Buttock fat transfer ("BBL") and implants',
+    evidence: 'moderate' as Evidence,
+    blurb: 'The shape that works and the operation that killed 25 US patients in five years; mortality fell from about 1 in 3,000 to about 1 in 15,000 once injection moved out of the muscle.',
+    knownFor: 'Subcutaneous, ultrasound-guided, or not at all',
+  },
+  {
+    id: 'prod-laser-1060',
+    brand: '1,060 nm diode laser (SculpSure)',
+    evidence: 'emerging' as Evidence,
+    blurb: '2.65 mm off the abdominal fat layer at twelve weeks with blinded evaluators picking the after-photograph 95% of the time — in one manufacturer trial with no sham arm.',
+    knownFor: 'A few millimetres without the cold',
+  },
+  {
+    id: 'prod-rf-fat',
+    brand: 'Radiofrequency for fat (Vanquish, truSculpt, Exilis)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A five-patient MRI study, a 16-patient series, a pilot with 24% ultrasound fat reduction and a four-year follow-up of 13 people; no sham arm anywhere.',
+    knownFor: 'Comfortable; measured by tape',
+  },
+  {
+    id: 'prod-injection-lipolysis',
+    brand: 'Injection lipolysis off the chin',
+    evidence: 'emerging' as Evidence,
+    blurb: 'The chin-licensed detergent and its unlicensed cocktails injected elsewhere: a seven-woman randomised trial, adipocyte necrosis on biopsy, and the nodules, ulcers and bans in the mesotherapy guide.',
+    knownFor: 'Small pockets, weeks of swelling, no licence',
+  },
+  {
+    id: 'prod-lllt',
+    brand: 'Low-level laser "lipo" (Zerona, i-Lipo, lipo pads)',
+    evidence: 'limited' as Evidence,
+    blurb: 'Two sham-controlled trials of inches and centimetres, a regain within a fortnight, and a systematic review that could not fix a dose. A tape-measure effect, as the red-light guide grades it.',
+    knownFor: 'Salon pads and a receipt',
+  },
+  {
+    id: 'prod-salon-devices',
+    brand: 'Salon fat freezing, cavitation, wraps, drainage, home devices',
+    evidence: 'limited' as Evidence,
+    blurb: 'Low-power copies and treatments that were never devices: leptin and circumference in the overweight, water moved by wraps, and full-thickness wounds from home cryolipolysis.',
+    knownFor: 'The walk-away row',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="body-contouring" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Body contouring, fat freezing to liposuction<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            Three different jobs &mdash; removing a pocket of fat, removing skin, and building muscle &mdash; and every
+            device, injection and operation graded on its trials, its complication databases, and the fat that comes
+            back somewhere else.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 15 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — a cryolipolysis applicator on a flank, the clinician marking the pinch" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Body contouring — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The pinch test: fat above the muscle, fat behind it, and skin that has stopped recoiling" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="What each method removes: a fifth of a pinch, the layer, the skin" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The three body-contouring decisions the evidence supports &mdash; and the one to walk away from.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'prod-liposuction',
+                    kind: 'Best evidence',
+                    title: 'Tumescent liposuction of a discrete pocket',
+                    blurb: 'The layer removed in one session: 0.7% major complications when done alone across 31,010 cases, none serious in 15,336 tumescent cases under local anaesthesia, and 86% recommending it at a mean of nine years with blinded evaluators still seeing the difference. For a stable weight and skin that recoils.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'prod-cryolipolysis',
+                    kind: 'Best without surgery',
+                    title: 'Cryolipolysis, after the hyperplasia conversation',
+                    blurb: 'A fifth to a quarter off a pinch in 19 studies, a contralateral-control 3D trial, a 30-study meta-analysis with 80% satisfaction — and a 1 in 455 risk of a hard overgrowth that only liposuction removes. For one or two pockets in a slim person who will not have surgery, on a device with a published trial.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'use-loose-skin-abdomen',
+                    kind: 'Only thing that removes skin',
+                    title: 'Abdominoplasty, once the weight has settled',
+                    blurb: 'A 2–4% major-complication rate across 25,000–56,000 patients, the highest clot risk in aesthetic surgery, seroma cut by two-thirds with progressive tension sutures, and body-image scores from 13 to 90 in the patients who needed it most. For skin that hangs, after a year of stable weight.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'prod-salon-devices',
+                    kind: 'Walk away',
+                    title: 'Salon fat freezing, cavitation and the pads',
+                    blurb: 'Low-power copies of the clinic devices and treatments that were never devices: a tape-measure change in the overweight, water moved by wraps, frostbite from home cooling, and no fat cell measurably removed. The money is one clinic cycle or one surgical consultation.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / TECHNOLOGIES / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a treatment to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE TECHNOLOGIES COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The treatment landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The technologies compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Twelve ways to remove fat, remove skin or add muscle, from the operation with a 31,010-case safety file to the salon pads with a tape measure. Each card is graded on the trials attached to the method, not on the before-and-after wall.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised trials, systematic reviews, meta-analyses, insurance and registry
+            databases, surgeon surveys, task-force reports, biopsy studies or case reports, linked inline within each
+            section. Primary sources: PubMed/PMC, Plastic and Reconstructive Surgery and Global Open, the Aesthetic
+            Surgery Journal and its Open Forum, Dermatologic Surgery, Lasers in Surgery and Medicine, Aesthetic Plastic
+            Surgery, Obesity Reviews, Obesity Surgery, the Journal of Clinical Endocrinology and Metabolism and the
+            Journal of Cosmetic Dermatology.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Every treatment on this page is a medical procedure &mdash; consult a
+          registered clinician or surgeon, disclose medications including weight-loss injections, clotting history and
+          your full medical history, and defer treatment during pregnancy or breastfeeding. Device and product names are
+          examples, not endorsements; regulatory status varies by country and is stated as of September 2026. Prices are
+          indicative private rates, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

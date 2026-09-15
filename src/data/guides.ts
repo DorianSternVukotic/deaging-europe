@@ -89,6 +89,12 @@ export const guides: GuideMeta[] = [
     kind: 'clinic',
   },
   {
+    path: 'body-contouring',
+    title: 'Body contouring',
+    tagline: 'Fat freezing, focused ultrasound, laser and radiofrequency fat devices, muscle stimulation, liposuction, abdominoplasty and the buttock fat transfer graded on their trials — millimetres of pinch, litres of layer, and the fat that comes back somewhere else.',
+    kind: 'clinic',
+  },
+  {
     path: 'laser-ipl',
     title: 'Laser & IPL',
     tagline: 'From gentle IPL to full resurfacing — matched to your skin and downtime budget.',
