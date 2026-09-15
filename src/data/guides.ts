@@ -95,6 +95,12 @@ export const guides: GuideMeta[] = [
     kind: 'clinic',
   },
   {
+    path: 'skin-resurfacing',
+    title: 'Skin resurfacing',
+    tagline: 'CO₂ and erbium lasers, full-field and fractional, the Fraxel-class non-ablative lasers, medium and deep peels, dermabrasion and the no-downtime machines graded by depth, result and what goes wrong.',
+    kind: 'clinic',
+  },
+  {
     path: 'microneedling',
     title: 'Microneedling & RF',
     tagline: 'Collagen induction from dermarollers to Morpheus8 — what the trials support.',

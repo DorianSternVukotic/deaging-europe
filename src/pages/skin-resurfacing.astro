@@ -1,0 +1,503 @@
+---
+/**
+ * The skin resurfacing guide (/skin-resurfacing) — in-clinic layout: evidence
+ * strength as the primary visual signal, all content in the DOM, one
+ * interactive block (concern matcher), and the technologies compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/skin-resurfacing';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Skin resurfacing — lasers, peels and dermabrasion graded by evidence | DeAging Europe';
+const description =
+  'Full-field and fractional CO2 and erbium lasers, the non-ablative Fraxel-class and 1927 nm lasers, picosecond and hybrid devices, medium and deep chemical peels, dermabrasion and the no-downtime machines graded on their trials — by depth, result, days of recovery, and the pigment, infection and scarring on record.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-fractional-vs-full': 'Full-field for etched lines; fractional for the rest',
+  'faq-erbium-vs-co2': 'CO2 for result, erbium for recovery',
+  'faq-how-long': 'Years (ablative); yearly upkeep (the rest)',
+  'faq-darker-skin': 'Yes — non-ablative, pico, RF; not full-field CO2',
+  'faq-laser-vs-peel': 'Alternatives; the operator decides',
+  'faq-antivirals': 'Yes, for anything ablative',
+  'faq-neck': 'Non-ablative only',
+  'faq-isotretinoin': 'Not for fractional or non-ablative',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Etched lines around my mouth or eyes',
+    paths: [
+      { id: 'use-etched-lines', title: 'Full-field ablation, once', why: 'the largest single result in cosmetic dermatology, with a raw week and the pigment risk to match' },
+      { id: 'prod-deep-peel', title: 'Or the phenol–croton peel', why: 'the same depth by acid, with a thicker collagen zone on biopsy' },
+    ],
+  },
+  {
+    concern: 'Sun damage and wrinkles across the whole face',
+    paths: [
+      { id: 'use-photodamage', title: 'Fractional ablative lasers or a medium peel', why: 'wrinkle depth halved on profilometry, a five-year result, no scars in 490 deep treatments' },
+      { id: 'prod-fractional-ablative', title: 'CO2 or erbium fractional', why: 'the workhorse and its gentler sibling' },
+    ],
+  },
+  {
+    concern: 'Fine lines, pores and texture — but I have a job on Monday',
+    paths: [
+      { id: 'use-texture-fine-lines', title: 'Non-ablative fractional lasers', why: 'five Friday sessions instead of one raw week; darker skin can have it' },
+      { id: 'prod-picosecond', title: 'Fractional picosecond', why: 'the same job with the least hyperpigmentation' },
+    ],
+  },
+  {
+    concern: 'Sun spots and blotchy tone',
+    paths: [
+      { id: 'use-pigment', title: 'The 1,927 nm laser after the spot lasers', why: '82% improved at one month, drifting back by three without sunscreen' },
+      { id: 'use-actinic-field', title: 'If the spots are rough', why: 'a field of keratoses is a dermatologist\'s diagnosis first' },
+    ],
+  },
+  {
+    concern: 'Acne scars',
+    paths: [
+      { id: 'use-acne-scars', title: 'Fractional lasers by scar type', why: 'CO2 for the biggest response, radiofrequency or picosecond for skin that pigments, TCA CROSS for ice-picks' },
+    ],
+  },
+  {
+    concern: 'Melasma',
+    paths: [
+      { id: 'use-melasma', title: 'Fractional lasers, with caution', why: 'a maintenance tool behind sunscreen and tranexamic acid; rebound is the risk' },
+      { id: 'safety-pigment', title: 'Pigment', why: 'why heat and light can make melasma worse' },
+    ],
+  },
+  {
+    concern: 'A crepey neck, chest or hands',
+    paths: [
+      { id: 'use-off-face', title: 'Non-ablative lasers at their own settings', why: 'thin skin heals slowly; density goes down and sessions go up' },
+      { id: 'use-neck-ablative', title: 'Never ablative on the neck', why: 'the hypertrophic scars on record' },
+    ],
+  },
+  {
+    concern: 'Darker skin, or skin that pigments after everything',
+    paths: [
+      { id: 'safety-pigment', title: 'The pigment rules', why: '42% hyperpigmentation after fractional CO2 in Southeast Asian skin; 8% permanent lightening after full-field CO2' },
+      { id: 'prod-picosecond', title: 'Picosecond and radiofrequency first', why: 'the lowest pigmentation rates in the meta-analyses' },
+    ],
+  },
+  {
+    concern: 'I want a glow before an event',
+    paths: [
+      { id: 'use-glow-no-downtime', title: 'Microdermabrasion and hydradermabrasion', why: 'an afternoon of smoothness; nothing underneath changes' },
+      { id: 'prod-medium-peels', title: 'Or a peel, three weeks before', why: 'a week of peeling for a real change' },
+    ],
+  },
+];
+
+// The technologies compared, as cards.
+const productRows = [
+  {
+    id: 'prod-fullfield-ablative',
+    brand: 'Full-field CO2 and erbium lasers',
+    evidence: 'strong' as Evidence,
+    blurb: 'The whole surface vaporised: 2.25–2.34 points off wrinkle scores, near-complete ablation of rhytides at six months, with hyperpigmentation in 21–46%, permanent hypopigmentation in 8% and scarring in 1% for CO2. Erbium heals alike and complicates less.',
+    knownFor: 'Etched lines, once; light skin only',
+  },
+  {
+    id: 'prod-fractional-ablative',
+    brand: 'Fractional CO2 and erbium lasers',
+    evidence: 'strong' as Evidence,
+    blurb: 'Wrinkle depth down 31–58% on profilometry, photoaging scores improved at five years, 13.6% adverse events and no scars in 490 deep treatments; the neck and eyelid cases define its limits.',
+    knownFor: 'The workhorse: photodamage and scars',
+  },
+  {
+    id: 'prod-nafl-1550',
+    brand: 'Non-ablative fractional 1550/1540 nm (Fraxel Dual, Icon, ResurFX)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Coagulation under an intact epidermis: collagen up 6.7% at four months, better wrinkle scores than fractional erbium in a randomised comparison, level-1 evidence in skin types IV–VI. Five sessions, a Monday face.',
+    knownFor: 'Texture with a job to keep',
+  },
+  {
+    id: 'prod-1927',
+    brand: '1,927 nm thulium and diode (Fraxel 1927, LaseMD, Clear + Brilliant, Moxi)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'The pigment laser of the fractional family: 82% then 69% improvement of photopigmentation, a drift back by three months, biopsy-proven field treatment of keratoses. The low-energy diodes are emerging.',
+    knownFor: 'Blotchy tone after the spot lasers',
+  },
+  {
+    id: 'prod-picosecond',
+    brand: 'Fractional picosecond (PicoSure Focus, PicoWay Resolve)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Equal to other fractional lasers for acne scars in a seven-study meta-analysis with far less hyperpigmentation and pain; beat the 1,927 nm for photopigmentation and IPL for periorbital lines in randomised trials.',
+    knownFor: 'Resurfacing for skin that pigments',
+  },
+  {
+    id: 'prod-hybrid',
+    brand: 'Hybrid fractional laser (Halo)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Ablative and non-ablative wavelengths in one pass: 80% significantly improved and 100% satisfied in one manufacturer-linked study of 29 completers, and no comparison against either parent technology.',
+    knownFor: 'Popular, plausible, one trial deep',
+  },
+  {
+    id: 'prod-medium-peels',
+    brand: 'Medium-depth peels (Jessner\'s + 35% TCA)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Decades of consistent data for photoaging, keratoses and fine wrinkles in one session with a week of peeling; the resurfacing that needs no machine and that a clinician\'s hand controls entirely.',
+    knownFor: 'Photodamage without a laser',
+  },
+  {
+    id: 'prod-deep-peel',
+    brand: 'Phenol–croton oil deep peel',
+    evidence: 'strong' as Evidence,
+    blurb: 'The deepest non-surgical resurfacing, titrated by croton-oil concentration, under cardiac monitoring, with a thicker collagen zone than the CO2 laser on biopsy. Two weeks raw; a lifetime of sunscreen.',
+    knownFor: 'A whole face of etched lines, once',
+  },
+  {
+    id: 'prod-dermabrasion',
+    brand: 'Dermabrasion (wire brush, diamond fraise)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'A randomised comparison found CO2 slightly better for perioral wrinkles at six months with more early redness and patients split on which they would recommend. A craft with few practitioners left.',
+    knownFor: 'The upper lip, in the right hands',
+  },
+  {
+    id: 'prod-microdermabrasion',
+    brand: 'Microdermabrasion and hydradermabrasion',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Dermal matrix changes in the evidence review, "limited" for pigment and acne, the least effective option for scars, and placebo-beating only with a retinoic-acid peel attached. The facial that sells as resurfacing.',
+    knownFor: 'An afternoon of glow',
+  },
+  {
+    id: 'prod-plasma-other',
+    brand: 'Plasma skin regeneration, Tixel and the newer resurfacers',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Nitrogen plasma had a clearance, uncontrolled series and no demarcation lines, then a manufacturer that stopped; the thermomechanical and newer devices have small series and no comparison with the lasers.',
+    knownFor: 'Plausible physics, thin files',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="skin-resurfacing" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Skin resurfacing, peel to CO<sub class="text-[0.6em]">2</sub> laser<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            Every resurfacing method removes or wounds the surface so the skin heals thicker &mdash; full-field and
+            fractional lasers, medium and deep peels, dermabrasion and the no-downtime machines &mdash; graded on
+            depth, result, days of recovery and what goes wrong.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 15 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — a fractional laser handpiece over a cheek, the grid of columns just visible" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Skin resurfacing — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Depth, from stratum corneum to reticular dermis: what each method removes and what heals back" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Day 0 to day 7 after full-field, fractional and non-ablative treatment" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The three resurfacing decisions the evidence supports &mdash; and the one to walk away from.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'prod-fractional-ablative',
+                    kind: 'The workhorse',
+                    title: 'Fractional CO2 for photodamage and scars',
+                    blurb: 'Wrinkle depth halved on the cheeks on profilometry, photoaging scores still improved at five years, meta-analyses favouring it for acne scars, and 13.6% adverse events with no scars in 490 deep treatments on the face. One to three long weekends for most of full-field\'s result.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'use-etched-lines',
+                    kind: 'Best result for etched lines',
+                    title: 'Full-field erbium or CO2 for the lip and eye lines',
+                    blurb: 'Wrinkle scores down 2.2–2.3 points, rhytides "almost completely ablated" at six months, an erbium lip result held at 13 months without hypopigmentation. The treatment for the line no syringe reaches — bought once, in light skin, with the antiviral and the six-month photographs.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'prod-nafl-1550',
+                    kind: 'Best with a job to keep',
+                    title: 'Non-ablative 1550 nm for texture and pores',
+                    blurb: 'Collagen up on biopsy, better wrinkle scores than fractional erbium in a randomised comparison, level-1 evidence in skin types IV–VI, and a Monday face after a Friday session. Five sessions for a moderate result that darker skin can have and an etched line cannot.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'use-neck-ablative',
+                    kind: 'Walk away',
+                    title: 'Ablative lasers on the neck',
+                    blurb: 'Hypertrophic scarring of the neck after fractional CO2 has its own paper, and three of the four scars in the fractional-CO2 complication series were necks — bands, streaks, a platysmal band. The neck gets non-ablative sessions at its own settings, or nothing.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / TECHNOLOGIES / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a depth to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE TECHNOLOGIES COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The resurfacing ladder</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The technologies compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Eleven ways to wound the skin on purpose, from the full-field laser with a thirty-year record to the facial that sells as resurfacing. Each card is graded on the trials attached to the method, not on the brochure.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised trials, systematic reviews, meta-analyses, Cochrane reviews,
+            consensus guidelines, biopsy studies, complication series or case reports, linked inline within each section.
+            Primary sources: PubMed/PMC, JAAD, Dermatologic Surgery, Archives of Dermatology, Lasers in Surgery and
+            Medicine, Lasers in Medical Science, the British Journal of Dermatology, Plastic and Reconstructive Surgery,
+            the Aesthetic Surgery Journal, the Journal of Cosmetic Dermatology, the Journal of Drugs in Dermatology and
+            the Cochrane Database of Systematic Reviews.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Every treatment on this page is a medical procedure &mdash; consult a
+          registered dermatologist or plastic surgeon, disclose medications, herpes and scarring history and your skin
+          type, and defer treatment during pregnancy or breastfeeding. Device and product names are examples, not
+          endorsements; regulatory status varies by country and is stated as of September 2026. Prices are indicative
+          private rates, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
