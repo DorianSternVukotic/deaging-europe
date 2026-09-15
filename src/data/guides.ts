@@ -83,6 +83,12 @@ export const guides: GuideMeta[] = [
     kind: 'clinic',
   },
   {
+    path: 'skin-tightening',
+    title: 'Non-surgical skin tightening',
+    tagline: 'Ultherapy, Thermage, Morpheus8, Sofwave, Emface, Renuvion and threads graded on their trials — millimetres of lift, 37% of a facelift, and the jowl no device has moved.',
+    kind: 'clinic',
+  },
+  {
     path: 'laser-ipl',
     title: 'Laser & IPL',
     tagline: 'From gentle IPL to full resurfacing — matched to your skin and downtime budget.',

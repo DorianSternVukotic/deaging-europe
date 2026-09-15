@@ -1,0 +1,486 @@
+---
+/**
+ * The non-surgical skin tightening guide (/skin-tightening) — in-clinic layout:
+ * evidence strength as the primary visual signal, all content in the DOM, one
+ * interactive block (concern matcher), and the device classes compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/skin-tightening';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Non-surgical skin tightening — every device graded by evidence | DeAging Europe';
+const description =
+  'Ultherapy and HIFU, Thermage, Morpheus8 and radiofrequency microneedling, Sofwave, Emface, Renuvion, FaceTite and threads graded on their trials — the brow they measurably lift, the 37%-of-a-facelift result, the fat loss and nerve injuries on the regulator\'s file, and the jowl no device has moved.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-non-surgical-facelift': 'No — 37% of one, measured',
+  'faq-ultherapy-vs-thermage': 'Equal head-to-head',
+  'faq-morpheus8-tightening': 'Texture yes; laxity thinly',
+  'faq-how-long': 'About a year; nobody measured two',
+  'faq-pain': '4–6 of 10 (ultrasound); 2–3 (RF)',
+  'faq-with-filler-toxin': 'Yes, in sequence',
+  'faq-darker-skin': 'Ultrasound and monopolar RF, yes',
+  'faq-cost': '€1,000–7,000; five yearly sessions ≈ a facelift',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'A heavy brow or a tired upper face',
+    paths: [
+      { id: 'use-brow-upper-face', title: 'Focused ultrasound on the brow', why: 'the best-measured result on the page: 1.7–2.2 mm with blinded raters' },
+      { id: 'prod-monopolar-rf', title: 'Monopolar radiofrequency on the lids', why: 'the gentler option for thin lid skin' },
+    ],
+  },
+  {
+    concern: 'A lower face that is starting to loosen',
+    paths: [
+      { id: 'use-lower-face', title: 'Mild laxity, before it is a jowl', why: 'one randomised trial, one split-face trial, and a series where a sixth looked worse' },
+      { id: 'prod-mfu', title: 'Ultherapy and the HIFU copies', why: 'why visualisation matters and what the regulator has on file' },
+    ],
+  },
+  {
+    concern: 'A loose neck or the skin under my chin',
+    paths: [
+      { id: 'use-neck-submental', title: 'From ultrasound to helium plasma', why: 'the non-invasive layer and the subdermal one, with their different risks' },
+      { id: 'prod-rfal', title: 'Radiofrequency-assisted liposuction', why: 'the strongest non-excisional neck result, bought with an incision' },
+    ],
+  },
+  {
+    concern: 'A crepey chest, arms or abdomen',
+    paths: [
+      { id: 'use-chest-body', title: 'Off-face laxity', why: 'one chest study with masked assessment; a 2025 body consensus; millimetres against handfuls' },
+    ],
+  },
+  {
+    concern: 'Thin, crepey skin and fine wrinkles',
+    paths: [
+      { id: 'use-texture-crepe', title: 'The texture bonus', why: 'the result most people actually get from a tightening session' },
+      { id: 'prod-rf-microneedling', title: 'Radiofrequency microneedling', why: 'randomised trials for texture; the depth setting decides the rest' },
+    ],
+  },
+  {
+    concern: 'Loose lower lids or lines around the eyes',
+    paths: [
+      { id: 'use-eye-area', title: 'Around the eyes', why: 'thin evidence for lid skin, and two published eye injuries from ultrasound on a lid' },
+      { id: 'safety-nerves-burns', title: 'The orbit rule', why: 'no focused ultrasound inside the orbital rim' },
+    ],
+  },
+  {
+    concern: 'Real jowls, a heavy neck or hollow cheeks',
+    paths: [
+      { id: 'use-jowls-heavy-neck', title: 'What tightening cannot do', why: 'fat, ligament and volume are not loose skin; the trials excluded you' },
+      { id: 'safety-later-surgery', title: 'The facelift later', why: 'what repeated sessions leave behind for the surgeon' },
+    ],
+  },
+  {
+    concern: 'I was offered a thread lift',
+    paths: [
+      { id: 'use-threads', title: 'Threads sold as tightening', why: 'the lift was gone by 60 days in the randomised trial' },
+    ],
+  },
+  {
+    concern: 'Darker skin, or worried about harm',
+    paths: [
+      { id: 'safety-pigment-scars', title: 'Pigment and scarring', why: 'ultrasound and monopolar RF bypass the epidermis; needles need care' },
+      { id: 'safety-fat-loss', title: 'Fat loss', why: 'the harm that looks like aging, and the faces most at risk' },
+    ],
+  },
+];
+
+// The device classes compared, as cards.
+const productRows = [
+  {
+    id: 'prod-mfu',
+    brand: 'Microfocused ultrasound (Ultherapy) and HIFU copies',
+    evidence: 'moderate' as Evidence,
+    blurb: 'The most-studied device: a rater-blinded brow lift of 1.7 mm, 70% tighter in a randomised 3D-imaging trial, 58% on blinded review in the largest series, and a sixth worse in the retrospective one. Painful; lipoatrophy and nerve effects lead the device reports.',
+    knownFor: 'Brow, lower face, neck, chest; one session a year',
+  },
+  {
+    id: 'prod-monopolar-rf',
+    brand: 'Monopolar radiofrequency (Thermage FLX, Oligio, Youmagic)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Equal to ultrasound in the randomised split-face trial, non-inferior between devices in 212 randomised patients, 2.7% temporary side effects in 600 treatments and none permanent. Gentlest for thin, crepey skin.',
+    knownFor: 'Thin skin, eyelids, the least to lose',
+  },
+  {
+    id: 'prod-rf-microneedling',
+    brand: 'Radiofrequency microneedling (Morpheus8, Genius, Potenza, Secret RF)',
+    evidence: 'emerging' as Evidence,
+    blurb: '15 randomised trials for texture and scars; 37% of a facelift\'s laxity result in the blinded comparison; fat loss, scarring, textural and pigment change and burns lead the regulator\'s reports.',
+    knownFor: 'Texture with a tightening bonus; depth decides',
+  },
+  {
+    id: 'prod-parallel-ultrasound',
+    brand: 'Parallel-beam ultrasound (Sofwave)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Shallower and kinder than focused ultrasound: 1.9–2.0 mm of contraction in 34 patients, 83% submental improvement in 42, no head-to-head against the device it is sold as an easier version of.',
+    knownFor: 'Thin skin and a low pain threshold',
+  },
+  {
+    id: 'prod-emface',
+    brand: 'Synchronised RF with muscle stimulation (Emface)',
+    evidence: 'emerging' as Evidence,
+    blurb: '35% wrinkle reduction on 3D imaging, brows up 2–3 mm, a thicker zygomaticus and collagen and elastin up on biopsy — every study open-label and manufacturer-linked, no laxity scale, no comparison.',
+    knownFor: 'Comfortable, needle-free, uncontrolled',
+  },
+  {
+    id: 'prod-helium-plasma',
+    brand: 'Subdermal helium plasma (Renuvion / J-Plasma)',
+    evidence: 'moderate' as Evidence,
+    blurb: '82.5% improvement of loose neck skin at 180 days in the clearance trial; 92% satisfaction and 5–15% complications across 3,508 patients; a regulator\'s safety communication about use outside the clearance. Surgery with a probe.',
+    knownFor: 'The loose neck after liposuction',
+  },
+  {
+    id: 'prod-rfal',
+    brand: 'Radiofrequency-assisted liposuction (FaceTite, AccuTite, BodyTite)',
+    evidence: 'moderate' as Evidence,
+    blurb: '247 lower faces and necks improved 1.4 Baker points with 93% pleased; prolonged swelling 4.8%, hard areas 3.2%, jaw-nerve neuropraxia 1.2%, all resolving; one published airway obstruction.',
+    knownFor: 'The strongest non-excisional neck result',
+  },
+  {
+    id: 'prod-other-devices',
+    brand: 'Interstitial lasers and surface handpieces (Endolift, Titan, Exilis, Venus)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Open-label series with 90% satisfaction and no control group for the interstitial laser; company studies for the surface handpieces that make up most salon "tightening".',
+    knownFor: 'The salon menu',
+  },
+  {
+    id: 'prod-threads',
+    brand: 'Threads (PDO, PLLA, PCL)',
+    evidence: 'limited' as Evidence,
+    blurb: 'A hitch, not a tightening: the randomised trial found the effect gone by 60 days whatever the thread count; swelling 35%, dimpling 10%, paraesthesia 6%, extrusion 2% in the meta-analysis.',
+    knownFor: 'The walk-away row',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="skin-tightening" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Skin tightening, Ultherapy to Renuvion<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            Every energy device heats collagen and measures millimetres &mdash; focused ultrasound, radiofrequency
+            in bulk and on needles, plasma under the skin &mdash; graded on their trials, against the facelift they
+            are sold instead of.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 15 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — an ultrasound transducer on a jawline, the screen showing the tissue layers" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Skin tightening — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Where the heat goes: focused points, bulk heating, needles, and a probe under the skin" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Laxity, descent and volume loss: three problems behind one word on the menu" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The three tightening decisions the evidence supports &mdash; and the one to walk away from.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'use-brow-upper-face',
+                    kind: 'Best measured',
+                    title: 'Focused ultrasound for the brow',
+                    blurb: 'A rater-blinded cohort and a randomised blinded trial, a fixed landmark, and 1.7–2.2 mm of measured lift in 86–88% at three to six months. The one region where a device result is seen by a stranger rather than by a camera — for a heavy brow that is not yet a hooded lid.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'prod-monopolar-rf',
+                    kind: 'Least to lose',
+                    title: 'Monopolar radiofrequency for thin, crepey skin',
+                    blurb: 'Equal to ultrasound head-to-head in a randomised split-face trial, non-inferior across devices in 212 randomised patients, 2.7% temporary side effects in 600 treatments and no permanent ones. Bulk heating that thickens thin skin without the focused beam\'s fat loss.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'prod-rfal',
+                    kind: 'Strongest neck result',
+                    title: 'Radiofrequency-assisted liposuction of the neck',
+                    blurb: '247 lower faces and necks improved 1.4 Baker points with 93% pleased and every complication resolving — the one non-excisional result a stranger might notice, bought with an incision, local anaesthesia and a surgeon who reads the internal temperature.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'use-threads',
+                    kind: 'Walk away',
+                    title: 'Thread lifts sold as tightening',
+                    blurb: 'The randomised trial found the lift gone by 60 days whatever the thread count; the meta-analysis found swelling in 35%, dimpling in 10% and paraesthesia in 6%; the reviews found "very limited durability" and a methodological gap. A suture through fat holds as long as sutures through fat hold.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / DEVICES / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a device to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE TECHNOLOGIES COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The device landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The technologies compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Nine device classes, from the ultrasound with a randomised trial and a meta-analysis to the thread with a 60-day result. Each card is graded on the trials attached to the technology, not on the clinic&rsquo;s photographs.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised trials, systematic reviews, meta-analyses, regulatory device-report
+            analyses, biopsy studies, consensus statements or case reports, linked inline within each section. Primary
+            sources: PubMed/PMC, JAAD, Dermatologic Surgery, the Aesthetic Surgery Journal and its Open Forum, Archives of
+            Dermatology, Lasers in Surgery and Medicine, Lasers in Medical Science, the Journal of Cosmetic Dermatology,
+            Plastic and Reconstructive Surgery and Global Open, BMC Ophthalmology and JMIR Dermatology.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Every treatment on this page is a medical procedure &mdash; consult a
+          registered clinician, disclose implanted devices, medications and your full medical history, and defer treatment
+          during pregnancy or breastfeeding. Product and device names are examples, not endorsements; regulatory status
+          varies by country and is stated as of September 2026. Prices are indicative private rates, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
