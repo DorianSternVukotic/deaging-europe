@@ -137,6 +137,12 @@ export const guides: GuideMeta[] = [
     kind: 'foundation',
   },
   {
+    path: 'sunscreen',
+    title: 'Sunscreen & photoprotection',
+    tagline: 'Broad-spectrum SPF and the UVA circle, tinted iron-oxide and mineral sunscreens, SPF 100, sunscreen in makeup, "sunscreen pills", nicotinamide, DNA-repair enzymes, clothing and shade graded on the randomised trials — and the dose that decides whether any of it works.',
+    kind: 'foundation',
+  },
+  {
     path: 'neck',
     title: 'Crepey neck & neck lines',
     tagline: 'Texture, necklace lines, platysmal bands and laxity — every fix graded, home to surgery.',

@@ -1,0 +1,526 @@
+---
+/**
+ * The sunscreen & photoprotection guide (/sunscreen) — foundation guide on the
+ * in-clinic layout: evidence strength as the primary visual signal, all content
+ * in the DOM, one interactive block (concern matcher), and the formats compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/sunscreen';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Sunscreen and photoprotection — every claim graded by evidence | DeAging Europe';
+const description =
+  'Broad-spectrum SPF and the UVA circle, tinted iron-oxide and mineral sunscreens, SPF 100, sunscreen in makeup and sprays, oral photoprotectants, nicotinamide, DNA-repair enzymes, clothing and shade graded on the randomised trials — what daily sunscreen prevents (aging, keratoses, squamous cell carcinoma, melasma), what it does not, how much to apply, and what the absorption and vitamin D data mean.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-spf-30-or-50': '50+, because you under-apply',
+  'faq-how-much': 'Two finger-lengths for the face; six teaspoons for the body',
+  'faq-reapply-indoors': 'No; outdoors, within the first hour',
+  'faq-mineral-or-chemical': 'Either with the UVA circle; the one you will wear',
+  'faq-makeup-spf': 'Not on its own',
+  'faq-cloudy-winter': 'Yes, whenever the UV index reaches 3',
+  'faq-vitamin-d': 'A small drop; take a supplement',
+  'faq-dark-skin': 'Yes, tinted',
+  'faq-oral-sunscreen': 'No',
+  'faq-children': 'From six months; shade and fabric before',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'I want to slow wrinkles and keep my skin where it is',
+    paths: [
+      { id: 'use-photoaging', title: 'Daily broad-spectrum sunscreen', why: 'no detectable increase in skin aging over 4.5 years in the randomised trial — the strongest row on the site' },
+      { id: 'prod-broad-spectrum-50', title: 'An SPF 50+ with the UVA circle', why: 'the trial product, at the dose you will actually apply' },
+      { id: 'how-much-how-often', title: 'The dose', why: 'two finger-lengths, two coats, a top-up in the first hour outdoors' },
+    ],
+  },
+  {
+    concern: 'Dark spots, melasma, or a darker skin tone',
+    paths: [
+      { id: 'use-pigment', title: 'Block the visible light too', why: 'the tinted sunscreen improved hydroquinone\'s result and cut relapses in randomised trials' },
+      { id: 'prod-tinted-iron-oxide', title: 'Iron-oxide tinted SPF 50+', why: 'CI 77491, 77492, 77499 on the label — the tint is the treatment' },
+    ],
+  },
+  {
+    concern: 'Sun spots, rough patches, or a skin cancer behind me',
+    paths: [
+      { id: 'use-actinic-keratoses-scc', title: 'Keratoses and squamous cell carcinoma', why: '40% fewer, and existing lesions regress — with a dose–response to the amount used' },
+      { id: 'prod-oral-nicotinamide', title: 'Oral nicotinamide', why: '23% fewer new cancers in people who had already had two' },
+      { id: 'use-bcc', title: 'The cancer it did not prevent', why: 'basal cell carcinoma — the honest negative' },
+    ],
+  },
+  {
+    concern: 'Fair skin, many moles, a family history of melanoma',
+    paths: [
+      { id: 'use-melanoma', title: 'What the trial and the cohorts show', why: 'invasive melanoma 3 against 11 a decade on; a third lower risk with SPF 15+ in 143,844 women' },
+      { id: 'prod-clothing-hats-shade', title: 'The hat, the sleeves and the shade', why: 'the trial population used all three; an umbrella alone left 78% burned' },
+      { id: 'use-tan', title: 'The sunbed and the "base tan"', why: '87% higher melanoma risk when started before 35, and no protection from the tan' },
+    ],
+  },
+  {
+    concern: 'Rosacea, redness, or a face that stings with every sunscreen',
+    paths: [
+      { id: 'use-rosacea-sensitive', title: 'Sunscreen as trigger control', why: 'ultraviolet drives the disease; the vehicle decides the sting' },
+      { id: 'prod-mineral', title: 'A mineral SPF 50 in a silicone base', why: 'no percutaneous absorption, tinted to hide the cast and the flush' },
+      { id: 'safety-allergy-irritation-acne', title: 'Allergy and irritation', why: 'fragrance-free, patch-tested, a stick for the eyes' },
+    ],
+  },
+  {
+    concern: 'Oily, acne-prone skin, or a retinoid at night',
+    paths: [
+      { id: 'safety-allergy-irritation-acne', title: 'The non-comedogenic fluid', why: 'adding a sunscreen to adapalene improved tolerance and post-acne marks' },
+      { id: 'prod-broad-spectrum-50', title: 'A gel or fluid SPF 50+', why: 'the same filters in the texture that gets worn on oily skin' },
+      { id: 'use-post-procedure', title: 'After a laser or a peel', why: 'wear it — and know what it does not prevent on its own' },
+    ],
+  },
+  {
+    concern: 'A beach holiday, the mountains, sport outdoors',
+    paths: [
+      { id: 'prod-high-spf', title: 'The very high SPF', why: '5% burned on the SPF 100+ side against 55% on the SPF 50+ side in a day of sun' },
+      { id: 'prod-clothing-hats-shade', title: 'UPF fabric, a 7.5 cm brim, shade at midday', why: 'the only SPF 50 still there at four in the afternoon' },
+      { id: 'how-much-how-often', title: 'Two coats, top-up in the first hour', why: 'one coat misses 20% of the skin; two miss 9%' },
+    ],
+  },
+  {
+    concern: 'I work indoors, drive a lot, or sit by a window',
+    paths: [
+      { id: 'use-indoors-car-screens', title: 'Glass, cars and screens', why: 'side windows pass a tenth of the UVA; screens did not worsen melasma' },
+      { id: 'prod-beyond-uv-claims', title: 'The "blue-light" claim', why: 'a transparent blue-light sunscreen is a contradiction' },
+    ],
+  },
+  {
+    concern: 'I would rather take a pill',
+    paths: [
+      { id: 'prod-oral-photoprotectants', title: 'Polypodium and the "sunscreen pills"', why: 'a 29% higher burn threshold is an SPF of 1.3' },
+      { id: 'prod-oral-nicotinamide', title: 'Nicotinamide', why: 'for people who have had a skin cancer, not for the healthy face' },
+    ],
+  },
+  {
+    concern: 'A child, or a pregnancy',
+    paths: [
+      { id: 'use-children-teens', title: 'Children and teenagers', why: 'fewer new moles in the randomised trial; sunburns count at every age' },
+      { id: 'safety-who-needs-more', title: 'Infants and the pregnant', why: 'shade and fabric under six months; the tint that stops melasma starting' },
+      { id: 'safety-absorption-hormones', title: 'The absorption data', why: 'what the FDA trials found, and the mineral-by-precaution rule' },
+    ],
+  },
+];
+
+// The formats compared, as cards.
+const productRows = [
+  {
+    id: 'prod-broad-spectrum-50',
+    brand: 'Broad-spectrum SPF 50+ with the UVA circle',
+    evidence: 'strong' as Evidence,
+    blurb: 'The trial product: daily broad-spectrum sunscreen held measured skin aging at zero, cut squamous cell carcinoma by 39% and, a decade on, invasive melanoma by 73%. A 50+ at your dose is the trial\'s 15-plus at theirs.',
+    knownFor: 'The one everything else sits on',
+  },
+  {
+    id: 'prod-tinted-iron-oxide',
+    brand: 'Tinted sunscreen with iron oxides',
+    evidence: 'strong' as Evidence,
+    blurb: 'Only visible pigments block visible light: 15% more melasma improvement on hydroquinone in a double-blind trial, fewer relapses in two randomised comparisons, and protection for type IV skin that an untinted mineral SPF 50+ did not give.',
+    knownFor: 'Melasma, marks and darker skin',
+  },
+  {
+    id: 'prod-high-spf',
+    brand: 'SPF 50+ and the "50+" that tests at 100',
+    evidence: 'moderate' as Evidence,
+    blurb: 'At real-world amounts SPF 30 and 50 deliver single figures and SPF 70–100 deliver 19–27; on the mountain, 5% burned on the SPF 100+ side against 55% on the SPF 50+ side. One-day, sponsor-funded sunburn trials.',
+    knownFor: 'The margin for under-application',
+  },
+  {
+    id: 'prod-mineral',
+    brand: 'Mineral sunscreens (zinc oxide, titanium dioxide)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Nanoparticles stayed out of living skin; a thousandth of applied zinc reached the blood. A whiter cast, weaker UVA in titanium-heavy products, no visible-light protection unless pigmented, and no outcome trials of their own.',
+    knownFor: 'The reactive face, pregnancy, babies, the reef',
+  },
+  {
+    id: 'prod-antioxidant-under',
+    brand: 'Vitamin C–E–ferulic serum under the sunscreen',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Doubled photoprotection in the laboratory, protected human skin against erythema and thymine dimers, cut keratosis counts 22% against placebo under sunscreen, and is the only demonstrated answer to infrared-A.',
+    knownFor: 'The supplement to sunscreen, never a substitute',
+  },
+  {
+    id: 'prod-oral-nicotinamide',
+    brand: 'Oral nicotinamide 500 mg twice daily',
+    evidence: 'moderate' as Evidence,
+    blurb: '23% fewer new keratinocyte cancers in a phase 3 trial of people who had already had two; nothing in transplant recipients; nothing for the burn threshold of healthy skin; the benefit stops with the tablet.',
+    knownFor: 'Chemoprevention after a skin cancer',
+  },
+  {
+    id: 'prod-clothing-hats-shade',
+    brand: 'Clothing, hats, sunglasses and shade',
+    evidence: 'moderate' as Evidence,
+    blurb: 'A brim over 7.5 cm, UPF 30+ in only half of summer fabrics, an umbrella that left 78% burned against 25% on sunscreen, and large sunglasses that bring the periorbital dose to near zero. Dosimetry, not trials.',
+    knownFor: 'No reapplication problem',
+  },
+  {
+    id: 'prod-long-uva-filters',
+    brand: 'Long-UVA filters (MCE / Mexoryl 400)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A filter peaking at 385 nm that closed the 370–400 nm gap and reduced UVA1-induced pigmentation in a 19-person manufacturer\'s trial. No outcome data; a sensible choice at the same price for melasma-prone skin.',
+    knownFor: 'The refinement, not a new category',
+  },
+  {
+    id: 'prod-oral-photoprotectants',
+    brand: '"Sunscreen pills": Polypodium, carotenoids, blends',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Polypodium raised the burn threshold 29% without reducing DNA damage; a gummy course raised it in 44%; an antioxidant blend did no more than its control. An SPF of about 1.3, for the person who will be in the sun regardless.',
+    knownFor: 'An adjunct, never a substitute',
+  },
+  {
+    id: 'prod-dna-repair',
+    brand: 'DNA-repair enzymes (photolyase, T4N5)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Fewer keratoses and basal cell carcinomas in xeroderma pigmentosum, fewer DNA lesions on biopsy — and no advantage over plain sunscreen in the one randomised trial in ordinary sun-damaged skin.',
+    knownFor: 'Mechanism proven, benefit not shown',
+  },
+  {
+    id: 'prod-spf-makeup-formats',
+    brand: 'SPF in makeup and moisturiser, powders, sprays, sticks',
+    evidence: 'limited' as Evidence,
+    blurb: 'An SPF moisturiser left 17% of the face and 21% of the eyelids bare; foundation and powder go on at a fraction of the tested dose; sprays are absorbed like lotions and the nano ones should not be breathed. Top-ups only.',
+    knownFor: 'The formats that under-dose',
+  },
+  {
+    id: 'prod-beyond-uv-claims',
+    brand: '"Blue-light", "anti-IR", "anti-pollution", after-sun "repair"',
+    evidence: 'limited' as Evidence,
+    blurb: 'Screens did not worsen melasma; only pigments block visible light; infrared damage is real and the only countermeasure shown is an antioxidant already graded above; no product carries an outcome trial.',
+    knownFor: 'The front-label copy',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="sunscreen" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Sunscreen, SPF 50+ to sunscreen pills<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            The one anti-aging product with randomised trials that count cancers &mdash; and a label measured at a
+            dose almost nobody applies. Every claim on the shelf graded on its evidence, from the tint that treats
+            melasma to the pill that is not a sunscreen.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 16 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — two finger-lengths of SPF 50+ on the back of a hand beside the tube, the UVA circle in focus" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Sunscreen &amp; photoprotection — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Under ultraviolet light: one coat, two coats, and the eyelids everyone misses" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The label decoded: SPF 50+, the UVA circle, the period-after-opening jar, CI 77491 in the list" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The three things the evidence supports &mdash; and the format to stop relying on.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'prod-broad-spectrum-50',
+                    kind: 'Best everyday',
+                    title: 'A pharmacy SPF 50+ with the UVA circle',
+                    blurb: 'The trial product, in the texture that gets worn: daily broad-spectrum sunscreen held measured skin aging at zero over 4.5 years, cut squamous cell carcinoma by 39% for a decade and, ten years on, invasive melanoma by 73%. Two finger-lengths every morning, on the photostable European filters, for €8–18 a tube.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'prod-tinted-iron-oxide',
+                    kind: 'For pigment and darker skin',
+                    title: 'Iron-oxide tinted SPF 50+',
+                    blurb: 'Only what is visible on the skin blocks visible light: the tinted sunscreen improved hydroquinone\'s result by 15% in a double-blind trial, cut melasma relapses in two randomised comparisons, and protected type IV skin where an untinted mineral SPF 50+ did not. CI 77491, 77492 and 77499 on the label, in a matching shade, all year.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'prod-clothing-hats-shade',
+                    kind: 'Beyond the bottle',
+                    title: 'A 7.5 cm brim, UPF sleeves and the shade',
+                    blurb: 'The half of photoprotection that does not wear off: a brim over 7.5 cm for the nose and cheeks, UPF 50 fabric for the beach and the bike, large UV400 sunglasses, and shade between eleven and three — with the cream underneath, because an umbrella alone left 78% of people sunburned in an afternoon.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'prod-spf-makeup-formats',
+                    kind: 'Not on its own',
+                    title: 'The SPF in your foundation or moisturiser',
+                    blurb: 'Applied at a fraction of the tested dose and missing 21% of the eyelids in the photographs, with an SPF that falls exponentially as the layer thins. A top-up over a real sunscreen, never the sunscreen — the commonest reason a careful person still arrives at the clinic with sun damage.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / FORMATS / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match a sunscreen to your situation</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the line that sounds like you to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE FORMATS COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The photoprotection landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The formats compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Twelve kinds of photoprotection, from the trial product to the claims on the front of the label. Each card is graded on its own data at the dose people actually apply.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised trials, cohort studies, systematic reviews, meta-analyses, Cochrane
+            reviews, dosimetry, coverage and absorption studies or regulatory texts, linked inline within each section.
+            Primary sources: PubMed/PMC, the Lancet, the New England Journal of Medicine, JAMA, the Journal of Clinical
+            Oncology, Annals of Internal Medicine, the British Journal of Dermatology, JAAD, JEADV, the Journal of
+            Investigative Dermatology, Photodermatology, Photoimmunology &amp; Photomedicine, PLoS One, the Cochrane Database
+            of Systematic Reviews and EUR-Lex.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Sunscreen does not replace skin checks: a changing mole, a sore that
+          will not heal, a skin-cancer history or an organ transplant belongs with a dermatologist. Product and brand
+          names are examples, not endorsements; regulatory status varies by country and is stated as of September 2026.
+          Prices are indicative retail prices, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
