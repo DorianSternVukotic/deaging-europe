@@ -1,0 +1,508 @@
+---
+/**
+ * The serums & actives guide (/serums) — foundation guide on the in-clinic
+ * layout: evidence strength as the primary visual signal, all content in the
+ * DOM, one interactive block (concern matcher), and the actives compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/serums';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Serums and actives — every ingredient graded by evidence | DeAging Europe';
+const description =
+  'Vitamin C, niacinamide, hyaluronic acid, glycolic, lactic and salicylic acid, azelaic and tranexamic acid, thiamidol and cysteamine, peptides, growth factors, bakuchiol, exosomes and topical collagen graded on their trials — which actives have vehicle-controlled evidence, at what concentration and pH, and which bottles cannot get through the skin.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-vitamin-c-form': 'L-ascorbic 10–20%, low pH, dark bottle',
+  'faq-c-and-niacinamide': 'Yes',
+  'faq-how-long': '8–12 weeks; 6 months for vitamin C',
+  'faq-serum-vs-cream': 'Only the active matters',
+  'faq-layering': 'Thin to thick; sunscreen last',
+  'faq-peptides-vs-retinol': 'No',
+  'faq-exosomes': 'No',
+  'faq-one-serum': 'Vitamin C–E–ferulic, or niacinamide',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — concern → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Fine lines and a dull, uneven surface',
+    paths: [
+      { id: 'use-fine-lines', title: 'Niacinamide, vitamin C and the acids', why: 'the three actives with vehicle-controlled split-face trials — modest, at three months' },
+      { id: 'prod-niacinamide', title: 'Start with niacinamide', why: 'the most versatile active at the lowest price' },
+    ],
+  },
+  {
+    concern: 'Dark spots or melasma',
+    paths: [
+      { id: 'use-dark-spots', title: 'The tyrosinase inhibitors, against hydroquinone', why: 'azelaic acid, thiamidol and cysteamine matched the prescription; vitamin C and tranexamic acid did not' },
+      { id: 'prod-azelaic', title: 'Azelaic acid', why: 'the one active a dermatologist prescribes' },
+    ],
+  },
+  {
+    concern: 'Tight, dehydrated skin',
+    paths: [
+      { id: 'use-hydration', title: 'Hyaluronic acid and glycerin', why: 'water held for hours, sealed with a cream — the cheapest bottle does it' },
+    ],
+  },
+  {
+    concern: 'Rough texture, congestion and pores',
+    paths: [
+      { id: 'use-texture-pores', title: 'The exfoliating acids', why: 'glycolic and lactic acid with trials; polyhydroxy acids for the face that stings' },
+      { id: 'prod-bha', title: 'Salicylic acid for oily skin', why: 'into the pore; moderate for acne, emerging for pores' },
+    ],
+  },
+  {
+    concern: 'Adult acne',
+    paths: [
+      { id: 'use-acne', title: 'Azelaic acid, niacinamide, salicylic acid', why: 'the Cochrane placings, and a niacinamide gel that matched clindamycin' },
+    ],
+  },
+  {
+    concern: 'Redness and rosacea bumps',
+    paths: [
+      { id: 'use-redness-rosacea', title: 'Azelaic acid at prescription strength', why: 'phase 3 trials, 61–62% success against 40–48% on vehicle, better than metronidazole' },
+      { id: 'use-sensitive-barrier', title: 'Niacinamide and the soothing extracts', why: 'barrier repair with a trial; centella without one on faces' },
+    ],
+  },
+  {
+    concern: 'Sensitive, reactive skin that stings with everything',
+    paths: [
+      { id: 'safety-stacking', title: 'The stacked routine', why: 'the commonest cause of the blotchy face the serums were bought to fix' },
+      { id: 'use-sensitive-barrier', title: 'Fewer products, gentler acids', why: 'polyhydroxy acids gave the alpha-hydroxy result with far less stinging' },
+    ],
+  },
+  {
+    concern: 'Under my eyes',
+    paths: [
+      { id: 'use-eye-area', title: 'What an eye serum reaches', why: 'open-label instrument studies; the bag is fat and the circle is often shadow' },
+    ],
+  },
+  {
+    concern: 'I want one serum that "boosts collagen"',
+    paths: [
+      { id: 'use-collagen-signals', title: 'Peptides and growth factors', why: 'small company-run split-face gains, none a match for a retinoid' },
+      { id: 'use-regenerative-claims', title: 'Not collagen, exosomes or stem cells', why: 'too large to enter; the collagen serum failed its six-month trial' },
+      { id: 'use-antioxidant-protection', title: 'Vitamin C–E–ferulic in the morning', why: 'the antioxidant with human photoprotection data' },
+    ],
+  },
+];
+
+// The actives compared, as cards.
+const productRows = [
+  {
+    id: 'prod-azelaic',
+    brand: 'Azelaic acid (15% gel, 20% cream; 10% cosmetic)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Phase 3 trials and a Cochrane review for rosacea, randomised head-to-heads with hydroquinone for melasma, a Cochrane placing beside tretinoin for acne, usable in pregnancy. The 15–20% strengths are medicines; the 10% cosmetics have no trials.',
+    knownFor: 'Redness, spots and acne; the prescribed one',
+  },
+  {
+    id: 'prod-vitamin-c',
+    brand: 'Vitamin C (L-ascorbic acid 10–20%; the derivatives)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Enters below pH 3.5, saturates at 20%; a six-month placebo-controlled trial and a half-face biopsy trial for photoaging, 62.5% against hydroquinone\'s 93% for melasma, and the vitamin E–ferulic photoprotection data.',
+    knownFor: 'The morning serum, under sunscreen',
+  },
+  {
+    id: 'prod-niacinamide',
+    brand: 'Niacinamide 4–5%',
+    evidence: 'moderate' as Evidence,
+    blurb: 'A double-blind split-face trial for fine lines, spots, blotchiness, sallowness and elasticity; 44% against hydroquinone\'s 55% for melasma; a gel that matched clindamycin for acne; a barrier trial in rosacea.',
+    knownFor: 'The one with no reason not to',
+  },
+  {
+    id: 'prod-hyaluronic',
+    brand: 'Hyaluronic acid and the humectants',
+    evidence: 'moderate' as Evidence,
+    blurb: '0.1% creams of every molecular weight raised hydration and elasticity against placebo; low-molecular fractions reduced wrinkle depth on profilometry; 20% glycerin matched urea. Water for hours, under a cream.',
+    knownFor: 'Hydration; not the injected kind',
+  },
+  {
+    id: 'prod-aha-pha',
+    brand: 'Alpha- and polyhydroxy acids (glycolic, lactic, gluconolactone)',
+    evidence: 'moderate' as Evidence,
+    blurb: '8% glycolic and lactic acid improved photodamage in 76% and 71% against 40% on vehicle; a polyhydroxy regimen matched the result with far less stinging; whether daily acids add to sun damage is an open question.',
+    knownFor: 'Texture and tone, two or three nights a week',
+  },
+  {
+    id: 'prod-bha',
+    brand: 'Salicylic acid 0.5–2% and lipohydroxy acid',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Reduced the benzoyl peroxide needed for acne and halved relapse in a randomised trial; no different from tretinoin on low-quality evidence; changed nothing on biopsy where its lipohydroxy cousin thickened the epidermis.',
+    knownFor: 'Oily and congested skin',
+  },
+  {
+    id: 'prod-tranexamic',
+    brand: 'Tranexamic acid 2–5%, topical',
+    evidence: 'moderate' as Evidence,
+    blurb: 'No better than vehicle in the one double-blind split-face trial; smaller effects than the tablet or the injection in a 22-trial meta-analysis; a useful adjunct with microneedling.',
+    knownFor: 'An add-on for melasma, not the routine',
+  },
+  {
+    id: 'prod-brighteners',
+    brand: 'Thiamidol, cysteamine, kojic acid, arbutin, licorice',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Thiamidol with a vehicle-controlled trial and two hydroquinone head-to-heads; cysteamine matching hydroquinone across seven randomised trials; kojic acid and arbutin as add-ons with irritation and a hydroquinone caveat.',
+    knownFor: 'Melasma and marks, under SPF 50',
+  },
+  {
+    id: 'prod-peptides',
+    brand: 'Peptides (palmitoyl pentapeptide, argireline, copper peptides)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'One split-face vehicle-controlled trial at parts per million, a subjective 48.9% against 0% for argireline, a manufacturer hexapeptide that beat retinol, and copper peptides that did nothing objective after laser.',
+    knownFor: 'Small gains, company trials, not a retinoid',
+  },
+  {
+    id: 'prod-growth-factors',
+    brand: 'Growth factors, snail secretion, "stem-cell" extracts',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Mostly too large to enter intact skin: one placebo-controlled win for fibroblast-derived growth factors, a snail trial subjects could not see, an EGF pilot with minimal wrinkle change, and a stem-cell cream matched by its placebo.',
+    knownFor: 'Prestige prices, emerging evidence',
+  },
+  {
+    id: 'prod-botanical-antioxidants',
+    brand: 'Botanical antioxidants and bakuchiol',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Green tea improved elastic tissue on biopsy and nothing a grader could see; idebenone and coenzyme Q10 have uncontrolled or industry data; bakuchiol matched 0.5% retinol in one randomised trial with less scaling.',
+    knownFor: 'Bakuchiol for the retinoid-intolerant',
+  },
+  {
+    id: 'prod-regenerative-marketing',
+    brand: 'Topical collagen, exosomes, stem cells, NAD+',
+    evidence: 'limited' as Evidence,
+    blurb: 'Collagen peptides failed a six-month randomised trial with biopsies; exosomes have no approved product and no consensus; NAD-precursor serums have formulation papers and no trial; none of them gets through the skin.',
+    knownFor: 'The walk-away row',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="serums" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Serums, vitamin C to peptides<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            A serum is a vehicle; the evidence belongs to the active in it. Every ingredient on the shelf graded on
+            its trials &mdash; at what concentration, at what pH, in what bottle &mdash; from the three with
+            vehicle-controlled data to the molecules too large to get through the skin.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 16 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — a dropper over the back of a hand, an amber vitamin C bottle beside a clear one that has turned orange" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Serums &amp; actives — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="Reading an ingredient list: the 1% line, the pH, and where the active sits" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The evidence-based shelf: vitamin C, sunscreen, a retinoid, niacinamide — and the empty space" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The three bottles the evidence supports &mdash; and the shelf to walk past.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'prod-vitamin-c',
+                    kind: 'Best morning serum',
+                    title: 'Vitamin C with E and ferulic acid',
+                    blurb: 'L-ascorbic acid at 10–20% and low pH, stabilised by vitamin E and ferulic acid: a six-month placebo-controlled trial and a biopsy trial for photoaging, and human photoprotection data that supplement — never replace — the sunscreen it goes under. In a dark, airless bottle, thrown away when it turns orange.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'prod-niacinamide',
+                    kind: 'Most versatile',
+                    title: 'Niacinamide 5%',
+                    blurb: 'A 12-week double-blind split-face trial for fine lines, spots, blotchiness, sallowness and elasticity, a head-to-head with hydroquinone, a gel that matched clindamycin, a barrier trial in rosacea, and no active it cannot sit beside. Small effects everywhere, at €8–40, with nothing to lose.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'prod-azelaic',
+                    kind: 'For spots and redness',
+                    title: 'Azelaic acid, 15–20%',
+                    blurb: 'Phase 3 trials and a Cochrane review for rosacea, randomised head-to-heads and a meta-analysis against hydroquinone for melasma, a Cochrane placing beside tretinoin for acne, and a pregnancy record. A fortnight of stinging, a prescription in most of Europe, and the one active on this page that a dermatologist writes.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'prod-regenerative-marketing',
+                    kind: 'Walk away',
+                    title: 'Topical collagen, exosomes and stem cells',
+                    blurb: 'Molecules too large to cross intact skin, sold at the highest prices on the shelf: the collagen serum failed a six-month randomised trial with biopsies, the stem-cell cream matched its placebo, and the exosome literature has no approved product and no consensus. A moisturiser with a story.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / ACTIVES / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ CONCERN MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match an active to your concern</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open your main concern to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE ACTIVES COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The ingredient landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The actives compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Twelve actives, from the acid with phase 3 trials to the molecules that cannot cross the skin. Each card is graded on vehicle-controlled trials of the active at its trial concentration, not on the front of the bottle.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised trials, systematic reviews, meta-analyses, Cochrane reviews,
+            absorption studies, biopsy studies or regulatory texts, linked inline within each section. Primary sources:
+            PubMed/PMC, the British Journal of Dermatology, Dermatologic Surgery, JAAD, the Journal of Investigative
+            Dermatology, Experimental Dermatology, JEADV, the International Journal of Cosmetic Science, the Journal of
+            Cosmetic Dermatology, the Cochrane Database of Systematic Reviews and EUR-Lex.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Prescription-strength azelaic acid, hydroquinone and the retinoids are
+          medicines &mdash; consult a registered clinician, disclose pregnancy, breastfeeding, allergies and skin
+          conditions, and patch-test any new product. Product and brand names are examples, not endorsements;
+          regulatory status varies by country and is stated as of September 2026. Prices are indicative retail prices,
+          not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

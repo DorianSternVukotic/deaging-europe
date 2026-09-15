@@ -131,6 +131,12 @@ export const guides: GuideMeta[] = [
     kind: 'foundation',
   },
   {
+    path: 'serums',
+    title: 'Serums & actives',
+    tagline: 'Vitamin C, niacinamide, hyaluronic acid, the acids, azelaic and tranexamic acid, the brighteners, peptides and growth factors graded on their trials — and the pH, packaging and concentration that decide whether the bottle works.',
+    kind: 'foundation',
+  },
+  {
     path: 'neck',
     title: 'Crepey neck & neck lines',
     tagline: 'Texture, necklace lines, platysmal bands and laxity — every fix graded, home to surgery.',
