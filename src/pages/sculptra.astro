@@ -1,0 +1,504 @@
+---
+/**
+ * The Sculptra / poly-L-lactic acid guide (/sculptra) — clinic guide on the in-clinic layout:
+ * evidence strength as the primary visual signal, all content in the DOM,
+ * one interactive block (situation matcher), and the products compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
+import {
+  keyTakeaways,
+  groups,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/sculptra';
+
+const locale = DEFAULT_LOCALE;
+const guide = guideMeta('sculptra');
+const title = 'Sculptra (poly-L-lactic acid) — every use graded by evidence | DeAging Europe';
+const description =
+  'Sculptra and the other poly-L-lactic acid collagen stimulators graded area by area on their trials: cheeks, nasolabial folds and temples, the HIV lipoatrophy origin, skin quality against saline, the lower face and the GLP-1 face, the body areas with split-body trials, the brands compared, what a course costs, the nodules and granulomas in numbers, and where never to inject it.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'tier-pill tier-strong'
+    : e === 'moderate'
+    ? 'tier-pill tier-moderate'
+    : e === 'emerging'
+    ? 'tier-pill tier-emerging'
+    : 'tier-pill tier-none';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-when-results': '6–12 weeks; judge at 6 months',
+  'faq-how-many': '1–2 vials, 2–3 sessions, on the face',
+  'faq-cost': '€500–900 a vial; €1,500–5,000 a facial course',
+  'faq-sculptra-or-filler': 'HA today and reversible; PLLA at a year and beyond',
+  'faq-reversible': 'No',
+  'faq-pain-downtime': '2–5 days of swelling; five days of massage',
+  'faq-combine': 'Yes — device first, PLLA after',
+  'faq-body': 'Modestly, on tiny trials; count the vials',
+  'faq-prevention-age': 'No trial says so',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'My cheeks and temples have deflated and I want it to look natural, not filled',
+    paths: [
+      { id: 'use-cheeks-midface', title: 'The cheek and midface trials', why: '71.6% against 26.1% at a year; 90.6% against 51.0% versus hyaluronic acid' },
+      { id: 'use-temples', title: 'The temple', why: '96.5% against 0% in one trial — a cannula on the bone, never a needle' },
+      { id: 'prod-sculptra', title: 'The product in the trials', why: 'the 25-month follow-up and the modern protocol are Sculptra\'s' },
+    ],
+  },
+  {
+    concern: 'Nasolabial folds are my main complaint',
+    paths: [
+      { id: 'use-nasolabial-folds', title: 'Beaten collagen, then hyaluronic acid', why: '92.4% against 59.3% at 48 weeks — after losing at four weeks' },
+      { id: 'prod-ha', title: 'Hyaluronic acid instead', why: 'a shape today, one fold exactly, and an enzyme if it is wrong' },
+      { id: 'prod-gana-v', title: 'The cheaper vial with a head-to-head', why: 'non-inferior to Sculptra split-face over two years' },
+    ],
+  },
+  {
+    concern: 'My jawline has softened and there is a hollow in front of the jowl',
+    paths: [
+      { id: 'use-lower-face-jawline', title: 'The lower face', why: 'jawline contour better in over 85% of the cheek trial — secondary, unblinded' },
+      { id: 'safety-technique-aftercare', title: 'What deep and away from the mouth means', why: 'the perioral nodules of the early years were a technique problem' },
+    ],
+  },
+  {
+    concern: 'I lost a lot of weight on a GLP-1 drug and my face looks gaunt',
+    paths: [
+      { id: 'use-glp1-face', title: 'The GLP-1 face', why: 'two open-label studies of PLLA plus hyaluronic acid; weight-stable first' },
+      { id: 'safety-who-should-not', title: 'The timing question', why: 'a stimulator cannot be adjusted when the fat comes or goes' },
+      { id: 'prod-ha', title: 'The gel for the shelf', why: 'hyaluronic acid on the cheekbone, PLLA for the deflation' },
+    ],
+  },
+  {
+    concern: 'My skin is crepey and dull rather than hollow',
+    paths: [
+      { id: 'use-skin-quality', title: 'The saline-controlled trial', why: 'elasticity, hydration, pigmentation and pores better at a year in 40 women' },
+      { id: 'faq-combine', title: 'With a laser or ultrasound', why: 'the surface is a retinoid or a device; PLLA is the dermis' },
+    ],
+  },
+  {
+    concern: 'Hip dips, a flat buttock or cellulite',
+    paths: [
+      { id: 'use-buttocks-hip-dips', title: 'The hip dell and the buttock', why: 'a 15-person split-body trial; 20 vials for visible volume' },
+      { id: 'use-cellulite', title: 'Cellulite', why: 'two double-blind trials of 20 and 31 women, one with subcision' },
+      { id: 'prod-lanluma', title: 'The vial with body indications', why: 'CE-marked for the body; the trials are Sculptra\'s' },
+    ],
+  },
+  {
+    concern: 'Crepey knees, inner arms, hands or chest',
+    paths: [
+      { id: 'use-knees-arms-abdomen', title: 'Knees, arms, abdomen', why: 'the knee the physicians could tell from placebo and the women could not' },
+      { id: 'use-decolletage', title: 'The chest', why: '90% improved by investigators, 57% by the women, open-label' },
+      { id: 'use-hands', title: 'The hands', why: 'retrospective series; the hand indication belongs to other fillers' },
+    ],
+  },
+  {
+    concern: 'I have been offered it under my eyes, in my lips or on the front of my neck',
+    paths: [
+      { id: 'use-under-eye-lips', title: 'Where the nodules were', why: 'nine of twelve visible nodules perioral, three periorbital; no eraser' },
+      { id: 'use-neck', title: 'The neck', why: 'case series, thin skin and the highest lump rate in the post-market study' },
+      { id: 'safety-granulomas-late', title: 'What a late granuloma costs', why: 'months of steroids, sometimes excision' },
+    ],
+  },
+  {
+    concern: 'Acne scars or stretch marks',
+    paths: [
+      { id: 'use-acne-scars', title: 'As an add-on to CO2 or RF microneedling', why: 'two small randomised trials; rolling scars respond, ice-picks do not' },
+      { id: 'use-striae', title: 'Stretch marks', why: 'one 40-woman trial, ten per arm, better than a 1,565 nm laser' },
+    ],
+  },
+  {
+    concern: 'I am in my twenties or thirties and it was pitched as "collagen banking"',
+    paths: [
+      { id: 'use-collagen-banking', title: 'The metaphor with a syringe', why: 'no trial in a face without deflation; irreversible' },
+      { id: 'faq-prevention-age', title: 'What prevention with trials looks like', why: 'sunscreen, a retinoid, not smoking' },
+    ],
+  },
+  {
+    concern: 'Which brand — and does the cheaper vial carry the same evidence?',
+    paths: [
+      { id: 'brands-and-law', title: 'The brands and the rules', why: 'the trial belongs to the product, not to the polymer' },
+      { id: 'prod-next-gen', title: 'The newer microspheres', why: 'the largest trials ever run, and a complication series that names names' },
+      { id: 'prod-aesthefill', title: 'The other isomer', why: 'poly-D,L-lactic acid, non-inferior to hyaluronic acid in 260 people' },
+    ],
+  },
+];
+
+// The products compared, as cards.
+const productRows = [
+  {
+    id: 'prod-sculptra',
+    brand: 'Sculptra (Galderma)',
+    evidence: 'strong' as Evidence,
+    blurb: 'The vial in the trials: folds against collagen to 25 months, cheeks against no treatment, skin quality against saline, the HIV face, the hip dell, the knee and cellulite split-body trials, and the 2021 immediate-reconstitution protocol. Facial indications only; the most expensive vial on the shelf.',
+    knownFor: 'The evidence is its own',
+  },
+  {
+    id: 'prod-gana-v',
+    brand: 'Gana V (Korea)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Non-inferior to Sculptra in a 55-person double-blind split-face trial of the nasolabial folds over 24 months, with a similar adverse-event profile. One trial, one site, one indication; usually priced below the original.',
+    knownFor: 'The only head-to-head with Sculptra',
+  },
+  {
+    id: 'prod-aesthefill',
+    brand: 'AestheFill (REGEN Biotech) — poly-D,L-lactic acid',
+    evidence: 'moderate' as Evidence,
+    blurb: 'A different isomer as a porous microsphere: 67.6% against 60.9% of folds a grade better at 24 weeks versus hyaluronic acid in 260 people, "noninferior" over 52 weeks. Slower to reconstitute on the bench; none of Sculptra\'s long follow-up.',
+    knownFor: 'One large trial against the right comparator',
+  },
+  {
+    id: 'prod-lanluma',
+    brand: 'Lanluma (Sinclair)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A CE-marked PLLA launched in Europe in 2021 with the body on its label — buttocks and hip dips, cellulite, arms, hands, décolletage, neck. Its own evidence is a 70-person open-label post-market study with lumps and nodules the most frequent events; the body trials it cites are Sculptra\'s.',
+    knownFor: 'On-label for the body, on someone else\'s trials',
+  },
+  {
+    id: 'prod-pdlla-hybrids',
+    brand: 'Juvelook, Lenisna and the PLLA–hyaluronic hybrids',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Lactic-acid particles carried in hyaluronic acid so that something shows on the day: retrospective series of 13 and 30 people over a year, Korean open series in the tear trough, and carrier comparisons in pigs. No randomised trial against either parent product.',
+    knownFor: 'Two mechanisms, two things to react to',
+  },
+  {
+    id: 'prod-next-gen',
+    brand: 'The newer PLLA microspheres (China, Spain, Brazil)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'The three largest PLLA trials ever run — 252, 331 and 208 people against hyaluronic acid — belong to Chinese products; LASYNPRO has imaging and patient-reported studies; Elleva matched Sculptra on the arm and was half of a Brazilian complication series. Brand by brand.',
+    knownFor: 'Real trials, mixed availability',
+  },
+  {
+    id: 'prod-caha',
+    brand: 'Instead: calcium hydroxylapatite (Radiesse)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Volume on the day plus a stimulating tail of 12–18 months: a hand indication with a randomised trial, 40% of folds still improved at 30 months with no nodules over three years, a 2025 double-blind non-inferiority trial, and the randomised décolleté trial when diluted. More inflammatory on the gene data; equally undissolvable.',
+    knownFor: 'The stimulator you can see on the day',
+  },
+  {
+    id: 'prod-ha',
+    brand: 'Instead: hyaluronic-acid filler',
+    evidence: 'strong' as Evidence,
+    blurb: 'Ahead at four weeks and behind from nine months in every head-to-head (59.3% against 92.4% at a year). Fills one hollow exactly, on the day, and an enzyme removes it. The right first injectable for most faces and the only choice for the tear trough and the lips.',
+    knownFor: 'Precise, immediate, reversible',
+  },
+  {
+    id: 'prod-pcl',
+    brand: 'Instead: polycaprolactone (Ellansé)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'The third stimulator: 88.8% of folds still improved at twelve months against 23.8% for the hyaluronic control in a 160-person randomised trial; versions lasting one to four years; a shorter safety record than PLLA and no eraser either.',
+    knownFor: 'The longest-lasting, on one trial',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="sculptra" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative">
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Sculptra, hollow temple to hip dip.
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            The original collagen stimulator graded area by area: the folds, cheeks and temples with randomised
+            trials, the skin-quality trial against saline, the body's split-body trials of twenty, the brands
+            compared, the nodules in numbers &mdash; and where never to inject it.
+          </p>
+          <p class="meta">
+            Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — a Sculptra vial, the reconstituted suspension in a syringe and a blunt cannula on a steel tray, the label turned to the camera" class="w-full lg:w-72" />
+      </div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-[1440px] mx-auto px-5 md:px-14 py-12 space-y-10">
+      <div>
+        <p class="eyebrow">The case in five lines</p>
+        <h2 class="text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-accent w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="text-[32px] md:text-[44px] leading-none">{g.title}</h2>
+          <div class="mt-6 grid">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section>
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
+
+        <div class="mb-10 pt-7 border-t-2 border-ink">
+          <p class="eyebrow">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Sculptra — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="The two curves: hyaluronic acid ahead at four weeks, PLLA ahead from nine months, crossing on the nasolabial-fold wrinkle scale" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Scale of things: a PLLA microparticle, the macrophages and fibroblasts around it, the capsule of collagen III then I, and a cheek at 0, 3 and 12 months" />
+              </div>
+            )}
+
+            <div class="chart mt-8">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    figure={g.id === 'uses'}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="band bleed scroll-mt-32 mb-16 py-12 md:py-14">
+              <p class="eyebrow">Editor's choice</p>
+              <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The indication with the trials, the vial with the head-to-head, the body budget &mdash; and the menu to refuse.</p>
+
+              <div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  {
+                    id: 'use-cheeks-midface',
+                    kind: 'Do this',
+                    title: 'Sculptra for the deflated midface and temples',
+                    blurb: 'The indication the regulator approved and the trials support: 71.6% of cheeks a grade better at a year against 26.1% untreated, a measurable lift on 3D photography, 90.6% against 51.0% versus hyaluronic acid for midface volume, temples 96.5% against 0%. Two or three sessions of one or two vials, judged at six months, lasting about two years — for the face that has deflated everywhere and a patient who accepts that it cannot be undone.',
+                  },
+                  {
+                    id: 'prod-gana-v',
+                    kind: 'The alternative vial',
+                    title: 'Gana V, or AestheFill, where the price matters',
+                    blurb: 'Gana V is the only PLLA tested head-to-head against Sculptra: non-inferior on the fold, split-face, double-blind, over 24 months, with the same adverse-event profile. AestheFill is the other isomer, non-inferior to hyaluronic acid in 260 people. Neither has Sculptra\'s 25-month data, its cheek trial or its body trials; both usually cost less a vial. Ask which is in stock, and which trial it ran.',
+                  },
+                  {
+                    id: 'use-buttocks-hip-dips',
+                    kind: 'Budget for it',
+                    title: 'The body: hip dells, cellulite, knees — emerging, and vial-hungry',
+                    blurb: 'Real but tiny trials: a hip dell 26–27% thicker in dermis and fat than its saline twin, cellulite dimples shallower at eleven months, a knee physicians could tell from placebo and the women could not. The manufacturer\'s own consensus calls the body evidence observational, buttock volume took twenty vials in the one series, and Lanluma is the vial with the body on its European label. Count the vials before the sessions.',
+                  },
+                  {
+                    id: 'use-under-eye-lips',
+                    kind: 'Walk away',
+                    title: 'Lips, tear troughs, the front of the neck, "collagen banking"',
+                    blurb: 'Nine of the twelve visible nodules in the early cosmetic series were perioral and three periorbital; the anterior neck "may cause a higher incidence of nodule formation"; and no trial has injected a normal thirty-year-old face and followed it for the decades the banking pitch covers. A late granuloma is months of steroids or an excision, and nothing dissolves the particles. The tear trough and the lips are hyaluronic acid or surgery; prevention is sunscreen and a retinoid.',
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card tile tile--flush group overflow-hidden"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="eyebrow">{pick.kind}</p>
+                      <h3 class="text-xl leading-tight mt-1 transition-colors">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="cta mt-4 self-start">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PRODUCTS / REFERENCES ════════════ -->
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
+            <div class="mt-8 grid">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match your face, or your body, to the evidence</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the line that sounds like your situation to see where the trials point &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid">
+            {matcher.map((m) => (
+              <details class="matcher-item group border-t border-ink last:border-b">
+                <summary class="cursor-pointer flex items-center justify-between gap-4 py-3.5 min-h-[44px]">
+                  <h3 class="text-[19px] md:text-2xl leading-tight group-hover:text-accent group-open:text-accent transition-colors">{m.concern}</h3>
+                  <span class="shrink-0 w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-accent group-hover:text-ink transition" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="pb-5">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 bg-bone/50 border border-ink/5 hover:border-accent/40 transition">
+                      <span class="block font-display font-medium text-[17px] tracking-tight leading-snug group-hover/path:text-accent transition-colors">{p.title}</span>
+                      <span class="block mt-1 text-sm text-ink/65 leading-normal">{p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PRODUCTS COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">The lactic-acid shelf</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The products compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Six kinds of poly-lactic-acid vial and the three alternatives a clinic will offer instead. Each card is graded on the product's own trials, not on the polymer's reputation or the brochure.</p>
+
+          <div class="tiles mt-6 sm:grid-cols-2 lg:grid-cols-3">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="tile group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="text-xl leading-tight transition-colors">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 pt-6 border-t border-ink">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised, split-face and split-body trials, systematic reviews, consensus
+            statements, biopsy and imaging studies, complication series and regulatory records, linked inline within
+            each section. Primary sources: PubMed/PMC, the Journal of the American Academy of Dermatology, Dermatologic
+            Surgery, Aesthetic Surgery Journal, Aesthetic Plastic Surgery, Plastic and Reconstructive Surgery, JDD, the
+            Journal of Cosmetic Dermatology, HIV Medicine, AIDS, Polymers, Ophthalmology, the US Food and Drug
+            Administration's premarket-approval database, and the manufacturers' own regulatory notices.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Poly-L-lactic acid is a prescription-only medical device; its
+          approved indications differ by brand and country, and use on the body, under the eyes, in the lips or on
+          the neck is off-label for most products. Consult a registered clinician, disclose autoimmune or
+          granulomatous disease, immunosuppression, pregnancy or breastfeeding, and keep a written record of the
+          brand and lot number injected. Product and brand names are examples, not endorsements; regulatory status
+          is stated as of September 2026. Prices are indicative European clinic prices, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: -2px;
+    }
+
+    .card[open] > summary { background: rgba(18,18,18,0.03); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>

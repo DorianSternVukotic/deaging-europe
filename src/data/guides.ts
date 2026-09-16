@@ -97,6 +97,14 @@ export const guides: GuideMeta[] = [
     updated: '2026-09-13',
   },
   {
+    path: 'sculptra',
+    title: 'Sculptra (poly-L-lactic acid)',
+    tagline: 'The original collagen stimulator graded area by area on its own trials — cheeks, folds and temples, the HIV lipoatrophy origin, skin quality against saline, the body areas with split-body trials, the brands compared, the nodules in numbers, and where never to put it.',
+    kind: 'clinic',
+    published: '2026-09-16',
+    updated: '2026-09-16',
+  },
+  {
     path: 'exosomes',
     title: 'Exosomes',
     tagline: 'Exosome treatments and serums graded on the human evidence — the one double-blind trial after CO2 laser, the PRP comparison, the hair studies, the injections and drips the FDA acted on, what the vial contains, what European law allows, and the alternatives with controlled trials.',
