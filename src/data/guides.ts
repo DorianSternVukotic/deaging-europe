@@ -71,6 +71,12 @@ export const guides: GuideMeta[] = [
     kind: 'clinic',
   },
   {
+    path: 'exosomes',
+    title: 'Exosomes',
+    tagline: 'Exosome treatments and serums graded on the human evidence — the one double-blind trial after CO2 laser, the PRP comparison, the hair studies, the injections and drips the FDA acted on, what the vial contains, what European law allows, and the alternatives with controlled trials.',
+    kind: 'clinic',
+  },
+  {
     path: 'skin-boosters',
     title: 'Skin boosters',
     tagline: 'Profhilo, Restylane Skinboosters, Volite / Skinvive, Belotero Revive, NCTF and the rest graded on their own trials — hydration and glow for a season, and what the saline-controlled trials say about remodelling.',

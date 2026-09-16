@@ -1,0 +1,494 @@
+---
+/**
+ * The exosomes guide (/exosomes) — clinic guide on the in-clinic layout:
+ * evidence strength as the primary visual signal, all content in the DOM,
+ * one interactive block (situation matcher), and the products compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import {
+  keyTakeaways,
+  groups,
+  focusLabels,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/exosomes';
+
+const locale = DEFAULT_LOCALE;
+const title = 'Exosomes in aesthetics — every claim graded by evidence | DeAging Europe';
+const description =
+  'Exosome treatments and serums graded on the human evidence: the one double-blind trial after CO2 laser for acne scars, the PRP comparison, the hair studies, the injected and intravenous products the FDA acted on, what the vial contains, what European cosmetic and medicines law allows, what it costs, and the alternatives with controlled trials.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'bg-sage/15 text-sage'
+    : e === 'moderate'
+    ? 'bg-gold/15 text-gold'
+    : e === 'emerging'
+    ? 'bg-rose/15 text-rose'
+    : 'bg-ink/10 text-ink/60';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-legal-europe': 'On the skin, if not human-derived; never injected',
+  'faq-intact-skin': 'No evidence, and a 500-Dalton wall',
+  'faq-exosomes-vs-prp': 'PRP',
+  'faq-hair': 'Not on their own',
+  'faq-after-laser': 'Only for acne scars, only applied',
+  'faq-stem-cells': 'No',
+  'faq-safe': 'Applied: probably; injected: no',
+  'faq-how-many': '3 sessions; €150–400 each on top',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'Atrophic acne scars, and I am having a laser or microneedling anyway',
+    paths: [
+      { id: 'use-acne-scars-laser', title: 'The one double-blind trial', why: '32.5% against 19.9% improvement after CO2 laser, with a shorter downtime' },
+      { id: 'prod-comparators', title: 'PRP with microneedling first', why: 'triples the odds of a better-than-50% result across 14 studies' },
+      { id: 'prod-asc-exosomes', title: 'If exosomes, the adipose-derived product', why: 'the source behind the trial — applied, never injected' },
+    ],
+  },
+  {
+    concern: 'Wrinkles and texture: an "exosome facial" has been suggested',
+    paths: [
+      { id: 'use-rejuvenation-with-devices', title: 'Exosomes as after-care to RF microneedling', why: 'matched PRP in one comparison; three extra wrinkle points in an unblinded trial' },
+      { id: 'use-antiaging-claims', title: 'The "regenerating collagen" claim', why: 'measured on a bench, not on a face' },
+      { id: 'prod-comparators', title: 'What the money buys with trials', why: 'a retinoid, a resurfacing laser, PRP' },
+    ],
+  },
+  {
+    concern: 'Thinning hair',
+    paths: [
+      { id: 'use-hair-loss', title: 'Eleven small studies, all with needling', why: '9.5–35 hairs per cm², no placebo with the needling held constant' },
+      { id: 'prod-hair-products', title: 'The scalp products', why: 'an expensive fourth rung after minoxidil, an antiandrogen and microneedling' },
+      { id: 'prod-comparators', title: 'Minoxidil plus microneedling', why: 'ranks first in the network meta-analysis' },
+    ],
+  },
+  {
+    concern: 'Melasma or dark marks',
+    paths: [
+      { id: 'use-melasma-pigment', title: 'One non-randomised comparison', why: 'better than laser with saline in 60 patients, delivery route irrelevant' },
+      { id: 'use-topical-intact-skin', title: 'Not as a serum', why: 'nothing this size gets through intact skin' },
+    ],
+  },
+  {
+    concern: 'Redness, sensitive skin, eczema or psoriasis',
+    paths: [
+      { id: 'use-sensitive-inflammatory', title: 'The anti-inflammatory story', why: 'open studies on symptom scores; prescription treatments have the trials' },
+    ],
+  },
+  {
+    concern: 'A fresh scar after surgery',
+    paths: [
+      { id: 'use-scars-wounds', title: 'Where the real medicine is', why: 'a 110-patient ulcer trial, a ten-patient split-scar study' },
+      { id: 'prod-umbilical-placental', title: 'The umbilical-cord source', why: 'the strongest medical trial, the largest regulatory shadow' },
+    ],
+  },
+  {
+    concern: 'I want the week after my laser to be shorter',
+    paths: [
+      { id: 'use-post-procedure-downtime', title: 'The recovery claim', why: '"milder" redness and "shorter" downtime in one trial — against a control gel' },
+      { id: 'safety-topical-tolerance', title: 'What to put on lasered skin', why: 'sterile, fragrance-free, and the resurfacing guide\'s basics' },
+    ],
+  },
+  {
+    concern: 'I have been offered exosome injections, a scalp injection or an IV drip',
+    paths: [
+      { id: 'use-injected-iv', title: 'Unlawful, and where the harm is', why: 'granulomas, necrosis, allergy, the Nebraska events; no licence anywhere' },
+      { id: 'safety-consent-and-recourse', title: 'What to ask, and where to report', why: 'the IND number, the registration, the medicines agency' },
+    ],
+  },
+  {
+    concern: 'I bought an exosome serum',
+    paths: [
+      { id: 'use-topical-intact-skin', title: 'The 500-Dalton wall', why: 'single-arm studies; the blinded cream trial found the placebo side improved as much' },
+      { id: 'prod-plant-milk-vesicles', title: 'If it is a European product, it is a plant one', why: 'lawful, biocompatible, and studied in cells and mice' },
+      { id: 'prod-otc-serums', title: 'The shelf', why: '18% of manufacturers rated transparent' },
+    ],
+  },
+];
+
+// The products compared, as cards.
+const productRows = [
+  {
+    id: 'prod-asc-exosomes',
+    brand: 'Adipose stem-cell exosomes (Korean powders and gels)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'The source behind the field\'s one double-blind trial (acne scars after CO2 laser), the PRP comparison and the largest hair series. Human-derived, so outside EU cosmetic law; applied after a device, never injected.',
+    knownFor: 'The most and best studies — still one trial',
+  },
+  {
+    id: 'prod-umbilical-placental',
+    brand: 'Umbilical cord, Wharton\'s jelly and placental exosomes',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A 110-patient diabetic-ulcer trial healing wounds in 6 weeks against 20, a 60-patient melasma comparison, and the strongest anti-inflammatory profile in the laboratory — and the birth-tissue provenance the FDA acted on.',
+    knownFor: 'The medicine, and the regulatory shadow',
+  },
+  {
+    id: 'prod-platelet-exosomes',
+    brand: 'Platelet-derived exosome serums',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Single-arm sponsor studies: imaging gains at six weeks, 87% self-reported improvement and thicker collagen fibrils at twelve, no vehicle arm; a phase I injection trial that was safe and did nothing for wound closure.',
+    knownFor: 'Trials without a control side',
+  },
+  {
+    id: 'prod-conditioned-media',
+    brand: 'Stem-cell conditioned media and "secretome"',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Three small randomised trials with a device (roughness, photoaging, pores and wrinkles better), six hair studies, and the one blinded vehicle-controlled cream trial in which graders saw no difference.',
+    knownFor: 'The older cousin with more trials',
+  },
+  {
+    id: 'prod-hair-products',
+    brand: 'Exosome scalp products after microneedling',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A 30-person open-label study with counts up at four months, a 39-patient series and an eleven-study review; no placebo with the needling held constant, no comparison against minoxidil.',
+    knownFor: 'A €1,200–3,000 fourth rung',
+  },
+  {
+    id: 'prod-plant-milk-vesicles',
+    brand: 'Plant, milk and bacterial "exosome-like" vesicles',
+    evidence: 'limited' as Evidence,
+    blurb: 'The lawful European cosmetic: rose, ginseng, centella, grape, cow\'s milk. Biocompatible, cheap, studied in cells and mice; six people, eight cases and a 28-day cosmetic study in humans.',
+    knownFor: 'The word "exosome" on a moisturiser',
+  },
+  {
+    id: 'prod-otc-serums',
+    brand: 'Over-the-counter "exosome" serums and ampoules',
+    evidence: 'limited' as Evidence,
+    blurb: 'The 500-Dalton wall, single-arm studies, unstated content, 18% of manufacturers transparent — and, if human-derived, not a lawful EU cosmetic at all.',
+    knownFor: 'The most expensive moisturiser on the shelf',
+  },
+  {
+    id: 'prod-injectables-drips',
+    brand: 'Injectable vials and intravenous "exosome drips"',
+    evidence: 'limited' as Evidence,
+    blurb: 'Unlicensed everywhere, of unverifiable content, behind every serious harm report in the literature and the FDA\'s Nebraska notification; no controlled trial for any aesthetic use.',
+    knownFor: 'Walk away',
+  },
+  {
+    id: 'prod-comparators',
+    brand: 'Instead: PRP, microneedling, minoxidil, the retinoid',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Microneedling with PRP for scars (14 studies), minoxidil with microneedling for hair (first of 27 trials), tretinoin and the fractional lasers for photoaging — the treatments exosomes matched once and have not otherwise been tested against.',
+    knownFor: 'What the same money buys with trials',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="exosomes" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative border-b border-ink/10 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Exosomes, post&#8209;laser gel to IV drip<span class="text-rose">.</span>
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            The most-marketed word in aesthetics, graded on its evidence: one double-blind trial, a handful of
+            split-face studies after lasers and needles, no approved product anywhere &mdash; and the injections
+            and drips where the harm reports come from.
+          </p>
+          <p class="mt-3 text-xs text-ink/50">
+            Updated 16 Sep 2026 · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — a lyophilised exosome vial and diluent beside a fractional laser handpiece, the label turned to the camera" tone="rose" class="w-full lg:w-72" />
+      </div>
+      <div class="absolute -right-32 -top-32 w-96 h-96 bg-rose/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-6xl mx-auto px-6 py-12 space-y-10">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-sage">The case in five lines</p>
+        <h2 class="font-display text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-rose w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" tone="sage" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="font-display text-3xl md:text-4xl">{g.title}</h2>
+          <div class="mt-6 grid gap-2">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section class="bg-white border-y border-ink/5">
+      <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <div class="mb-10 pt-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Exosomes — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="A split face after fractional CO2: exosome gel on one side, control gel on the other, at week 0 and week 12" tone="rose" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Scale of things: a 500-Dalton molecule, a 100 nm vesicle, the stratum corneum, a microneedle channel" tone="bone" />
+              </div>
+            )}
+
+            <div class="card-grid mt-8 divide-y divide-ink/[0.07] border-y border-ink/[0.07]">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    variant="bar"
+                    tag={s.focus && s.focus !== 'general' ? focusLabels[s.focus] : undefined}
+                    mediaTone={g.id === 'uses' ? 'rose' : undefined}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="mb-16 scroll-mt-32">
+              <p class="text-xs uppercase tracking-[0.3em] text-sage">Editor's choice</p>
+              <h2 class="font-display text-3xl md:text-4xl mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The one defensible use, the older cousin, the alternatives with trials &mdash; and the vial to refuse.</p>
+
+              <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    id: 'prod-asc-exosomes',
+                    kind: 'If at all',
+                    title: 'Adipose exosomes after a CO2 laser or RF needling',
+                    blurb: 'The one double-blind trial: 32.5% against 19.9% acne-scar improvement after fractional CO2, milder redness, shorter downtime; matched PRP after radiofrequency microneedling with equal collagen on biopsy. A named Korean manufacturer, a particle count, applied to the opened skin — an emerging-tier surcharge on a procedure you were having anyway.',
+                    tone: 'rose' as const,
+                  },
+                  {
+                    id: 'prod-conditioned-media',
+                    kind: 'The older cousin',
+                    title: 'Stem-cell conditioned media, after a device',
+                    blurb: 'Three small randomised trials with fractional radiofrequency or microneedling — roughness, photoaging, pores and wrinkles better than saline or vehicle — and the one blinded cream trial that lost. The same lesson as exosomes: a signal when the skin is opened, none when it is not. Deer-derived, and therefore a lawful European cosmetic.',
+                    tone: 'sage' as const,
+                  },
+                  {
+                    id: 'prod-comparators',
+                    kind: 'Do this instead',
+                    title: 'PRP, microneedling, minoxidil, the retinoid',
+                    blurb: 'Microneedling with PRP triples the odds of a better-than-50% scar result across 14 studies; minoxidil with microneedling ranks first of 27 hair trials; tretinoin has biopsy-proven collagen and a Cochrane review. Exosomes matched PRP once and have been tested against nothing else. The moderate row on this page belongs to these.',
+                    tone: 'bone' as const,
+                  },
+                  {
+                    id: 'prod-injectables-drips',
+                    kind: 'Walk away',
+                    title: 'Injected and intravenous exosomes',
+                    blurb: 'No licence anywhere, content nobody has checked, and every serious harm in the literature — granulomas, necrosis, allergic reactions, the Nebraska patients behind the FDA\'s notification — from this route. An "exosome facelift", a scalp injection or an anti-aging drip is an unlicensed medicine sold as a treatment; the consent form does not change that.',
+                    tone: 'gold' as const,
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card group flex flex-col bg-white rounded-2xl border border-ink/10 overflow-hidden hover:border-rose hover:shadow-md transition"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} tone={pick.tone} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="text-[10px] uppercase tracking-widest font-semibold text-sage">{pick.kind}</p>
+                      <h3 class="font-display text-lg leading-tight mt-1 group-hover:text-rose transition">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest font-semibold text-rose group-hover:gap-2 transition-all">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PRODUCTS / REFERENCES ════════════ -->
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="text-xs uppercase tracking-[0.3em] text-sage">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="font-display text-3xl md:text-4xl mt-2">{g.title}</h2>
+            {g.intro && <p class="mt-3 text-ink/70 max-w-2xl">{g.intro}</p>}
+            <div class="mt-8 grid gap-2">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 bg-gradient-to-br from-rose/10 via-bone to-sage/5 rounded-2xl p-6 md:p-10 border border-ink/5">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match the offer to the evidence</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the line that sounds like your situation to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid gap-2">
+            {matcher.map((m) => (
+              <details class="matcher-item group rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-rose/40 open:border-rose/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h3 class="font-display text-xl leading-tight group-hover:text-rose group-open:text-rose transition">{m.concern}</h3>
+                  <span class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-rose bg-rose/10 group-open:bg-rose group-open:text-white transition" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-3 pt-3 border-t border-ink/10 space-y-2">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 rounded-xl bg-bone/50 border border-ink/5 hover:border-rose/40 transition">
+                      <span class="font-medium text-ink/90">{p.title}</span>
+                      <span class="text-ink/60"> — {p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PRODUCTS COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 bg-white rounded-2xl border border-ink/5 p-6 md:p-8 overflow-hidden">
+          <p class="text-xs uppercase tracking-[0.3em] text-sage">The exosome landscape</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The products compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Eight kinds of vial and bottle, by source, and the alternatives with controlled trials. Each card is graded on its own human data, not on the laboratory or the brochure.</p>
+
+          <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="block p-5 bg-bone/40 rounded-xl border border-ink/5 hover:border-rose/40 hover:shadow-md transition group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="font-display text-lg leading-tight group-hover:text-rose">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 bg-white rounded-2xl p-8 border border-ink/5">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised and split-face trials, systematic and scoping reviews, position
+            papers of the International Society for Extracellular Vesicles and the International Society for Cell
+            &amp; Gene Therapy, regulatory notices or regulatory texts, linked inline within each section. Primary
+            sources: PubMed/PMC, the Journal of Extracellular Vesicles, Acta Dermato-Venereologica, the Journal of
+            Cosmetic Dermatology, Aesthetic Surgery Journal, Aesthetic Plastic Surgery, Dermatologic Surgery, JDD,
+            Stem Cell Research &amp; Therapy, Cytotherapy, the US Food and Drug Administration and EUR-Lex.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. No exosome product is authorised for injection or infusion in the
+          European Union or the United States; topical use after a procedure is at the practitioner's responsibility.
+          Consult a registered clinician, disclose any cancer history, immunosuppression, pregnancy or breastfeeding,
+          and ask for the product's name, manufacturer and registration in writing. Product and brand names are
+          examples, not endorsements; regulatory status varies by country and is stated as of September 2026. Prices
+          are indicative clinic and retail prices, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-rose);
+      outline-offset: -2px;
+      border-radius: 1rem;
+    }
+
+    .card[open] > summary { background: rgba(184,130,109,0.04); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
