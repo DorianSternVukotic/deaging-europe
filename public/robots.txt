@@ -1,18 +1,34 @@
+# deage.eu robots.txt — NOT served on Wix-managed hosting: Wix's edge serves the
+# dashboard-generated file on the live domain (also on previews, even with
+# wix({ robots: false })). This is the text to paste into the dashboard's
+# SEO & GEO → Robots.txt Editor; keep the two in sync. The Sitemap line matters:
+# Wix's default points at /sitemap.xml, which does not exist for this site.
 User-agent: *
 Allow: /
 
-# AI crawlers — explicitly welcomed
-User-agent: GPTBot
-Allow: /
-User-agent: ClaudeBot
-Allow: /
-User-agent: anthropic-ai
-Allow: /
+# AI search and user-fetch crawlers, explicitly welcome
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
 User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: DuckAssistBot
+User-agent: Amzn-SearchBot
+User-agent: bingbot
+User-agent: Applebot
 Allow: /
-User-agent: Google-Extended
-Allow: /
+
+# Training crawlers — allowed on purpose (blocking them has been observed to
+# reduce citations); revisit if the policy changes.
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: anthropic-ai
 User-agent: CCBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: meta-externalagent
+User-agent: Amazonbot
 Allow: /
 
 Sitemap: https://www.deage.eu/sitemap-index.xml

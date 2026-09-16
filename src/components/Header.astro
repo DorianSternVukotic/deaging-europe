@@ -1,4 +1,10 @@
 ---
+/**
+ * Header — a 64px bar (56px on mobile) on an ink hairline: uppercase tracked
+ * wordmark left, tracked-uppercase nav right. Below md the nav collapses into
+ * a native "Menu" disclosure that drops a full-width list under the bar.
+ * Sticky, so the guides' scroll-margin maths keeps working.
+ */
 import { type Locale } from '../i18n/ui';
 import { t, localePath } from '../i18n/utils';
 
@@ -6,20 +12,54 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
----
-<header class="border-b border-ink/10 bg-bone/90 backdrop-blur sticky top-0 z-40">
-  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
-    <a href={localePath(locale, '')} class="font-display text-2xl tracking-tight">
-      <span class="text-ink">de<span class="text-rose">∞</span>aging</span>
-      <span class="text-sage text-sm align-super ml-1">europe</span>
-    </a>
 
-    <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
-      <a class="hover:text-rose transition" href={localePath(locale, '#products')}>{t(locale, 'nav.products')}</a>
-      <a class="hover:text-rose transition" href="/#guides">Guides</a>
-      <a class="hover:text-rose transition" href="/collagen">Collagen guide</a>
-      <a class="hover:text-rose transition" href="/contact">{t(locale, 'nav.contact')}</a>
+const items = [
+  { href: localePath(locale, '#products'), label: t(locale, 'nav.products') },
+  { href: '/#guides', label: 'Guides' },
+  { href: '/collagen', label: 'Collagen guide' },
+  { href: '/contact', label: t(locale, 'nav.contact') },
+];
+---
+<header class="site-header sticky top-0 z-40 border-b border-ink bg-bone">
+  <div class="max-w-[1440px] mx-auto px-5 md:px-14 h-14 md:h-16 flex items-center justify-between gap-6">
+    <a href={localePath(locale, '')} class="wordmark">DeAging Europe</a>
+
+    <nav class="hidden md:flex items-center gap-10" aria-label="Primary">
+      {items.map((it) => <a class="navlink" href={it.href}>{it.label}</a>)}
     </nav>
 
+    <details class="menu md:hidden">
+      <summary class="navlink cursor-pointer py-2">Menu</summary>
+      <div class="menu-list absolute left-0 right-0 top-full z-40 flex flex-col border-b border-ink bg-bone">
+        {items.map((it) => <a class="navlink block px-5 py-3.5 border-t border-ink/15" href={it.href}>{it.label}</a>)}
+      </div>
+    </details>
   </div>
 </header>
+
+<style>
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--color-ink);
+  }
+  .navlink {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+    color: var(--color-ink);
+  }
+  nav .navlink:hover { border-bottom-color: var(--color-ink); }
+  .menu-list .navlink { border-bottom: 0; }
+  .menu-list .navlink:hover { color: var(--color-accent); }
+  @media (max-width: 767px) { .wordmark { font-size: 13px; } }
+</style>

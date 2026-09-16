@@ -12,9 +12,9 @@ const { locale, faq } = Astro.props;
 ---
 {faq.length > 0 && (
   <section id="faq" class="scroll-mt-32">
-    <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
-      <h2 class="font-display text-3xl md:text-4xl">{t(locale, 'product.faq.title')}</h2>
-      <div class="mt-8 grid gap-2 max-w-3xl">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-16 md:py-20">
+      <h2 class="text-[32px] md:text-[44px] leading-none">{t(locale, 'product.faq.title')}</h2>
+      <div class="mt-8 grid max-w-3xl">
         {faq.map((f, i) => (
           <ExpandableDrawer id={`faq-${i + 1}`} title={f.q}>
             <p>{f.a}</p>

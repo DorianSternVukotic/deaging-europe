@@ -6,12 +6,9 @@ brand: Aeterna
 origin: Plovdiv, Bulgaria
 image: https://static.wixstatic.com/media/51aaad_cf505ae35a114265a3db9a21f02b25f2~mv2.png/v1/fit/w_1000,h_1000,q_90/file.png
 gallery:
-  - src: https://static.wixstatic.com/media/51aaad_cf505ae35a114265a3db9a21f02b25f2~mv2.png/v1/fit/w_1000,h_1000,q_90/file.png
-    alt: COLLAGEN MAX PRO, neutral, 390 g tub
-  - src: https://static.wixstatic.com/media/51aaad_c6c61d91697741aab50f0b525e66489e~mv2.png/v1/fit/w_1000,h_1000,q_90/file.png
+  - src: /images/aeterna/white-raspberry-tub-1200.jpg
     alt: COLLAGEN MAX PRO White Raspberry, 390 g tub
-  - src: https://static.wixstatic.com/media/51aaad_f0bc127c0c894446a4ed76ad7b6ef5d5~mv2.png/v1/fit/w_1000,h_1000,q_90/file.png
-    alt: COLLAGEN MARIN MAX PRO C+, fresh lemon, 390 g tub
+    fit: cover
   - src: /images/aeterna/pouch-neutral-1200.jpg
     alt: The 195 g travel pack of COLLAGEN MAX PRO, neutral
     fit: cover
@@ -22,7 +19,7 @@ gallery:
     alt: A woman holding the 390 g tub and the 195 g travel pack
     fit: cover
   - src: /images/aeterna/white-coat-portrait-1200.jpg
-    alt: A woman in a white coat holding a tub of COLLAGEN MAX PRO
+    alt: A doctor in a white coat holding a tub of COLLAGEN MAX PRO
     fit: cover
 tagline: >-
   10 g of Peptan® collagen peptides a day, with a hyaluronic-acid matrix, ceramides and acerola vitamin C. Bulgarian brand, named European suppliers.
