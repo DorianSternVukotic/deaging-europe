@@ -153,6 +153,14 @@ export const guides: GuideMeta[] = [
     updated: '2026-09-15',
   },
   {
+    path: 'hair-transplant',
+    title: 'Hair transplant (FUE & FUT)',
+    tagline: 'The operation graded indication by indication and technique by technique — 85–93% graft survival across 34 studies, the one randomised trial (finasteride around surgery), FUE against the strip, robots and "sapphire" blades, women, scars, eyebrows and beards, who should not have one, the complications in numbers, and the eight questions that separate a surgeon from a black-market clinic.',
+    kind: 'clinic',
+    published: '2026-09-17',
+    updated: '2026-09-17',
+  },
+  {
     path: 'laser-ipl',
     title: 'Laser & IPL',
     tagline: 'From gentle IPL to full resurfacing — matched to your skin and downtime budget.',

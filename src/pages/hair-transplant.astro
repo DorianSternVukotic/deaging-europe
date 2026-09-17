@@ -1,0 +1,537 @@
+---
+/**
+ * The hair transplant guide (/hair-transplant) — clinic guide on the in-clinic layout:
+ * evidence strength as the primary visual signal, all content in the DOM,
+ * one interactive block (situation matcher), and the techniques compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
+import {
+  keyTakeaways,
+  groups,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/hair-transplant';
+
+const locale = DEFAULT_LOCALE;
+const guide = guideMeta('hair-transplant');
+const title = 'Hair transplant (FUE & FUT) — every indication and technique graded by evidence | DeAging Europe';
+const description =
+  'Hair transplantation graded indication by indication and technique by technique: graft survival of 85–93% in a meta-analysis of 34 studies, the one randomised trial (finasteride around surgery), FUE against the strip method, robots, implanter pens and "sapphire" blades, women, scars, eyebrows and beards, why scarring alopecia grafts fade, who should not have one, complications in numbers, what it costs in Europe and in Turkey, and the eight questions that separate a surgeon from a black-market clinic.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'tier-pill tier-strong'
+    : e === 'moderate'
+    ? 'tier-pill tier-moderate'
+    : e === 'emerging'
+    ? 'tier-pill tier-emerging'
+    : 'tier-pill tier-none';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-permanent': 'The grafts, yes; the hair around them, no',
+  'faq-when-results': 'Growth from month 3–4; judge at 12–18',
+  'faq-how-many-grafts': '1,500–2,500 for a hairline and forelock',
+  'faq-cost': '€4,000–12,000; €1,800–3,500 in Turkey',
+  'faq-fue-or-fut': 'Same grafts, different scar',
+  'faq-turkey': 'It depends on who holds the punch',
+  'faq-women': 'Some — if the donor is dense',
+  'faq-medication-after': 'Yes, for pattern loss',
+  'faq-age': 'Under 25, wait; no upper limit',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'I am a man with a receding hairline and a thinning top',
+    paths: [
+      { id: 'use-male-pattern', title: 'The indication the operation was built for', why: '85–93% pooled graft survival; 90–97% satisfaction' },
+      { id: 'adj-finasteride-minoxidil', title: 'Medication around it', why: 'visible improvement in 94% against 67% in the one randomised trial' },
+      { id: 'who-is-a-candidate', title: 'Whether you are a candidate', why: 'stable for a year, dense donor, adult hairline' },
+    ],
+  },
+  {
+    concern: 'I am 22 and my temples are going',
+    paths: [
+      { id: 'use-too-young', title: 'The operation to postpone', why: 'three of the eight reasons surgeons give for refusing' },
+      { id: 'adj-finasteride-minoxidil', title: 'What to do instead, now', why: 'the medicines hold most young men\'s hair for years' },
+      { id: 'faq-age', title: 'Too young, too old', why: 'under 25, wait; there is no upper limit' },
+    ],
+  },
+  {
+    concern: 'I am a woman and my part is widening',
+    paths: [
+      { id: 'use-female-pattern', title: 'A smaller group of candidates', why: '24 studies; the strip method preferred; shock loss commoner' },
+      { id: 'alt-smp', title: 'Pigment instead of grafts', why: 'above about 105 hairs per cm², one clinic\'s data favour it' },
+      { id: 'use-dupa-diffuse', title: 'If the back of the head is thinning too', why: 'no safe donor — medical treatment, not surgery' },
+    ],
+  },
+  {
+    concern: 'My hairline has always been high',
+    paths: [
+      { id: 'use-hairline-lowering', title: 'Grafts, or the forehead-reduction operation', why: '641 patients, about 16 mm removed, 11–16% relapse at two years' },
+    ],
+  },
+  {
+    concern: 'I have been quoted €2,000 in Istanbul for "up to 5,000 grafts"',
+    paths: [
+      { id: 'cost-and-tourism', title: 'Why it is a third of the price', why: 'technicians, several patients a day, a "data black hole"' },
+      { id: 'safety-black-market', title: 'Eight questions to ask', why: '59% of society members have black-market clinics in their city' },
+      { id: 'tech-megasession', title: 'What 4,000 grafts in a day does', why: 'folliculitis 4.8 times likelier; the necrosis series average 3,900' },
+      { id: 'safety-donor-and-scars', title: 'The donor area', why: 'the one thing a repair cannot give back' },
+    ],
+  },
+  {
+    concern: 'FUE, strip, robot, DHI, sapphire — which one?',
+    paths: [
+      { id: 'tech-fue', title: 'FUE', why: 'dots instead of a line; 7.5–18% transection depending on hands and site' },
+      { id: 'tech-fut-strip', title: 'The strip method', why: 'equally good grafts, a line scar, no shaving' },
+      { id: 'tech-robotic', title: 'The robot', why: 'yield 82% against 90% by hand in the one randomised comparison' },
+      { id: 'tech-implanters-dhi', title: 'Implanter pens and "DHI"', why: 'a placement tool, no trial against forceps' },
+      { id: 'tech-sapphire', title: '"Sapphire FUE"', why: 'a blade for the recipient sites; evidence points both ways' },
+    ],
+  },
+  {
+    concern: 'I have a scar or a burn where no hair grows',
+    paths: [
+      { id: 'use-scars-burns', title: 'Grafts into scar tissue, in stages', why: '86–89% pooled survival; 79% in a 37-patient series' },
+      { id: 'use-eyebrows', title: 'If it is an eyebrow', why: '354 patients in the review, most after burns' },
+    ],
+  },
+  {
+    concern: 'I have lichen planopilaris or frontal fibrosing alopecia',
+    paths: [
+      { id: 'use-primary-scarring', title: 'Only when burnt out, and the grafts fade', why: '82.7% survival at a year, 39.6% at four to six' },
+      { id: 'safety-wrong-diagnosis-and-mind', title: 'The diagnosis that hides in pattern loss', why: '26 patients in one series; 27 who developed it after a transplant' },
+    ],
+  },
+  {
+    concern: 'Thin eyebrows, or a patchy beard',
+    paths: [
+      { id: 'use-eyebrows', title: 'Eyebrows', why: 'satisfaction 4.7–4.9 of 5; trimming for life' },
+      { id: 'use-beard', title: 'Beard and moustache', why: 'expert series of 700 or more, no counts' },
+      { id: 'use-gender-affirming', title: 'Gender-affirming work', why: 'a year on testosterone first; plan with facial surgery' },
+    ],
+  },
+  {
+    concern: 'I have tightly curled hair, or I lost my edges to braids',
+    paths: [
+      { id: 'use-afro-traction', title: 'Curved follicles, special punches', why: 'transection under 5% with the right tool, failure with the wrong one' },
+    ],
+  },
+  {
+    concern: 'My first transplant went badly',
+    paths: [
+      { id: 'use-repair', title: 'Repair', why: 'one repair case in ten now comes from a black-market operation' },
+      { id: 'use-body-hair-donor', title: 'Beard and body hair as donor', why: '122 patients; satisfaction 7.8 of 10' },
+      { id: 'alt-smp', title: 'Pigment for the scars', why: 'hides strip lines and FUE dots' },
+    ],
+  },
+  {
+    concern: 'The clinic adds PRP, exosomes or a "special solution" to the package',
+    paths: [
+      { id: 'adj-prp', title: 'Platelet-rich plasma', why: 'three small controlled studies, 217 people, all positive, all different' },
+      { id: 'adj-holding-solutions', title: 'Holding solutions and growth factors', why: 'two randomised trials of the details' },
+      { id: 'alt-synthetic-cloning', title: 'Fibres, cloning, exosomes', why: 'none is a substitute for a donor area' },
+    ],
+  },
+];
+
+// The techniques compared, as cards.
+const productRows = [
+  {
+    id: 'tech-fue',
+    brand: 'FUE (follicular unit excision)',
+    evidence: 'strong' as Evidence,
+    blurb: 'Units cored out one at a time with a punch under a millimetre wide. No line scar, a shaved donor, short hair possible afterwards. A blind technique: 7.5–8.8% transection in expert series, 13–14% in a trial, up to 18% at the sides, more as the surgeon tires. The dots do scar.',
+    knownFor: 'The commonest method, and the one that can be delegated',
+  },
+  {
+    id: 'tech-fut-strip',
+    brand: 'FUT (the strip method)',
+    evidence: 'strong' as Evidence,
+    blurb: 'A strip from the densest part of the permanent zone, dissected under microscopes. The most grafts with the least transection and no shaving; a line scar that widens or thickens in up to 15%. Equally good grafts; many women prefer it.',
+    knownFor: 'The method behind most long-term data',
+  },
+  {
+    id: 'adj-finasteride-minoxidil',
+    brand: 'Finasteride, dutasteride and minoxidil around surgery',
+    evidence: 'strong' as Evidence,
+    blurb: 'The one double-blind trial in the field: 79 men, finasteride or placebo from four weeks before to 48 weeks after — visible improvement in 94% against 67%. Minoxidil does not change graft survival but spared 60% of treated grafts the post-operative shed.',
+    knownFor: 'Protecting the hair the surgeon did not move',
+  },
+  {
+    id: 'tech-robotic',
+    brand: 'Robotic FUE (ARTAS)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'A camera-guided arm that harvests; people do everything else. In the one randomised split-donor comparison, yield 82.1% against 90.0% by hand, discard rate 10.7% against 5.5%, transection and satisfaction the same. It does not tire.',
+    knownFor: 'Parity, at a premium',
+  },
+  {
+    id: 'tech-implanters-dhi',
+    brand: 'Implanter pens and "DHI"',
+    evidence: 'moderate' as Evidence,
+    blurb: 'A hollow needle that places the graft without forceps on the bulb. The counted study behind the field\'s 92% figure used one; series of 104 and 29 report good results. No trial against forceps, so "grows better" is unproven; "handled less" is true.',
+    knownFor: 'A placement tool with a brand name',
+  },
+  {
+    id: 'tech-megasession',
+    brand: 'Megasessions and dense packing',
+    evidence: 'moderate' as Evidence,
+    blurb: '3,000–6,000 grafts in one six-to-twelve-hour day: 93.5–96.6% survival in the best series. Folliculitis 4.8 times likelier from 4,000 grafts and 2.2 times above 45 per cm²; survival lower at 40–50 than at 20–30 per cm²; the necrosis series average 3,900.',
+    knownFor: 'Done once — with a dose-response for complications',
+  },
+  {
+    id: 'tech-long-hair-unshaven',
+    brand: 'Unshaven and long-hair FUE',
+    evidence: 'emerging' as Evidence,
+    blurb: 'No shaved head, a previewable result and matched curl for eyebrows. Transection of 7.5–8.8% in 42 patients and 8.2% in 658. Slower, smaller sessions, a premium of 20–50% — and "unshaven" means different things in different advertisements.',
+    knownFor: 'Discretion, not a better graft',
+  },
+  {
+    id: 'adj-prp',
+    brand: 'Platelet-rich plasma with the transplant',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A systematic review found three controlled studies and 217 participants, all favouring it, with different preparations and no standardised counting. In organ culture, grafts grew no faster with it. €300–600 a session.',
+    knownFor: 'A plausible extra',
+  },
+  {
+    id: 'adj-holding-solutions',
+    brand: 'Holding solutions and growth factors',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A buffered organ-preservation solution cut post-operative shedding from 95% to 74% of large operations in 240 randomised patients, with the same final survival; a fibroblast growth factor gave 91.1% survival against 81.0% in 60.',
+    knownFor: 'Where survival is actually won or lost',
+  },
+  {
+    id: 'alt-smp',
+    brand: 'Instead: scalp micropigmentation',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Thousands of tattooed dots that read as stubble or as less scalp showing through, and hide strip and FUE scars. Favoured over grafts in women whose density is still above about 105 hairs per cm². Fades in three to five years; adds no hair.',
+    knownFor: 'Camouflage that needs no donor',
+  },
+  {
+    id: 'tech-sapphire',
+    brand: '"Sapphire FUE"',
+    evidence: 'emerging' as Evidence,
+    blurb: 'A blade for the recipient slits, nothing to do with harvesting. A non-randomised 1,000-patient study: 94.7% survival against 88.9% with steel. A twelve-man split-scalp perfusion study: handmade steel razor blades caused less tissue damage.',
+    knownFor: 'A material sold as a method',
+  },
+  {
+    id: 'alt-synthetic-cloning',
+    brand: 'Instead: synthetic fibres, "cloning", exosomes',
+    evidence: 'limited' as Evidence,
+    blurb: 'Artificial hair fibres are banned by the US FDA and their studies rated poor to fair; follicle multiplication is a research programme; exosome injections have no approved product. None replaces a donor area.',
+    knownFor: 'Sold to people who have run out of donor',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="hair-transplant" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative">
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Hair transplant, hairline to donor scar.
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            The operation graded indication by indication and technique by technique: what sixty years of series
+            show, the one randomised trial, FUE against the strip, robots and "sapphire" blades, who should not
+            have one, the complications in numbers &mdash; and the eight questions to ask before you fly.
+          </p>
+          <p class="meta">
+            Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — follicular-unit grafts of one to four hairs lined up on a chilled dish under a stereo microscope, a 0.9 mm punch beside them" class="w-full lg:w-72" />
+      </div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-[1440px] mx-auto px-5 md:px-14 py-12 space-y-10">
+      <div>
+        <p class="eyebrow">The case in five lines</p>
+        <h2 class="text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-accent w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="text-[32px] md:text-[44px] leading-none">{g.title}</h2>
+          <div class="mt-6 grid">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section>
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
+
+        <div class="mb-10 pt-7 border-t-2 border-ink">
+          <p class="eyebrow">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Hair transplant — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="One day in theatre: the ring block, the harvest, grafts sorted by hair count in a chilled holding solution, recipient sites made, placement — and who does each step" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="The same scalp at day 1, week 3 (shed), month 4 (first growth) and month 12; beside it the donor area shaved short at one year — dots after FUE, a line after the strip" />
+              </div>
+            )}
+
+            <div class="chart mt-8">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    figure={g.id === 'uses'}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="band bleed scroll-mt-32 mb-16 py-12 md:py-14">
+              <p class="eyebrow">Editor's choice</p>
+              <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The operation where it is proven, the tablet that protects it, the unfashionable method &mdash; and the patient who should wait.</p>
+
+              <div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  {
+                    id: 'use-male-pattern',
+                    kind: 'Do this',
+                    title: 'A conservative hairline and forelock, in a stable pattern',
+                    blurb: 'Pooled graft survival of 85–93% and satisfaction of 90–97% across 34 studies, 92% of transplanted hairs growing at six months in a counted study, better quality-of-life and anxiety scores at follow-up. Results were best under 33 and below Norwood 4a. Ask for an adult hairline, the front before the crown, and a written count of the grafts you have for life. Judge it at twelve to eighteen months, not at four.',
+                  },
+                  {
+                    id: 'adj-finasteride-minoxidil',
+                    kind: 'With it, always',
+                    title: 'Finasteride or dutasteride, started before surgery',
+                    blurb: 'The only double-blind trial in the field: 79 men on finasteride 1 mg or placebo from four weeks before to 48 weeks after a transplant, with visible increases in hair in 94% against 67%. The grafts survive without it; the hair behind them does not. A year on medication first also proves the loss is stable — and sometimes returns enough that the operation gets smaller. The hair-loss guide covers the side effects.',
+                  },
+                  {
+                    id: 'tech-fut-strip',
+                    kind: 'Unfashionable, still earned',
+                    title: 'The strip method, for women and big first sessions',
+                    blurb: 'Equally good grafts, the most of them from the safest zone, the least transection, no shaved head, and the rest of the donor left untouched for FUE later. The price is a line scar hidden by two centimetres of hair that widens or thickens in up to 15%. It lost its market share partly to preference and partly because strip dissection under microscopes cannot be handed to an untrained team.',
+                  },
+                  {
+                    id: 'use-too-young',
+                    kind: 'Wait',
+                    title: 'A low hairline at 22',
+                    blurb: 'Very young, unstable, and not enough loss yet: three of the eight reasons a specialist review gives for refusing. Nobody can map the future pattern or the safe donor at 22, and a teenage hairline placed now can be stranded in front of a bald scalp at 40 with nothing left to fill behind it. The medicines hold most young men\'s hair for years, and the operation is still there at 28 with better information.',
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card tile tile--flush group overflow-hidden"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="eyebrow">{pick.kind}</p>
+                      <h3 class="text-xl leading-tight mt-1 transition-colors">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="cta mt-4 self-start">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PRODUCTS / REFERENCES ════════════ -->
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
+            <div class="mt-8 grid">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match the offer to the evidence</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the line that sounds like your situation to see where the evidence points &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid">
+            {matcher.map((m) => (
+              <details class="matcher-item group border-t border-ink last:border-b">
+                <summary class="cursor-pointer flex items-center justify-between gap-4 py-3.5 min-h-[44px]">
+                  <h3 class="text-[19px] md:text-2xl leading-tight group-hover:text-accent group-open:text-accent transition-colors">{m.concern}</h3>
+                  <span class="shrink-0 w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-accent group-hover:text-ink transition" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="pb-5">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 bg-bone/50 border border-ink/5 hover:border-accent/40 transition">
+                      <span class="block font-display font-medium text-[17px] tracking-tight leading-snug group-hover/path:text-accent transition-colors">{p.title}</span>
+                      <span class="block mt-1 text-sm text-ink/65 leading-normal">{p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE TECHNIQUES COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">The clinic menu</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The techniques compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Seven ways of doing the operation, three things sold with it and two sold instead of it. Each card is graded on its own studies, not on the acronym or the brochure.</p>
+
+          <div class="tiles mt-6 sm:grid-cols-2 lg:grid-cols-3">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="tile group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="text-xl leading-tight transition-colors">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 pt-6 border-t border-ink">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed meta-analyses, systematic and scoping reviews, randomised and split-scalp
+            trials, prospective and retrospective series, practice guidelines and complication reports, linked
+            inline within each section. Primary sources: PubMed/PMC, Dermatologic Surgery, the Journal of the
+            American Academy of Dermatology, Plastic and Reconstructive Surgery, Aesthetic Plastic Surgery, the
+            Journal of Cosmetic Dermatology, Facial Plastic Surgery Clinics of North America, the Journal of
+            Cutaneous and Aesthetic Surgery, the Indian Journal of Plastic Surgery, Skin Appendage Disorders, and
+            the consumer alert and 2025 practice census of the International Society of Hair Restoration Surgery.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Hair transplantation is surgery and should be planned and
+          performed by a registered doctor after a diagnosis of the cause of the hair loss; who may lawfully
+          perform which step differs by country. Finasteride, dutasteride and oral minoxidil are
+          prescription-only medicines with their own warnings, covered in the hair-loss guide. Tell the surgeon
+          about smoking, diabetes, blood-thinning medicines, keloids, previous scalp surgery and any history of
+          depression or body dysmorphic disorder. Device and brand names are examples, not endorsements;
+          regulatory statements are as of September 2026. Prices are indicative European and Turkish clinic
+          prices, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: -2px;
+    }
+
+    .card[open] > summary { background: rgba(18,18,18,0.03); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
