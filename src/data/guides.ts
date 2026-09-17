@@ -105,6 +105,14 @@ export const guides: GuideMeta[] = [
     updated: '2026-09-16',
   },
   {
+    path: 'radiesse',
+    title: 'Radiesse (calcium hydroxylapatite)',
+    tagline: 'The filler that also stimulates, graded use by use on its own trials — folds, hands and the jawline with randomised trials and regulatory indications, the décolleté approval of 2026, the hyperdiluted "skin-tightening" protocol with none on the face or body, the hybrids, the nodules in numbers, why it shows on a CT scan, and why nothing dissolves it.',
+    kind: 'clinic',
+    published: '2026-09-17',
+    updated: '2026-09-17',
+  },
+  {
     path: 'exosomes',
     title: 'Exosomes',
     tagline: 'Exosome treatments and serums graded on the human evidence — the one double-blind trial after CO2 laser, the PRP comparison, the hair studies, the injections and drips the FDA acted on, what the vial contains, what European law allows, and the alternatives with controlled trials.',

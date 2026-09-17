@@ -1,0 +1,488 @@
+---
+/**
+ * The Radiesse / calcium hydroxylapatite guide (/radiesse) — clinic guide on the in-clinic layout:
+ * evidence strength as the primary visual signal, all content in the DOM,
+ * one interactive block (situation matcher), and the products compared as cards.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MediaPlaceholder from '../components/MediaPlaceholder.astro';
+import ExpandableDrawer from '../components/ExpandableDrawer.astro';
+import EvidenceRow from '../components/EvidenceRow.astro';
+import { DEFAULT_LOCALE } from '../i18n/ui';
+import { guideMeta, formatDate } from '../data/guides';
+import {
+  keyTakeaways,
+  groups,
+  allSections,
+  readingMinutes as guideReadingMinutes,
+  type Evidence,
+} from '../data/radiesse';
+
+const locale = DEFAULT_LOCALE;
+const guide = guideMeta('radiesse');
+const title = 'Radiesse (calcium hydroxylapatite) — every use graded by evidence | DeAging Europe';
+const description =
+  'Radiesse and the other calcium hydroxylapatite fillers graded use by use on their trials: nasolabial folds, hands and the jawline with randomised trials and regulatory indications, the cheeks, the 2026 décolleté approval, the hyperdiluted "skin-tightening" protocol for face, neck and body, the hybrids with hyaluronic acid, what a course costs, the nodules in numbers, why it shows on a CT scan, and why nothing dissolves it.';
+
+const readingMinutes = guideReadingMinutes();
+
+const evidenceRank: Record<Evidence, number> = { strong: 0, moderate: 1, emerging: 2, limited: 3 };
+
+const evidencePillClass = (e?: Evidence) =>
+  e === 'strong'
+    ? 'tier-pill tier-strong'
+    : e === 'moderate'
+    ? 'tier-pill tier-moderate'
+    : e === 'emerging'
+    ? 'tier-pill tier-emerging'
+    : 'tier-pill tier-none';
+
+const orderedSections = (g: (typeof groups)[number]) =>
+  g.sections
+    .slice()
+    .sort((a, b) => evidenceRank[a.evidence ?? 'limited'] - evidenceRank[b.evidence ?? 'limited']);
+
+// Bottom-line answer shown in the collapsed FAQ card.
+const faqAnswer: Record<string, string> = {
+  'faq-how-long': '12–18 months, tapering',
+  'faq-when-results': 'On the day; judge at 3 months',
+  'faq-how-many': '1–4 syringes, by area',
+  'faq-cost': '€350–600 a syringe',
+  'faq-radiesse-or-sculptra': 'Contour today, or deflation over months',
+  'faq-radiesse-or-ha': 'HA first, and always near the eye, lip or nose',
+  'faq-dissolve': 'No',
+  'faq-xray': 'Yes — and it does not hide the bone',
+  'faq-hyperdilute': 'On the chest, yes; elsewhere, emerging',
+};
+
+const topInfoIds = new Set(['basics', 'context']);
+const infoGroupIds = new Set([...topInfoIds, 'safety', 'faq']);
+const topInfoGroups = groups.filter((g) => topInfoIds.has(g.id));
+const mainGroups = groups.filter((g) => !topInfoIds.has(g.id));
+const evidenceGroups = mainGroups.filter((g) => !infoGroupIds.has(g.id));
+const tailInfoGroups = mainGroups.filter((g) => infoGroupIds.has(g.id));
+const lastChartGroupId = evidenceGroups[evidenceGroups.length - 1].id;
+const partNo = (g: (typeof groups)[number]) => mainGroups.findIndex((x) => x.id === g.id) + 1;
+
+// Interactive matcher — situation → recommended rows (anchors must exist in data).
+const matcher: { concern: string; paths: { id: string; title: string; why: string }[] }[] = [
+  {
+    concern: 'My jawline has softened and there is a hollow in front of the jowl',
+    paths: [
+      { id: 'use-jawline', title: 'The jawline trial', why: '75.6% against 8.8% at twelve weeks; 62.9% still improved at 48' },
+      { id: 'use-marionette-chin', title: 'Pre-jowl, chin and marionette lines', why: 'likely on series; on bone is the safer half' },
+      { id: 'prod-radiesse', title: 'The product in the trial', why: 'Radiesse (+), deep, with a cannula' },
+    ],
+  },
+  {
+    concern: 'Deep nasolabial folds',
+    paths: [
+      { id: 'use-nasolabial-folds', title: 'Three randomised trials', why: '79% against 43% still improved at a year versus hyaluronic acid' },
+      { id: 'prod-ha', title: 'Hyaluronic acid instead', why: 'shorter, softer, and the only one with an antidote' },
+    ],
+  },
+  {
+    concern: 'The backs of my hands show veins and tendons',
+    paths: [
+      { id: 'use-hands', title: 'The hand indication', why: '75% a grade better at three months, held to twelve, function unchanged' },
+      { id: 'safety-imaging', title: 'It will show on a hand X-ray', why: 'in 83% at two years, never hiding the bone' },
+    ],
+  },
+  {
+    concern: 'Flat or hollow cheeks',
+    paths: [
+      { id: 'use-cheeks-midface', title: 'The cheek trial', why: 'three syringes a face; 92% of physicians and 80% of patients satisfied at a year' },
+      { id: 'prod-sculptra', title: 'Sculptra instead, if the whole face has deflated', why: 'nothing on the day, more at a year' },
+    ],
+  },
+  {
+    concern: 'Crepey chest and cleavage lines',
+    paths: [
+      { id: 'use-decolletage', title: 'Diluted 1:2, with a randomised trial', why: '71.2% against 6.3% at 24 weeks; on the label since 2026' },
+      { id: 'prod-hyperdilute', title: 'The diluted protocol', why: 'the chest is the one place it has been properly tested' },
+    ],
+  },
+  {
+    concern: 'I have been offered "hyperdilute Radiesse" to tighten my face or neck',
+    paths: [
+      { id: 'use-face-hyperdilute', title: 'The face', why: 'three consensus papers, no randomised trial' },
+      { id: 'use-neck', title: 'The neck', why: '86% of 22 women a grade better on necklines, no control' },
+      { id: 'prod-mfu-combination', title: 'The ultrasound-plus-Radiesse package', why: 'eleven studies, mainly before-and-after' },
+    ],
+  },
+  {
+    concern: 'Loose skin on my arms, stomach, knees or buttocks, or cellulite',
+    paths: [
+      { id: 'use-body-arms-abdomen-knees', title: 'Arms, abdomen, knees', why: 'series of ten to thirty; the split-body study measured no change' },
+      { id: 'use-buttocks-cellulite', title: 'Buttocks and cellulite', why: 'twelve syringes and a subcision cannula, open-label' },
+      { id: 'use-stretch-marks', title: 'Stretch marks', why: 'three small series, each with a device added' },
+    ],
+  },
+  {
+    concern: 'Acne scars',
+    paths: [
+      { id: 'use-acne-scars', title: 'As an add-on to fractional CO2', why: 'a 160-person randomised trial; ice-pick scars do not respond' },
+    ],
+  },
+  {
+    concern: 'I have been offered it for my lips, nose or under my eyes',
+    paths: [
+      { id: 'use-lips-nose-eyes', title: 'Where the nodules and the blindness cases are', why: '12.4% lip nodules; at least eleven cases of visual loss, mostly the nose' },
+      { id: 'safety-vascular-blindness', title: 'Why the site matters', why: 'nothing flushes it out of an artery' },
+      { id: 'safety-no-eraser', title: 'The antidote question', why: 'the manufacturer\'s own study found none' },
+    ],
+  },
+  {
+    concern: 'Radiesse, Sculptra or a hyaluronic filler — which?',
+    paths: [
+      { id: 'radiesse-vs-ha-vs-sculptra', title: 'Firmness, tempo and the exit', why: 'on the day and 12–18 months; at three months and two years; or reversible' },
+      { id: 'prod-hybrids', title: 'The hybrids', why: 'a softer lift with half an antidote' },
+      { id: 'faq-radiesse-or-ha', title: 'The short answer', why: 'hyaluronic acid first' },
+    ],
+  },
+];
+
+// The products compared, as cards.
+const productRows = [
+  {
+    id: 'prod-radiesse',
+    brand: 'Radiesse and Radiesse (+) (Merz)',
+    evidence: 'strong' as Evidence,
+    blurb: 'The syringe in the trials: folds against collagen and hyaluronic acid with a clean three-year follow-up, the hand trial, the jawline trial, the cheek trial and the décolleté trial. The (+) version adds lidocaine and cut injection pain by 4.4 cm on a 10 cm scale. Firm, radio-opaque, not dissolvable.',
+    knownFor: 'Four FDA indications since 2006',
+  },
+  {
+    id: 'prod-hyperdilute',
+    brand: 'Hyperdilute Radiesse (1:2 to 1:6)',
+    evidence: 'emerging' as Evidence,
+    blurb: 'The same syringe with saline, sold as a "biostimulator" for the face, neck and body. New collagen and elastin on biopsy, consensus papers that call themselves preliminary, open series — and, per both 2024 systematic reviews, no randomised trial outside the chest.',
+    knownFor: 'The most popular use, the least evidence',
+  },
+  {
+    id: 'prod-hybrids',
+    brand: 'HArmonyCa and the premixed Radiesse–hyaluronic blend',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Microspheres in a hyaluronic gel for a softer lift with an immediate effect: an open-label 140-person post-marketing study, retrospective series of 41 and 129, a Delphi panel, and a review noting a slight decline after six months. Hyaluronidase removes only the gel.',
+    knownFor: 'Half an antidote',
+  },
+  {
+    id: 'prod-other-caha',
+    brand: 'Other calcium hydroxylapatite fillers',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Aphranel was non-inferior to Restylane in a properly masked 210-person split-face trial. Other brands trade on the material; particle size, gel and evidence are each product\'s own, and Radiesse\'s three-year record does not transfer.',
+    knownFor: 'One brand with a real trial',
+  },
+  {
+    id: 'prod-mfu-combination',
+    brand: 'The package: microfocused ultrasound, then hyperdilute Radiesse',
+    evidence: 'emerging' as Evidence,
+    blurb: 'Eleven studies, "mainly pre-post", with better scores and more elastin on biopsy; a twelve-woman pilot says ultrasound first. No study has an arm with only one of the two, so what the second adds is unknown. Priced as the sum of its parts.',
+    knownFor: 'Two treatments, one unanswered question',
+  },
+  {
+    id: 'prod-sculptra',
+    brand: 'Instead: Sculptra (poly-L-lactic acid)',
+    evidence: 'strong' as Evidence,
+    blurb: 'The other irreversible stimulator: nothing on the day, two or three sessions, ahead of hyaluronic acid from nine months in three randomised trials, about two years of hold. Better for diffuse deflation; Radiesse is better for a contour wanted today.',
+    knownFor: 'Slower, longer, more diffuse',
+  },
+  {
+    id: 'prod-ha',
+    brand: 'Instead: hyaluronic-acid filler',
+    evidence: 'strong' as Evidence,
+    blurb: 'Lost to Radiesse on duration in both head-to-head fold trials and wins on everything a cautious patient cares about: soft enough for thin and mobile areas, invisible on scans, and gone within a day of hyaluronidase. First filler, tear trough, lips, nose.',
+    knownFor: 'The only one with an antidote',
+  },
+  {
+    id: 'prod-pcl',
+    brand: 'Instead: polycaprolactone (Ellansé)',
+    evidence: 'moderate' as Evidence,
+    blurb: 'Polyester microspheres in the same kind of gel: 88.8% of folds still improved at twelve months against 23.8% for hyaluronic acid in one 160-person randomised trial; versions lasting one to four years; a shorter safety record and no antidote.',
+    knownFor: 'The longest-lasting, on one trial',
+  },
+];
+---
+
+<BaseLayout title={title} description={description} locale={locale} path="radiesse" type="article">
+  <article class="bg-bone">
+    <!-- ════════════ HERO ════════════ -->
+    <header class="relative">
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+        <div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[1.02] max-w-3xl">
+            Radiesse, jawline to décolleté.
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg md:text-xl text-ink/75 leading-relaxed">
+            The filler that also stimulates, graded use by use: the folds, hands and jawline with randomised trials,
+            the chest approval of 2026, the hyperdiluted "skin tightening" with none, the nodules in numbers,
+            why it shows on a scan &mdash; and why nothing dissolves it.
+          </p>
+          <p class="meta">
+            Updated <time datetime={guide.updated}>{formatDate(guide.updated)}</time> · ~{readingMinutes} min full read · {allSections().length} sections
+          </p>
+        </div>
+        <MediaPlaceholder kind="image" ratio="4/5" label="Hero — a Radiesse syringe of opaque white gel beside a blunt cannula and a vial of saline for dilution, on a steel tray" class="w-full lg:w-72" />
+      </div>
+    </header>
+
+    <!-- ════════════ TOP-FOLD SUMMARY + INFO DRAWERS ════════════ -->
+    <section id="takeaways" class="scroll-mt-32 max-w-[1440px] mx-auto px-5 md:px-14 py-12 space-y-10">
+      <div>
+        <p class="eyebrow">The case in five lines</p>
+        <h2 class="text-3xl mt-2">If you read nothing else</h2>
+        <ol class="mt-5 space-y-3 text-[15px] leading-relaxed text-ink/85 max-w-3xl">
+          {keyTakeaways.map((k, i) => (
+            <li class="flex gap-3">
+              <span class="font-display text-accent w-6 shrink-0">{i + 1}.</span>
+              <span>{k}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div>
+        <MediaPlaceholder kind="video" ratio="16/9" label="Explainer · 2 min" />
+      </div>
+
+      {topInfoGroups.map((g) => (
+        <section id={g.id} class="scroll-mt-32 pt-2">
+          <h2 class="text-[32px] md:text-[44px] leading-none">{g.title}</h2>
+          <div class="mt-6 grid">
+            {g.sections.map((s) => (
+              <ExpandableDrawer id={s.id} title={s.title} bodyHtml={s.bodyHtml} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <!-- ════════════ MAIN CONTENT (the graded chart) ════════════ -->
+    <section>
+      <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
+
+        <div class="mb-10 pt-7 border-t-2 border-ink">
+          <p class="eyebrow">The full breakdown</p>
+          <h2 class="font-display text-4xl md:text-5xl lg:text-6xl mt-2 leading-[1.05]">Radiesse — what the evidence says</h2>
+        </div>
+
+        <div id="guide-body" class="min-w-0">
+          {evidenceGroups.map((g) => (
+          <>
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
+
+            {g.id === 'uses' && (
+              <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <MediaPlaceholder kind="video" ratio="16/9" label="One syringe, three products: undiluted on the jawbone, 1:1 in the cheek, 1:4 fanned under neck skin — what changes in the syringe and under the skin" />
+                <MediaPlaceholder kind="image" ratio="16/9" label="Scale of things: a 25–45 micron microsphere, the fibroblast touching it, collagen III at four months and collagen I at nine; the same cheek on CT" />
+              </div>
+            )}
+
+            <div class="chart mt-8">
+                {orderedSections(g).map((s) => (
+                  <EvidenceRow
+                    s={s}
+                    figure={g.id === 'uses'}
+                  />
+                ))}
+            </div>
+          </section>
+
+          {g.id === lastChartGroupId && (
+            <div id="picks" class="band bleed scroll-mt-32 mb-16 py-12 md:py-14">
+              <p class="eyebrow">Editor's choice</p>
+              <h2 class="text-[32px] md:text-[44px] leading-none mt-2">Our picks</h2>
+              <p class="mt-3 text-ink/70 max-w-2xl">The contour it was approved for, the hand, the one diluted use with a trial &mdash; and the sites to refuse.</p>
+
+              <div class="tiles mt-8 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  {
+                    id: 'use-jawline',
+                    kind: 'Do this',
+                    title: 'Radiesse (+) for the jawline and pre-jowl',
+                    blurb: 'The indication it was approved for in 2021: 75.6% of treated jawlines a grade better at twelve weeks against 8.8% of controls in 180 people, 62.9% still improved at 48 weeks, 74.6% at 60 with one retreatment. Deep, on bone or under the skin, with a cannula; two to four syringes. It draws a straighter line under a softening jaw; it does not lift a heavy jowl, and it cannot be taken out.',
+                  },
+                  {
+                    id: 'use-hands',
+                    kind: 'Also earned',
+                    title: 'The backs of the hands',
+                    blurb: 'Two controlled trials with blinded grading and a regulatory indication: 75% of 114 people a grade better at three months and holding at twelve, hand function unchanged, 20 of 20 against 0 of 10 in the second study. Diluted with lidocaine, placed with a cannula above the veins. It fills the hollows between tendons; the spots and the crepe are the sun\'s work and need the hands guide.',
+                  },
+                  {
+                    id: 'use-decolletage',
+                    kind: 'The diluted use with a trial',
+                    title: 'The décolleté, 1:2',
+                    blurb: 'The only place where diluted Radiesse has been tested against a control: 71.2% of treated women a grade better at 24 weeks against 6.3% of those who waited, blinded evaluators, no interference with later breast imaging, on the European label and, since April 2026, the American one. Everything else sold as hyperdilute "skin tightening" is biopsies, series and consensus papers.',
+                  },
+                  {
+                    id: 'use-lips-nose-eyes',
+                    kind: 'Walk away',
+                    title: 'Lips, nose, glabella, tear trough',
+                    blurb: 'Nodules followed 12.4% of lip injections in the first large series and the lips have been off the label since. At least eleven cases of visual loss are published, most after the nasal dorsum, the detailed ones after the glabella. Sodium thiosulfate failed in the manufacturer\'s own study and inside cadaver arteries. These sites belong to a filler with an antidote, or to a surgeon.',
+                  },
+                ].map((pick) => (
+                  <a
+                    href={`#${pick.id}`}
+                    class="pick-card tile tile--flush group overflow-hidden"
+                  >
+                    <MediaPlaceholder kind="image" ratio="4/3" label={pick.title} />
+                    <div class="p-5 flex flex-col flex-1">
+                      <p class="eyebrow">{pick.kind}</p>
+                      <h3 class="text-xl leading-tight mt-1 transition-colors">{pick.title}</h3>
+                      <p class="mt-2 text-sm text-ink/65 leading-snug flex-1">{pick.blurb}</p>
+                      <span class="cta mt-4 self-start">
+                        View details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
+        ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SAFETY / FAQ TAIL + MATCHER / PRODUCTS / REFERENCES ════════════ -->
+    <div class="max-w-[1440px] mx-auto px-5 md:px-14 py-12">
+
+        {tailInfoGroups.map((g) => (
+          <section id={g.id} class="group-section scroll-mt-32 mb-16" data-group={g.id}>
+            <p class="eyebrow">Part {String(partNo(g)).padStart(2, '0')}</p>
+            <h2 class="text-[32px] md:text-[44px] leading-none mt-2">{g.title}</h2>
+            <div class="mt-8 grid">
+              {g.sections.map((s) => (
+                <ExpandableDrawer id={s.id} title={s.title} short={faqAnswer[s.id] ?? s.tldr} bodyHtml={s.bodyHtml} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <!-- ════════════ SITUATION MATCHER ════════════ -->
+        <section id="matcher" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">Interactive</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">Match the offer to the evidence</h2>
+          <p class="mt-2 text-ink/70 max-w-2xl">Open the line that sounds like your situation to see where the trials point &mdash; each link jumps to the graded section.</p>
+
+          <div class="mt-8 grid">
+            {matcher.map((m) => (
+              <details class="matcher-item group border-t border-ink last:border-b">
+                <summary class="cursor-pointer flex items-center justify-between gap-4 py-3.5 min-h-[44px]">
+                  <h3 class="text-[19px] md:text-2xl leading-tight group-hover:text-accent group-open:text-accent transition-colors">{m.concern}</h3>
+                  <span class="shrink-0 w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-accent group-hover:text-ink transition" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter" class="transition-transform group-open:rotate-180">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="pb-5">
+                  {m.paths.map((p) => (
+                    <a href={`#${p.id}`} class="block p-3 bg-bone/50 border border-ink/5 hover:border-accent/40 transition">
+                      <span class="block font-display font-medium text-[17px] tracking-tight leading-snug group-hover/path:text-accent transition-colors">{p.title}</span>
+                      <span class="block mt-1 text-sm text-ink/65 leading-normal">{p.why}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ THE PRODUCTS COMPARED ════════════ -->
+        <section id="compare" class="scroll-mt-32 mb-16 pt-8 border-t border-ink">
+          <p class="eyebrow">The calcium shelf</p>
+          <h2 class="font-display text-3xl md:text-4xl mt-2">The products compared</h2>
+          <p class="mt-2 text-ink/65 max-w-2xl">Five things sold under the name or the material and the three alternatives a clinic will offer instead. Each card is graded on its own trials, not on the mineral's reputation or the brochure.</p>
+
+          <div class="tiles mt-6 sm:grid-cols-2 lg:grid-cols-3">
+            {productRows.map((r) => (
+              <a href={`#${r.id}`} class="tile group">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class={`text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 ${evidencePillClass(r.evidence)}`}>{r.evidence}</span>
+                </div>
+                <h3 class="text-xl leading-tight transition-colors">{r.brand}</h3>
+                <p class="mt-1 text-sm text-ink/65 leading-snug">{r.blurb}</p>
+                <p class="mt-3 text-xs font-medium text-ink/85">Known for: {r.knownFor}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- ════════════ REFERENCES ════════════ -->
+        <section id="references" class="scroll-mt-32 pt-6 border-t border-ink">
+          <h2 class="font-display text-3xl">References &amp; further reading</h2>
+          <p class="mt-2 text-ink/70 text-sm">
+            All claims cite peer-reviewed randomised and split-face trials, systematic reviews, consensus statements,
+            biopsy and imaging studies, complication reports and regulatory records, linked inline within each
+            section. Primary sources: PubMed/PMC, Dermatologic Surgery, Aesthetic Surgery Journal, Plastic and
+            Reconstructive Surgery, the Journal of Drugs in Dermatology, the Journal of Cosmetic Dermatology,
+            Aesthetic Plastic Surgery, Clinical, Cosmetic and Investigational Dermatology, Ophthalmology, the US
+            Food and Drug Administration's premarket-approval database, and the manufacturer's regulatory notices.
+          </p>
+        </section>
+
+        <p class="mt-10 text-xs text-ink/50 italic max-w-3xl">
+          Educational content, not medical advice. Calcium hydroxylapatite is a prescription-only medical device;
+          its approved indications differ by product and country, and the diluted and hyperdiluted use on the face,
+          neck and body is off-label apart from the décolleté. It cannot be dissolved. Consult a registered
+          clinician, disclose autoimmune disease, bleeding disorders, anticoagulants, pregnancy or breastfeeding,
+          and keep a written record of the brand, lot number, dilution and sites injected. Product and brand names
+          are examples, not endorsements; regulatory status is stated as of September 2026. Prices are indicative
+          European clinic prices, not quotes.
+        </p>
+    </div>
+
+  </article>
+
+  <style>
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; }
+
+    details > summary:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: -2px;
+    }
+
+    .card[open] > summary { background: rgba(18,18,18,0.03); }
+
+    section[id], details[id] {
+      scroll-margin-top: calc(var(--header-h, 60px) + var(--bar-h, 56px) + 12px);
+    }
+
+    @media print {
+      aside, .pointer-events-none { display: none !important; }
+      details { break-inside: avoid; }
+      .card { break-inside: avoid; border: 1px solid #ddd !important; box-shadow: none !important; }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      const guideBody = document.getElementById('guide-body');
+      if (!guideBody) return;
+
+      function measureChrome() {
+        const header = document.querySelector('body > header');
+        document.documentElement.style.setProperty('--header-h', (header?.getBoundingClientRect().height || 60) + 'px');
+        document.documentElement.style.setProperty('--bar-h', '0px');
+      }
+      measureChrome();
+      window.addEventListener('resize', measureChrome);
+
+      function openHashTarget() {
+        if (!location.hash) return;
+        const el = document.getElementById(location.hash.slice(1));
+        if (el?.tagName === 'DETAILS') el.setAttribute('open', '');
+      }
+      window.addEventListener('hashchange', openHashTarget);
+      openHashTarget();
+    })();
+  </script>
+</BaseLayout>
